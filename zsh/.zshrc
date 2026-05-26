@@ -22,7 +22,7 @@ ZSH_THEME="powerlevel10k/powerlevel10k"
 # Custom plugins may be added to $ZSH_CUSTOM/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
-plugins=(git)
+plugins=(git zsh-autosuggestions zsh-syntax-highlighting zoxide)
 
 source $ZSH/oh-my-zsh.sh
 
@@ -48,3 +48,5 @@ eval "$(zoxide init zsh)"
 
 # Go binaries
 export PATH=$PATH:$HOME/go/bin
+
+[[ $- == *i* ]] && fastfetch

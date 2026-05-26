@@ -96,7 +96,7 @@ chsh -s "$(which zsh)" "$USER" 2>/dev/null || warn "Run: chsh -s $(which zsh)"
 # ── 11. Stow dotfiles ────────────────────────────────────────────
 info "Stowing dotfiles..."
 cd "$DOTFILES"
-stow hypr waybar foot btop brave gh zsh
+stow hypr waybar foot btop brave gh zsh fastfetch
 
 # ── 12. Set up graphical-session.target for portals ──────────────
 info "Setting up systemd user targets for Wayland portals..."

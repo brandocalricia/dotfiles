@@ -301,9 +301,19 @@ EOF
     pkill fuzzel 2>/dev/null || true
 fi
 
+# ── Fastfetch keyColor ────────────────────────────────────────────
+FASTFETCH_CONF="$HOME/.config/fastfetch/config.jsonc"
+if [ -f "$FASTFETCH_CONF" ]; then
+    if [[ "$(uname)" == "Darwin" ]]; then
+        sed -i '' "s/\"color\": \"#[0-9a-fA-F]*\"/\"color\": \"#${ACCENT_PRIMARY}\"/" "$FASTFETCH_CONF"
+    else
+        sed -i "s/\"color\": \"#[0-9a-fA-F]*\"/\"color\": \"#${ACCENT_PRIMARY}\"/" "$FASTFETCH_CONF"
+    fi
+fi
+
 # ── Save current theme ────────────────────────────────────────────
 echo "$THEME" > "$HOME/.config/current-theme"
 
 echo "✓ Switched to: $THEME_NAME"
 echo "  borders reloaded · waybar restarted · foot updated · ghostty updated · hyprlock updated"
-echo "  mako updated · btop theme updated · fuzzel updated"
+echo "  mako updated · btop theme updated · fuzzel updated · fastfetch updated"
