@@ -239,8 +239,71 @@ if [[ "$(uname)" == "Linux" ]]; then
     pkill waybar 2>/dev/null; sleep 1 && waybar &>/dev/null & disown
 fi
 
+# ── Mako notifications ────────────────────────────────────────────
+if [[ "$(uname)" == "Linux" ]]; then
+    mkdir -p "$HOME/.config/mako"
+    cat > "$HOME/.config/mako/config" << EOF
+background-color=#${BG_DARK}ff
+text-color=#${FG_BRIGHT}ff
+border-color=#${ACCENT_PRIMARY}ff
+border-size=2
+border-radius=8
+padding=12
+margin=8
+default-timeout=5000
+max-visible=5
+EOF
+    makoctl reload 2>/dev/null || true
+fi
+
+# ── btop ──────────────────────────────────────────────────────────
+if [[ "$(uname)" == "Linux" ]]; then
+    BTOP_THEMES_DIR="$HOME/.config/btop/themes"
+    mkdir -p "$BTOP_THEMES_DIR"
+    if [ -f "$DOTFILES/btop/.config/btop/themes/$THEME.theme" ]; then
+        cp "$DOTFILES/btop/.config/btop/themes/$THEME.theme" "$BTOP_THEMES_DIR/active.theme"
+    fi
+    BTOP_CONF="$HOME/.config/btop/btop.conf"
+    if [ -f "$BTOP_CONF" ]; then
+        if grep -q "^color_theme" "$BTOP_CONF"; then
+            sed -i 's/^color_theme.*$/color_theme = "active"/' "$BTOP_CONF"
+        else
+            echo 'color_theme = "active"' >> "$BTOP_CONF"
+        fi
+    fi
+fi
+
+# ── Fuzzel app launcher ───────────────────────────────────────────
+if [[ "$(uname)" == "Linux" ]]; then
+    mkdir -p "$HOME/.config/fuzzel"
+    cat > "$HOME/.config/fuzzel/fuzzel.ini" << EOF
+[main]
+font=JetBrainsMono Nerd Font:size=13
+width=30
+lines=8
+tabs=2
+horizontal-pad=20
+vertical-pad=10
+inner-pad=8
+
+[colors]
+background=${BG_DARK}ff
+text=${FG_DIM}ff
+match=${ACCENT_PRIMARY}ff
+selection=${BG_LIGHT}cc
+selection-text=${FG_BRIGHT}ff
+border=${ACCENT_PRIMARY}ff
+
+[border]
+width=2
+radius=8
+EOF
+    pkill fuzzel 2>/dev/null || true
+fi
+
 # ── Save current theme ────────────────────────────────────────────
 echo "$THEME" > "$HOME/.config/current-theme"
 
 echo "✓ Switched to: $THEME_NAME"
 echo "  borders reloaded · waybar restarted · foot updated · ghostty updated · hyprlock updated"
+echo "  mako updated · btop theme updated · fuzzel updated"
