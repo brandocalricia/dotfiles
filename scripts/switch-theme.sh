@@ -20,12 +20,15 @@ source "$THEMES_DIR/$THEME.sh"
 echo "Switching to: $THEME_NAME"
 
 # ── Hyprland borders ─────────────────────────────────────────────
-HYPR_CONF="$HOME/.config/hypr/hyprland.conf"
-sed -i "s/col.active_border = rgba([^)]*) rgba([^)]*) 45deg/col.active_border = rgba(${BORDER_ACTIVE_1}ff) rgba(${BORDER_ACTIVE_2}ff) 45deg/" "$HYPR_CONF"
-sed -i "s/col.inactive_border = rgba([^)]*)/col.inactive_border = rgba(${BORDER_INACTIVE}aa)/" "$HYPR_CONF"
-hyprctl reload
+if [[ "$(uname)" == "Linux" ]]; then
+    HYPR_CONF="$HOME/.config/hypr/hyprland.conf"
+    sed -i "s/col.active_border = rgba([^)]*) rgba([^)]*) 45deg/col.active_border = rgba(${BORDER_ACTIVE_1}ff) rgba(${BORDER_ACTIVE_2}ff) 45deg/" "$HYPR_CONF"
+    sed -i "s/col.inactive_border = rgba([^)]*)/col.inactive_border = rgba(${BORDER_INACTIVE}aa)/" "$HYPR_CONF"
+    hyprctl reload
+fi
 
 # ── Waybar CSS (hex only, no rgb conversion) ──────────────────────
+if [[ "$(uname)" == "Linux" ]]; then
 cat > "$HOME/.config/waybar/style.css" << EOF
 * {
     font-family: "JetBrainsMono Nerd Font", "JetBrainsMono NF", "Font Awesome 6 Free", monospace;
@@ -98,8 +101,10 @@ tooltip {
     padding: 4px;
 }
 EOF
+fi
 
 # ── foot terminal ─────────────────────────────────────────────────
+if [[ "$(uname)" == "Linux" ]]; then
 cat > "$HOME/.config/foot/foot.ini" << EOF
 font=JetBrainsMono Nerd Font:size=11
 pad=12x12
@@ -131,6 +136,7 @@ bright5=${PURPLE}
 bright6=${ACCENT_PRIMARY}
 bright7=${FG_BRIGHT}
 EOF
+fi
 
 # ── Ghostty terminal ─────────────────────────────────────────────
 GHOSTTY_THEMES_DIR="$HOME/.config/ghostty/themes"
@@ -162,6 +168,7 @@ EOF
 sed -i "s/^theme = .*/theme = ${THEME}/" "$GHOSTTY_CONF"
 
 # ── hyprlock ──────────────────────────────────────────────────────
+if [[ "$(uname)" == "Linux" ]]; then
 cat > "$HOME/.config/hypr/hyprlock.conf" << EOF
 background {
     monitor =
@@ -222,13 +229,15 @@ label {
     valign = center
 }
 EOF
+fi
 
-# Fix GTK CSS alpha
- sed -i "s/background: #\([0-9a-fA-F]\{6\}\)ee;/background: alpha(#\1, 0.93);/g" "$HOME/.config/waybar/style.css"
- sed -i "s/background: #\([0-9a-fA-F]\{6\}\)99;/background: alpha(#\1, 0.60);/g" "$HOME/.config/waybar/style.css"
- sed -i "s/background: #\([0-9a-fA-F]\{6\}\)fa;/background: alpha(#\1, 0.98);/g" "$HOME/.config/waybar/style.css"
-# ── Restart waybar ────────────────────────────────────────────────
-pkill waybar 2>/dev/null; sleep 1 && waybar &>/dev/null & disown
+# ── Fix GTK CSS alpha + restart waybar ───────────────────────────
+if [[ "$(uname)" == "Linux" ]]; then
+    sed -i "s/background: #\([0-9a-fA-F]\{6\}\)ee;/background: alpha(#\1, 0.93);/g" "$HOME/.config/waybar/style.css"
+    sed -i "s/background: #\([0-9a-fA-F]\{6\}\)99;/background: alpha(#\1, 0.60);/g" "$HOME/.config/waybar/style.css"
+    sed -i "s/background: #\([0-9a-fA-F]\{6\}\)fa;/background: alpha(#\1, 0.98);/g" "$HOME/.config/waybar/style.css"
+    pkill waybar 2>/dev/null; sleep 1 && waybar &>/dev/null & disown
+fi
 
 # ── Save current theme ────────────────────────────────────────────
 echo "$THEME" > "$HOME/.config/current-theme"
