@@ -1,4 +1,5 @@
 typeset -g POWERLEVEL9K_INSTANT_PROMPT=quiet
+[[ $- == *i* ]] && fastfetch
 # Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
 # Initialization code that may require console input (password prompts, [y/n]
 # confirmations, etc.) must go above this block; everything else may go below.
@@ -50,4 +51,3 @@ eval "$(zoxide init zsh)"
 # Go binaries
 export PATH=$PATH:$HOME/go/bin
 
-[[ $- == *i* ]] && fastfetch
