@@ -1,0 +1,38 @@
+# Solarized Dark Theme
+# https://ethanschoonover.com/solarized
+THEME_NAME="solarized"
+
+# Backgrounds
+BG_DARK="002b36"
+BG_MID="073642"
+BG_LIGHT="586e75"
+BG_LIGHTER="657b83"
+
+# Foregrounds
+FG_DIM="657b83"
+FG_MID="839496"
+FG_BRIGHT="eee8d5"
+
+# Accents
+ACCENT_PRIMARY="268bd2"
+ACCENT_SECONDARY="2aa198"
+ACCENT_TERTIARY="859900"
+
+# Highlights
+RED="dc322f"
+ORANGE="cb4b16"
+YELLOW="b58900"
+GREEN="859900"
+PURPLE="6c71c4"
+TEAL="2aa198"
+
+# Border gradient (active window)
+BORDER_ACTIVE_1="268bd2"
+BORDER_ACTIVE_2="2aa198"
+BORDER_INACTIVE="073642"
+
+# Bar
+BAR_BG="002b36"
+BAR_ALPHA="0.95"
+BAR_BORDER="073642"
+BAR_INACTIVE_WS="586e75"
