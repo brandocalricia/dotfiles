@@ -107,9 +107,8 @@ dpi-aware=yes
 
 [cursor]
 style=beam
-color=${BG_DARK} ${ACCENT_PRIMARY}
 
-[colors]
+[colors-dark]
 alpha=0.95
 background=${BG_DARK}
 foreground=${FG_DIM}
@@ -132,6 +131,35 @@ bright5=${PURPLE}
 bright6=${ACCENT_PRIMARY}
 bright7=${FG_BRIGHT}
 EOF
+
+# ── Ghostty terminal ─────────────────────────────────────────────
+GHOSTTY_THEMES_DIR="$HOME/.config/ghostty/themes"
+GHOSTTY_CONF="$HOME/.config/ghostty/config"
+mkdir -p "$GHOSTTY_THEMES_DIR"
+cat > "$GHOSTTY_THEMES_DIR/$THEME" << EOF
+palette = 0=#${BG_MID}
+palette = 1=#${RED}
+palette = 2=#${GREEN}
+palette = 3=#${YELLOW}
+palette = 4=#${ACCENT_SECONDARY}
+palette = 5=#${PURPLE}
+palette = 6=#${TEAL}
+palette = 7=#${FG_MID}
+palette = 8=#${BG_LIGHTER}
+palette = 9=#${RED}
+palette = 10=#${GREEN}
+palette = 11=#${YELLOW}
+palette = 12=#${ACCENT_PRIMARY}
+palette = 13=#${PURPLE}
+palette = 14=#${ACCENT_PRIMARY}
+palette = 15=#${FG_BRIGHT}
+background = #${BG_DARK}
+foreground = #${FG_DIM}
+cursor-color = #${ACCENT_PRIMARY}
+selection-background = #${BG_LIGHT}
+selection-foreground = #${FG_BRIGHT}
+EOF
+sed -i "s/^theme = .*/theme = ${THEME}/" "$GHOSTTY_CONF"
 
 # ── hyprlock ──────────────────────────────────────────────────────
 cat > "$HOME/.config/hypr/hyprlock.conf" << EOF
@@ -206,4 +234,4 @@ pkill waybar 2>/dev/null; sleep 1 && waybar &>/dev/null & disown
 echo "$THEME" > "$HOME/.config/current-theme"
 
 echo "✓ Switched to: $THEME_NAME"
-echo "  borders reloaded · waybar restarted · foot updated · hyprlock updated"
+echo "  borders reloaded · waybar restarted · foot updated · ghostty updated · hyprlock updated"
