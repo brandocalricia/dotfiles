@@ -1,0 +1,4 @@
+# Logs and cache files
+*.log
+*.cache
+*.tmp
