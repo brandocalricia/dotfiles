@@ -1,0 +1,209 @@
+#!/usr/bin/env bash
+# Usage: bash ~/dotfiles/scripts/switch-theme.sh <theme>
+
+set -e
+THEME="$1"
+DOTFILES="$HOME/dotfiles"
+THEMES_DIR="$DOTFILES/themes"
+
+if [ -z "$THEME" ]; then
+    echo "Available: $(ls $THEMES_DIR/*.sh | xargs -n1 basename | sed 's/.sh//' | tr '\n' ' ')"
+    exit 1
+fi
+
+if [ ! -f "$THEMES_DIR/$THEME.sh" ]; then
+    echo "Theme '$THEME' not found."
+    exit 1
+fi
+
+source "$THEMES_DIR/$THEME.sh"
+echo "Switching to: $THEME_NAME"
+
+# ── Hyprland borders ─────────────────────────────────────────────
+HYPR_CONF="$HOME/.config/hypr/hyprland.conf"
+sed -i "s/col.active_border = rgba([^)]*) rgba([^)]*) 45deg/col.active_border = rgba(${BORDER_ACTIVE_1}ff) rgba(${BORDER_ACTIVE_2}ff) 45deg/" "$HYPR_CONF"
+sed -i "s/col.inactive_border = rgba([^)]*)/col.inactive_border = rgba(${BORDER_INACTIVE}aa)/" "$HYPR_CONF"
+hyprctl reload
+
+# ── Waybar CSS (hex only, no rgb conversion) ──────────────────────
+cat > "$HOME/.config/waybar/style.css" << EOF
+* {
+    font-family: "JetBrainsMono Nerd Font", "JetBrainsMono NF", "Font Awesome 6 Free", monospace;
+    font-size: 13px;
+    font-weight: 500;
+    min-height: 0;
+    border: none;
+    border-radius: 0;
+}
+window#waybar {
+    background: transparent;
+    color: #${FG_DIM};
+}
+.modules-left, .modules-center, .modules-right {
+    background: #${BAR_BG};
+    border: 1px solid #${BAR_BORDER};
+    border-radius: 10px;
+    margin: 6px 4px;
+    padding: 0 6px;
+}
+#workspaces { padding: 0 4px; }
+#workspaces button {
+    padding: 0 8px;
+    margin: 4px 2px;
+    color: #${BAR_INACTIVE_WS};
+    background: transparent;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+#workspaces button.active {
+    color: #${BG_DARK};
+    background: #${ACCENT_PRIMARY};
+}
+#workspaces button.urgent {
+    color: #${BG_DARK};
+    background: #${RED};
+}
+#workspaces button:hover {
+    background: #${BG_LIGHT};
+    color: #${FG_BRIGHT};
+}
+#clock {
+    padding: 0 14px;
+    color: #${ACCENT_PRIMARY};
+    font-weight: 600;
+}
+#cpu, #memory, #disk, #network, #pulseaudio, #tray {
+    padding: 0 10px;
+    margin: 4px 3px;
+    background: #${BG_MID};
+    color: #${FG_DIM};
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+#cpu:hover, #memory:hover, #disk:hover, #network:hover, #pulseaudio:hover {
+    background: #${BG_LIGHT};
+}
+#cpu { color: #${YELLOW}; }
+#memory { color: #${ORANGE}; }
+#disk { color: #${PURPLE}; }
+#network { color: #${GREEN}; }
+#pulseaudio { color: #${TEAL}; }
+#pulseaudio.muted { color: #${RED}; }
+#tray { padding: 0 8px; }
+tooltip {
+    background: #${BG_DARK};
+    border: 1px solid #${BG_LIGHTER};
+    border-radius: 8px;
+    color: #${FG_BRIGHT};
+    padding: 4px;
+}
+EOF
+
+# ── foot terminal ─────────────────────────────────────────────────
+cat > "$HOME/.config/foot/foot.ini" << EOF
+font=JetBrainsMono Nerd Font:size=11
+pad=12x12
+dpi-aware=yes
+
+[cursor]
+style=beam
+color=${BG_DARK} ${ACCENT_PRIMARY}
+
+[colors]
+alpha=0.95
+background=${BG_DARK}
+foreground=${FG_DIM}
+selection-background=${BG_LIGHT}
+selection-foreground=${FG_BRIGHT}
+regular0=${BG_MID}
+regular1=${RED}
+regular2=${GREEN}
+regular3=${YELLOW}
+regular4=${ACCENT_SECONDARY}
+regular5=${PURPLE}
+regular6=${TEAL}
+regular7=${FG_MID}
+bright0=${BG_LIGHTER}
+bright1=${RED}
+bright2=${GREEN}
+bright3=${YELLOW}
+bright4=${ACCENT_PRIMARY}
+bright5=${PURPLE}
+bright6=${ACCENT_PRIMARY}
+bright7=${FG_BRIGHT}
+EOF
+
+# ── hyprlock ──────────────────────────────────────────────────────
+cat > "$HOME/.config/hypr/hyprlock.conf" << EOF
+background {
+    monitor =
+    path = screenshot
+    blur_passes = 3
+    blur_size = 8
+    contrast = 0.9
+    brightness = 0.8
+}
+input-field {
+    monitor =
+    size = 280, 56
+    outline_thickness = 2
+    dots_size = 0.28
+    dots_spacing = 0.35
+    dots_center = true
+    outer_color = rgba(${ACCENT_PRIMARY}ff)
+    inner_color = rgba(${BG_DARK}b3)
+    font_color = rgba(${FG_DIM}ff)
+    fade_on_empty = false
+    placeholder_text = <i>password...</i>
+    hide_input = false
+    rounding = 12
+    check_color = rgba(${GREEN}ff)
+    fail_color = rgba(${RED}ff)
+    position = 0, -140
+    halign = center
+    valign = center
+}
+label {
+    monitor =
+    text = cmd[update:1000] date "+%I:%M %p"
+    color = rgba(${FG_BRIGHT}ff)
+    font_size = 110
+    font_family = JetBrainsMono Nerd Font ExtraBold
+    position = 0, 120
+    halign = center
+    valign = center
+}
+label {
+    monitor =
+    text = cmd[update:60000] date "+%A, %B %d"
+    color = rgba(${ACCENT_PRIMARY}ff)
+    font_size = 22
+    font_family = JetBrainsMono Nerd Font
+    position = 0, 30
+    halign = center
+    valign = center
+}
+label {
+    monitor =
+    text = \$USER
+    color = rgba(${FG_DIM}e6)
+    font_size = 16
+    font_family = JetBrainsMono Nerd Font
+    position = 0, -240
+    halign = center
+    valign = center
+}
+EOF
+
+# Fix GTK CSS alpha
+ sed -i "s/background: #\([0-9a-fA-F]\{6\}\)ee;/background: alpha(#\1, 0.93);/g" "$HOME/.config/waybar/style.css"
+ sed -i "s/background: #\([0-9a-fA-F]\{6\}\)99;/background: alpha(#\1, 0.60);/g" "$HOME/.config/waybar/style.css"
+ sed -i "s/background: #\([0-9a-fA-F]\{6\}\)fa;/background: alpha(#\1, 0.98);/g" "$HOME/.config/waybar/style.css"
+# ── Restart waybar ────────────────────────────────────────────────
+pkill waybar 2>/dev/null; sleep 1 && waybar &>/dev/null & disown
+
+# ── Save current theme ────────────────────────────────────────────
+echo "$THEME" > "$HOME/.config/current-theme"
+
+echo "✓ Switched to: $THEME_NAME"
+echo "  borders reloaded · waybar restarted · foot updated · hyprlock updated"
