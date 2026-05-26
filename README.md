@@ -1,101 +1,121 @@
-# dotfiles
+# branco/dotfiles
 
-Brandon's Linux config — Hyprland on Fedora 44.  
-Last updated: May 2026. Hardware: Ryzen 7 7800X3D · RX 7800 XT · 32GB RAM.
+A cross-platform dotfiles system with 21 themes, one-command switching, and full Linux + macOS support.
 
----
-
-## What's in here
-
-```
-dotfiles/
-├── hypr/        Hyprland WM + hyprlock (keybinds, gaps, Nord borders)
-├── waybar/      Status bar (floating, Nord theme, icon fonts, click handlers)
-├── foot/        Terminal emulator (Nord colors, JetBrainsMono, beam cursor)
-├── brave/       Brave browser flags (--password-store=basic fixes keyring issues)
-├── gh/          GitHub CLI config (you'll need to re-auth: gh auth login)
-├── zsh/         Shell config (.zshrc) + Powerlevel10k prompt (.p10k.zsh)
-├── install.sh   One-shot setup script for a fresh Fedora machine
-└── README.md    You are here
-```
-
-Each folder is a **GNU stow package**. Stow creates symlinks from `~/.config/*`
-into the repo so edits to your configs are automatically tracked by git.
+`Platform: Linux | macOS` &nbsp; `Themes: 21` &nbsp; `Shell: zsh + oh-my-zsh` &nbsp; `WM: Hyprland + Aerospace`
 
 ---
 
-## Fresh machine setup
+**Theme switching:**
+```bash
+bash ~/dotfiles/scripts/switch-theme.sh <theme>
+```
 
-> Tested on Fedora 44 KDE. Should work on Fedora 43+ with minor adjustments.
+---
+
+## Quick Start
+
+### Linux (Fedora)
 
 ```bash
-# 1. Clone the repo
 git clone https://github.com/brandocalricia/dotfiles ~/dotfiles
-
-# 2. Run the installer
-cd ~/dotfiles
-bash install.sh
+cd ~/dotfiles && bash install.sh
 ```
 
-The installer handles:
-- System update
-- RPM Fusion (free + nonfree)
-- ashbuk/Hyprland-Fedora COPR
-- Brave browser repo
-- All packages (hyprland, waybar, foot, fuzzel, mako, hyprlock, hypridle,
-  swaybg, cliphist, grim, slurp, wl-clipboard, brightnessctl, playerctl,
-  pavucontrol, zsh, git, gh, stow, btop, htop, bat, eza, fd-find, ripgrep,
-  fzf, zoxide, fastfetch, obs-studio, ffmpeg, vlc, brave-browser, keepassxc)
-- JetBrainsMono Nerd Font (from nerd-fonts releases)
-- oh-my-zsh + Powerlevel10k + zsh-autosuggestions + zsh-syntax-highlighting
-- GNU stow (links all configs)
-- systemd user target for Wayland portals (needed for OBS, screen sharing)
-- Flatpaks: Spotify, Obsidian
-- kwallet autostart disabled (Brave keyring fix)
+### macOS
 
-**After install:**
-1. Log out → pick **Hyprland** (not uwsm) at SDDM login screen
+```bash
+git clone https://github.com/brandocalricia/dotfiles ~/dotfiles
+cd ~/dotfiles && bash mac-install.sh
+```
+
+**After install on Linux:**
+1. Log out → pick **Hyprland** (not uwsm) at SDDM
 2. Re-authenticate GitHub CLI: `gh auth login`
-3. Drop a wallpaper at `~/Pictures/wallpapers/` and update the swaybg line in `hyprland.conf`
-4. For OBS screen capture: add a **Screen Capture (PipeWire)** source — the portal is already wired up
+3. Drop a wallpaper at `~/Pictures/wallpapers/` and update the `swaybg` line in `hyprland.conf`
+4. For OBS screen capture: add a **Screen Capture (PipeWire)** source — the portal is pre-wired
 
 ---
 
-## Day-to-day workflow
+## Theme Switching
 
-### Editing configs
-Since everything is symlinked, just edit normally:
 ```bash
-nano ~/.config/hypr/hyprland.conf   # edits ~/dotfiles/hypr/.config/hypr/hyprland.conf
-hyprctl reload                       # apply changes without logging out
+bash ~/dotfiles/scripts/switch-theme.sh <theme-id>
 ```
 
-### Saving changes to the repo
-```bash
-cd ~/dotfiles
-git add .
-git commit -m "tweak: describe what you changed"
-git push
-```
+On apply, the script rewrites configs for every themed component and reloads them live — no logout needed.
 
-### Pulling updates on another machine
-```bash
-cd ~/dotfiles && git pull
-# Re-stow if you added new packages:
-stow hypr waybar foot brave gh zsh
-```
+### Custom Palettes
 
-### Rolling back a broken config
-```bash
-cd ~/dotfiles
-git log --oneline        # find the commit you want
-git checkout <hash> -- hypr/.config/hypr/hyprland.conf
-hyprctl reload
-```
+| Theme ID | Name | Vibe |
+|---|---|---|
+| `nord` | Nord | Cool Arctic blues and muted grays; calm and precise |
+| `summer` | Summer | Warm yellows, sandy tones, and sun-washed pastels |
+| `twilight` | Twilight | Deep purples and indigo with golden-hour accents |
+| `bonfire` | Bonfire | Burnt oranges, deep reds, and ember glows on dark charcoal |
+| `crimson` | Crimson | High-contrast dark base with bold reds and electric accents |
+| `ocean` | Ocean | Deep teals, seafoam greens, and midnight navy |
+
+### Community Themes
+
+| Theme ID | Name | Vibe |
+|---|---|---|
+| `catppuccin` | Catppuccin Mocha | Pastel mauve, lavender, and soft pinks on a deep midnight base |
+| `tokyo-night` | Tokyo Night | Neon blues and electric purples inspired by rain-soaked city lights |
+| `gruvbox` | Gruvbox Dark Hard | Earthy retro palette: warm ambers, greens, and terracotta on dark brown |
+| `dracula` | Dracula | Classic dark: electric purple, pink, and cyan on near-black |
+| `rose-pine` | Rosé Pine | Dusty rose, pine green, and foam on deep, muted purple-gray |
+| `everforest` | Everforest Dark Hard | Muted greens and warm earth tones; easy on the eyes in any light |
+| `kanagawa` | Kanagawa Wave | Japanese ink-painting aesthetic: deep indigo with gold and sakura accents |
+| `onedark` | One Dark Pro | Balanced everyday dark theme with cool blues and subtle purple |
+| `material` | Material Deep Ocean | Deep near-black with vibrant primary colors and crisp white text |
+| `synthwave` | Synthwave '84 | Neon pink and electric cyan on dark purple; 80s retro aesthetic |
+| `ayu-dark` | Ayu Dark | Minimal dark blue-black with soft orange and gold accents |
+| `moonlight` | Moonlight | Blue-tinted dark with cool purples and teal; a refined night theme |
+| `solarized` | Solarized Dark | The classic precision-designed palette with mathematically chosen contrast |
+| `horizon` | Horizon Dark | Warm-cool contrast: coral reds and electric blues on dark navy |
+| `palenight` | Palenight | Material-inspired deep navy base with purple and cyan highlights |
 
 ---
 
-## Keybind reference
+## What Gets Themed
+
+Every component below is updated atomically on each `switch-theme.sh` call.
+
+| Component | What changes |
+|---|---|
+| **Hyprland borders** | Active window gradient (2-color), inactive border color |
+| **Waybar** | Bar background + alpha, workspace pills (active/inactive), module accent colors, clock color |
+| **foot terminal** | Background, foreground, full 16-color ANSI palette |
+| **Ghostty terminal** | Full palette (macOS; uses generated theme files in `ghostty/themes/`) |
+| **mako notifications** | Background color, foreground text, border color |
+| **btop** | Full color scheme (generated btop theme file) |
+| **fuzzel launcher** | Background, text, selection highlight, border |
+| **hyprlock** | Blur overlay tint, input field colors, clock and date colors |
+| **fastfetch** | Accent color for system info display |
+
+---
+
+## Stack
+
+| Component | Tool | Platform |
+|---|---|---|
+| WM | Hyprland 0.55.2 (ashbuk/Hyprland-Fedora COPR) | Linux |
+| WM | Aerospace | macOS |
+| Bar | Waybar | Linux |
+| Terminal | foot | Linux |
+| Terminal | Ghostty | macOS |
+| Launcher | fuzzel | Linux |
+| Notifications | mako | Linux |
+| Lock screen | hyprlock | Linux |
+| Shell | zsh + oh-my-zsh + Powerlevel10k | Both |
+| Theme switcher | `scripts/switch-theme.sh` | Both |
+
+**Hardware this was built on:** Ryzen 7 7800X3D · RX 7800 XT · 32GB RAM · Fedora 44
+
+---
+
+## Keybinds
 
 | Keybind | Action |
 |---|---|
@@ -123,69 +143,75 @@ hyprctl reload
 
 ---
 
-## Stack details
+## Repo Structure
 
-### Hyprland
-- Version: 0.55.2 via ashbuk/Hyprland-Fedora COPR
-- Config: `hypr/.config/hypr/hyprland.conf`
-- Lock screen config: `hypr/.config/hypr/hyprlock.conf`
-- Gaps: 3px inner / 6px outer
-- Rounding: 8px
-- Active border: Nord blue gradient (`#88c0d0` → `#81a1c1` at 45°)
-- Inactive border: Nord dark (`#3b4252`)
-
-### Waybar
-- Config: `waybar/.config/waybar/config.jsonc`
-- Style: `waybar/.config/waybar/style.css`
-- Position: floating top bar with margins
-- Left: workspaces
-- Center: clock (Mon May 25 09:10 PM)
-- Right: network · volume · CPU · memory · disk · tray
-- Click handlers: CPU/memory → btop · network → nmtui · volume → pavucontrol
-
-### foot terminal
-- Config: `foot/.config/foot/foot.ini`
-- Font: JetBrainsMono Nerd Font, size 11
-- Background: Nord `#2e3440` at 95% opacity
-- Cursor: beam, Nord cyan
-
-### Waybar module colors (Nord palette)
-| Module | Color |
-|---|---|
-| Clock | `#88c0d0` (Nord frost) |
-| CPU | `#ebcb8b` (Nord yellow) |
-| Memory | `#d08770` (Nord orange) |
-| Disk | `#b48ead` (Nord purple) |
-| Network | `#a3be8c` (Nord green) |
-| Volume | `#8fbcbb` (Nord teal) |
-
-### Nord color reference
 ```
-#2e3440  polar night darkest (background)
-#3b4252  polar night dark
-#434c5e  polar night mid
-#4c566a  polar night light
-#d8dee9  snow storm dark (foreground)
-#e5e9f0  snow storm mid
-#eceff4  snow storm bright
-#8fbcbb  frost teal
-#88c0d0  frost light blue  ← primary accent
-#81a1c1  frost blue
-#5e81ac  frost dark blue
-#bf616a  aurora red
-#d08770  aurora orange
-#ebcb8b  aurora yellow
-#a3be8c  aurora green
-#b48ead  aurora purple
+dotfiles/
+├── themes/          # 21 theme color palettes (sourced by switch-theme.sh)
+├── scripts/         # switch-theme.sh
+├── hypr/            # Hyprland WM config + hyprlock lock screen
+├── waybar/          # Status bar config and stylesheet
+├── foot/            # Linux terminal (foot.ini)
+├── ghostty/         # macOS terminal config + generated theme files
+├── aerospace/       # macOS tiling WM config
+├── mako/            # Notification daemon
+├── btop/            # System monitor
+├── fuzzel/          # App launcher
+├── fastfetch/       # System info display
+├── zsh/             # .zshrc + Powerlevel10k prompt config
+├── brave/           # Brave browser flags
+├── gh/              # GitHub CLI config (re-auth required on each machine)
+├── install.sh       # Linux (Fedora) installer
+└── mac-install.sh   # macOS installer
+```
+
+Each directory is a **GNU stow package**: `stow <name>` creates symlinks from `~/.config/` back into the repo so every config edit is automatically tracked by git.
+
+---
+
+## Day-to-day Workflow
+
+### Editing configs
+
+Everything is symlinked, so edit files at their normal paths:
+
+```bash
+nano ~/.config/hypr/hyprland.conf   # edits dotfiles/hypr/.config/hypr/hyprland.conf
+hyprctl reload                       # apply without logging out
+```
+
+### Saving changes
+
+```bash
+cd ~/dotfiles
+git add -p                           # review hunks before committing
+git commit -m "tweak: description"
+git push
+```
+
+### Syncing to another machine
+
+```bash
+cd ~/dotfiles && git pull
+stow hypr waybar foot zsh            # re-stow if new packages were added
+```
+
+### Rolling back a broken config
+
+```bash
+cd ~/dotfiles
+git log --oneline
+git checkout <hash> -- hypr/.config/hypr/hyprland.conf
+hyprctl reload
 ```
 
 ---
 
-## Known issues / notes
+## Known Issues
 
-- `hyprland-qtutils` not available in ashbuk COPR — some rare dialogs won't render. Suppressed via `ecosystem {}` block in hyprland.conf.
-- `hypridle` crashes without a config (create `~/.config/hypr/hypridle.conf` to enable auto-lock — not included yet).
-- Brave browser must be launched with `--password-store=basic` (already handled via `brave-flags.conf` and the SUPER+B keybind). Without this, KDE Wallet prompts on every login.
-- OBS: use **Screen Capture (PipeWire)** source — not the old X11 source. `xdg-desktop-portal-hyprland` handles this.
-- On a new machine: wallpaper won't auto-load until you drop an image at `~/Pictures/wallpapers/` and update the `exec-once = swaybg` line in `hyprland.conf`.
-- GitHub CLI (`gh`) stores auth tokens in `gh/.config/gh/hosts.yml`. These are machine-specific — run `gh auth login` fresh on each machine.
+- **`hyprland-qtutils` missing from COPR** — some rare Qt dialogs won't render. Suppressed via `ecosystem {}` block in `hyprland.conf`.
+- **`hypridle`** — crashes without a config. `~/.config/hypr/hypridle.conf` is not included; create one manually to enable auto-lock.
+- **Brave keyring prompts** — Brave must launch with `--password-store=basic`. Already handled via `brave-flags.conf` and the `SUPER+B` keybind. Without it, KDE Wallet prompts on every login.
+- **OBS screen capture** — use **Screen Capture (PipeWire)**, not the X11 source. `xdg-desktop-portal-hyprland` handles the portal.
+- **Wallpaper on fresh install** — `swaybg` won't find anything until you drop an image at `~/Pictures/wallpapers/` and update the `exec-once = swaybg` line in `hyprland.conf`.
+- **GitHub CLI auth** — `gh/.config/gh/hosts.yml` stores machine-specific tokens. Run `gh auth login` fresh on each machine.
