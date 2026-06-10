@@ -52,3 +52,4 @@ eval "$(zoxide init zsh)"
 export PATH=$PATH:$HOME/go/bin
 
 export PATH="$HOME/.npm-global/bin:$PATH"
+export PATH="$HOME/.local/bin:$PATH"
