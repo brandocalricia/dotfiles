@@ -2,3 +2,6 @@
 *.log
 *.cache
 *.tmp
+
+# Per-machine Hyprland overrides (each host maintains its own copy)
+hypr/.config/hypr/local.conf

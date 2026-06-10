@@ -1,0 +1,5 @@
+# Machine-specific overrides. Copy this file to local.conf and edit for your host.
+# local.conf is gitignored — each machine maintains its own copy.
+#
+# Wallpaper (required — main config sources this file):
+exec-once = swaybg -i ~/Pictures/wallpapers/YOUR_WALLPAPER.png -m fill
