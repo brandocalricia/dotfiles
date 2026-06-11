@@ -113,9 +113,6 @@ font=JetBrainsMono Nerd Font:size=11
 pad=12x12
 dpi-aware=yes
 
-[key-bindings]
-select-all=Control+Shift+a
-
 [cursor]
 style=beam
 
