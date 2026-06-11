@@ -287,6 +287,7 @@ if [[ "$(uname)" == "Linux" ]]; then
     cat > "$HOME/.config/fuzzel/fuzzel.ini" << EOF
 [main]
 font=JetBrainsMono Nerd Font:size=13
+terminal=foot {cmd}
 width=30
 lines=8
 tabs=2
