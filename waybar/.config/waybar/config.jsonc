@@ -6,7 +6,7 @@
 
     "modules-left": ["hyprland/workspaces"],
     "modules-center": ["clock"],
-    "modules-right": ["network", "pulseaudio", "cpu", "memory", "disk", "battery", "tray"],
+    "modules-right": ["network", "pulseaudio", "cpu", "memory", "disk", "tray"],
 
     "hyprland/workspaces": {
         "format": "{id}",
@@ -43,16 +43,17 @@
     },
 
     "battery": {
+        "bat": "BAT1",
+        "adapter": "ACAD",
         "interval": 30,
         "states": {
             "warning": 30,
             "critical": 15
         },
-        "format": "{icon} {capacity}%",
-        "format-charging": " {capacity}%",
-        "format-plugged": " {capacity}%",
-        "format-icons": ["", "", "", "", ""],
-        "tooltip-format": "{timeTo}"
+        "format": "{capacity}%",
+        "format-charging": "{capacity}% (charging)",
+        "format-plugged": "{capacity}% (plugged)",
+        "tooltip": false
     },
 
     "network": {
