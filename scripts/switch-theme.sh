@@ -110,6 +110,9 @@ font=JetBrainsMono Nerd Font:size=11
 pad=12x12
 dpi-aware=yes
 
+[key-bindings]
+select-all=Control+Shift+a
+
 [cursor]
 style=beam
 
@@ -165,7 +168,7 @@ cursor-color = #${ACCENT_PRIMARY}
 selection-background = #${BG_LIGHT}
 selection-foreground = #${FG_BRIGHT}
 EOF
-sed -i "s/^theme = .*/theme = ${THEME}/" "$GHOSTTY_CONF"
+[ -f "$GHOSTTY_CONF" ] && sed -i "s/^theme = .*/theme = ${THEME}/" "$GHOSTTY_CONF"
 
 # ── hyprlock ──────────────────────────────────────────────────────
 if [[ "$(uname)" == "Linux" ]]; then

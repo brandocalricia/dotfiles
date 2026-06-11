@@ -179,6 +179,16 @@ if $IS_MAC; then
 fi
 installed "dotfiles (stow)"
 
+# local.conf is gitignored (machine-specific). Create from example if missing
+# so that hyprland.conf's `source=` line never errors on a fresh install.
+if $IS_LINUX; then
+  LOCAL_CONF="$HOME/.config/hypr/local.conf"
+  if [ ! -f "$LOCAL_CONF" ]; then
+    cp "$DOTFILES/hypr/.config/hypr/local.conf.example" "$LOCAL_CONF"
+    warn "Created ~/.config/hypr/local.conf from example — edit it for this machine (wallpaper path, monitor layout, etc.)"
+  fi
+fi
+
 # ══════════════════════════════════════════════════════════════════
 # LINUX — systemd, Flatpak, kwallet
 # ══════════════════════════════════════════════════════════════════
