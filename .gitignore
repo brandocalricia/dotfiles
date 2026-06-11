@@ -5,3 +5,7 @@
 
 # Per-machine Hyprland overrides (each host maintains its own copy)
 hypr/.config/hypr/local.conf
+
+# Generated at runtime by switch-theme.sh / btop itself
+btop/.config/btop/themes/active.theme
+btop/.config/btop/btop.conf
