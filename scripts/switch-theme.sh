@@ -206,7 +206,7 @@ label {
     text = cmd[update:1000] date "+%I:%M %p"
     color = rgba(${FG_BRIGHT}ff)
     font_size = 110
-    font_family = JetBrainsMono Nerd Font ExtraBold
+    font_family = JetBrainsMono NF ExtraBold
     position = 0, 120
     halign = center
     valign = center
