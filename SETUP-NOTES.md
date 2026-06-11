@@ -22,7 +22,7 @@ repo; anything marked per-machine lives in untracked files.
 monitor = eDP-1, 2880x1920@120, 0x0, 2
 # NOTE: $mod is defined after this file is sourced — use SUPER literally here
 bind = SUPER, E, exec, nautilus
-exec-once = swaybg -i ~/Pictures/wallpapers/wallhaven-6lw77w_2880x1800.png -m fill
+exec-once = swaybg -i ~/Pictures/wallpapers/wallhaven-2k5j3y_2880x1920.png -m fill
 ```
 
 The shared `hyprland.conf` no longer binds a file manager — each host adds
