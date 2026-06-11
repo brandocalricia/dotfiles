@@ -4,9 +4,19 @@
     "height": 36,
     "spacing": 4,
 
-    "modules-left": [],
+    "modules-left": ["hyprland/workspaces"],
     "modules-center": ["clock"],
     "modules-right": ["network", "pulseaudio", "cpu", "memory", "disk", "battery", "tray"],
+
+    "hyprland/workspaces": {
+        "format": "{id}",
+        "persistent-workspaces": {
+            "*": [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 ]
+        },
+        "on-click": "activate",
+        "on-scroll-up": "hyprctl dispatch workspace e-1",
+        "on-scroll-down": "hyprctl dispatch workspace e+1"
+    },
 
     "clock": {
         "format": "{:%a %b %d  %I:%M %p}",
@@ -14,13 +24,13 @@
     },
 
     "cpu": {
-        "format": "  {usage}%",
+        "format": "  {usage}%",
         "interval": 2,
         "on-click": "foot -e btop"
     },
 
     "memory": {
-        "format": "  {percentage}%",
+        "format": "  {percentage}%",
         "interval": 2,
         "tooltip-format": "{used:0.1f}G / {total:0.1f}G",
         "on-click": "foot -e btop"
@@ -28,7 +38,7 @@
 
     "disk": {
         "interval": 30,
-        "format": "  {percentage_used}%",
+        "format": "  {percentage_used}%",
         "path": "/"
     },
 
@@ -39,25 +49,25 @@
             "critical": 15
         },
         "format": "{icon} {capacity}%",
-        "format-charging": "\uf0e7 {capacity}%",
-        "format-plugged": "\uf1e6 {capacity}%",
-        "format-icons": ["\uf244", "\uf243", "\uf242", "\uf241", "\uf240"],
+        "format-charging": " {capacity}%",
+        "format-plugged": " {capacity}%",
+        "format-icons": ["", "", "", "", ""],
         "tooltip-format": "{timeTo}"
     },
 
     "network": {
-        "format-wifi": "  wifi",
-        "format-ethernet": "  wired",
-        "format-disconnected": "  offline",
+        "format-wifi": "  wifi",
+        "format-ethernet": "  wired",
+        "format-disconnected": "  offline",
         "tooltip-format": "{ipaddr}",
         "on-click": "foot -e nmtui"
     },
 
     "pulseaudio": {
         "format": "{icon} {volume}%",
-        "format-muted": "  muted",
+        "format-muted": "  muted",
         "format-icons": {
-            "default": ["", "", ""]
+            "default": ["", "", ""]
         },
         "scroll-step": 5,
         "on-click": "pavucontrol"
