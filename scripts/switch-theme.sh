@@ -75,7 +75,7 @@ window#waybar {
     color: #${ACCENT_PRIMARY};
     font-weight: 600;
 }
-#cpu, #memory, #disk, #network, #pulseaudio, #tray {
+#cpu, #memory, #disk, #network, #pulseaudio, #battery, #tray {
     padding: 0 10px;
     margin: 4px 3px;
     background: #${BG_MID};
@@ -83,7 +83,7 @@ window#waybar {
     border-radius: 6px;
     transition: all 0.2s ease;
 }
-#cpu:hover, #memory:hover, #disk:hover, #network:hover, #pulseaudio:hover {
+#cpu:hover, #memory:hover, #disk:hover, #network:hover, #pulseaudio:hover, #battery:hover {
     background: #${BG_LIGHT};
 }
 #cpu { color: #${YELLOW}; }
@@ -92,6 +92,9 @@ window#waybar {
 #network { color: #${GREEN}; }
 #pulseaudio { color: #${TEAL}; }
 #pulseaudio.muted { color: #${RED}; }
+#battery { color: #${ACCENT_PRIMARY}; }
+#battery.warning { color: #${YELLOW}; }
+#battery.critical { color: #${RED}; }
 #tray { padding: 0 8px; }
 tooltip {
     background: #${BG_DARK};
