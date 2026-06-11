@@ -173,6 +173,11 @@ EOF
 # ── hyprlock ──────────────────────────────────────────────────────
 if [[ "$(uname)" == "Linux" ]]; then
 cat > "$HOME/.config/hypr/hyprlock.conf" << EOF
+auth {
+    fingerprint {
+        enabled = true
+    }
+}
 background {
     monitor =
     path = screenshot
