@@ -30,79 +30,73 @@ its own in `local.conf` (desktop: dolphin). Remember: **`$mod` is not yet
 defined when local.conf is sourced** (sourced at the autostart section,
 `$mod = SUPER` comes later) — use `SUPER` literally in local.conf binds.
 
-## greetd + SELinux: the xdm_t situation (CURRENT WORKAROUND IN PLACE)
+## greetd + SELinux: xdm_t session confinement (FIXED 2026-06-11)
 
-**State**: SELinux enforcing, but `xdm_t` is a customized permissive domain
-(`sudo semanage permissive -a xdm_t` — the only customized permissive type).
+**State**: SELinux fully enforcing, NO customized permissive domains. The
+session transitions to `unconfined_t` at login via pam_selinux lines in
+`/etc/pam.d/greetd`. Verified after a cold boot: `id -Z` →
+`unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023`;
+`ausearch -m avc -ts boot` → `<no matches>`.
 
-**Root cause (verified 2026-06-10)**: `/etc/pam.d/greetd` is:
+**History**: greetd's PAM file had no `pam_selinux.so`/`pam_loginuid.so`
+session lines, so the entire Hyprland session ran confined as greetd's
+`xdm_t` domain. Worked around 2026-06-10 with `semanage permissive -a xdm_t`;
+properly fixed 2026-06-11 (session stack edit below) and the workaround
+removed (`semanage permissive -d xdm_t`).
 
-```
-auth       sufficient   pam_fprintd.so
-auth       include      system-auth
-account    include      system-auth
-password   include      system-auth
-session    include      system-auth
-```
-
-No `pam_selinux.so` session lines and no `pam_loginuid.so`, so the user
-session never transitions out of greetd's `xdm_t` domain — the entire
-Hyprland session runs confined as the display manager.
-
-**Denial inventory while xdm_t was enforcing** (from ausearch, this boot):
-foot (ptmx open/ioctl — broken terminals), zsh (.zsh_history.LOCK,
-zcompdump map), git (index map), sudo (ptmx), claude (settings.json
-write/watch), fc-list/fc-match (font cache map), man (mandb cache), Chrome
-(udp name_bind, /proc/pressure), Steam/Proton (pressure-vessel remounts,
-/dev/ntsync, execmod on dlls). Brave crash-looped (SIGSEGV/SIGTRAP) under
-enforcement; clean ever since permissive.
-
-### Proper fix plan — FUTURE SESSION ONLY, USER AWAKE, RECOVERY TTY OPEN
-
-Goal: session transitions to `unconfined_t` at login; then remove the
-permissive workaround. This is a PAM **session-stack** edit (sudo required).
-
-Preparation (before touching anything):
-1. Open a root-capable TTY (**Ctrl+Alt+F3**, log in) and KEEP IT OPEN.
-2. `sudo cp /etc/pam.d/greetd /etc/pam.d/greetd.bak`
-3. Confirm current confinement: `id -Z` in the session → expect `...xdm_t...`.
-
-Edit `/etc/pam.d/greetd` session stack, mirroring `/etc/pam.d/login`
-(verified on this host) — final file:
+**The fix** — `/etc/pam.d/greetd` session stack mirrors `/etc/pam.d/login`.
+Current file (single-space separators — typed by hand at the TTY; PAM
+tokenizes on whitespace, alignment is cosmetic):
 
 ```
-auth       sufficient   pam_fprintd.so
-auth       include      system-auth
-account    include      system-auth
-password   include      system-auth
-session    required     pam_selinux.so close
-session    required     pam_loginuid.so
-session    required     pam_selinux.so open
-session    include      system-auth
+auth sufficient pam_fprintd.so
+auth include system-auth
+account include system-auth
+password include system-auth
+session required pam_selinux.so close
+session required pam_loginuid.so
+session required pam_selinux.so open
+session include system-auth
 ```
 
-(`close` first, `open` immediately before the user-context session modules,
-exactly as the comments in `/etc/pam.d/login` prescribe.)
+(`close` first session rule, `open` immediately before the user-context
+session modules, per the comments in `/etc/pam.d/login`.)
 
-Then:
-4. Log out, log back in via tuigreet (or reboot).
-5. Verify: `id -Z` → `unconfined_u:unconfined_r:unconfined_t:...`;
-   `ps -eZ | grep Hyprland` shows unconfined_t.
-6. Run the smoke tests: open foot, run git in a repo, fc-list, launch Brave,
-   start Steam — i.e., everything from the denial inventory above.
-7. Only after a full healthy reboot cycle: remove the workaround:
-   `sudo semanage permissive -d xdm_t`.
-8. Repeat the smoke tests. Any new denial: `sudo ausearch -m avc -ts recent`.
+**Durability across updates (verified)**: the file is owned by the greetd
+RPM as `%config(noreplace)` (fileflags 17) — package updates keep the local
+file and drop the packaged version as `.rpmnew`. After greetd upgrades,
+check for `/etc/pam.d/greetd.rpmnew` and confirm `id -Z` is still
+unconfined after relogin.
 
-Rollback at any point:
-- Login broken after the edit → from the open TTY:
-  `sudo cp /etc/pam.d/greetd.bak /etc/pam.d/greetd && sudo systemctl restart greetd`
-- Breakage after removing permissive → `sudo semanage permissive -a xdm_t`
-  restores tonight's working state.
+**Pre-fix backups** (the old 183-byte file without the session lines):
+`/root/pam-greetd-backup-1781204878/greetd` and `/etc/pam.d/greetd.bak`.
+
+**Smoke-tested 2026-06-11 under full enforcement** (fresh boot): fingerprint
+login at tuigreet, waybar battery (BAT1), foot (PTY), Super+R fuzzel,
+notify-send styled mako, btop via fuzzel→foot, zsh history persistence,
+`git status` in ~/dotfiles, Brave stable (no crash-loop), hyprlock
+fingerprint-alone AND password-alone unlock, `fc-list`, Steam to library
+screen. All passed; zero AVC denials.
+
+**Rollback if this ever regresses** (e.g. session lands back in xdm_t):
+- First check `/etc/pam.d/greetd` still has the three session lines.
+- Broken login after any PAM change → from a root TTY:
+  `cp /etc/pam.d/greetd.bak /etc/pam.d/greetd && systemctl restart greetd`
+  (note: the .bak is the PRE-fix file — restores login but also restores
+  xdm_t confinement; re-apply the session lines after).
+- Emergency re-add of the old workaround: `sudo semanage permissive -a xdm_t`.
 - Absolute worst case (greetd loop, can't log in): from TTY
-  `sudo systemctl stop greetd`, then start Hyprland manually from the TTY to
-  recover; restore the backup; `sudo systemctl start greetd`.
+  `sudo systemctl stop greetd`, start Hyprland manually from the TTY to
+  recover, restore the backup, `sudo systemctl start greetd`.
 - NEVER touch display-manager.service, never install/enable another DM.
+
+**Historic denial inventory under xdm_t enforcement** (for recognition if it
+regresses): foot (ptmx open/ioctl — broken terminals), zsh
+(.zsh_history.LOCK, zcompdump map), git (index map), sudo (ptmx), claude
+(settings.json write/watch), fc-list/fc-match (font cache map), man (mandb
+cache), Chrome (udp name_bind, /proc/pressure), Steam/Proton
+(pressure-vessel remounts, /dev/ntsync, execmod on dlls), Brave crash-loop
+(SIGSEGV/SIGTRAP).
 
 ## hyprlock + fingerprint
 
