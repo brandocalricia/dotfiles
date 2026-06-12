@@ -397,6 +397,11 @@ typeset -g POWERLEVEL9K_TIME_FOREGROUND='#${FG_DIM}'
 typeset -g POWERLEVEL9K_MULTILINE_FIRST_PROMPT_GAP_FOREGROUND='#${BG_LIGHTER}'
 EOF
 
+# ── Greeter staging (applied separately: sudo sh scripts/greeter-apply.sh) ──
+if [[ "$(uname)" == "Linux" ]]; then
+    bash "$DOTFILES/scripts/stage-greeter-theme.sh" "$ACCENT_PRIMARY" || true
+fi
+
 # ── Save current theme ────────────────────────────────────────────
 echo "$THEME" > "$HOME/.config/current-theme"
 

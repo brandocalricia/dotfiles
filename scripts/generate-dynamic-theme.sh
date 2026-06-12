@@ -132,32 +132,9 @@ theme[upload_end]="#{p['RED']}"
 with open(f"{home}/dotfiles/btop/.config/btop/themes/dynamic.theme", "w") as f:
     f.write(btop)
 
-# tuigreet staging: nearest ratatui named color for the accent (greeter can
-# only do named ANSI colors — approximation is the ceiling, documented)
-# Map by HUE, not RGB distance: pastel Material accents are nearly white in
-# RGB space but their hue is unmistakable. Buckets cover the named ANSI hues.
-def nearest(hexstr):
-    h, l, s = hex2hls(hexstr)
-    if s < 0.12:
-        return "white" if l > 0.65 else "gray"
-    deg = (h * 360) % 360
-    buckets = [(20, "lightred"), (48, "lightyellow"), (75, "lightyellow"),
-               (160, "lightgreen"), (215, "lightcyan"), (262, "lightblue"),
-               (330, "lightmagenta"), (360, "lightred")]
-    for limit, name in buckets:
-        if deg <= limit:
-            return name
-    return "white"
-
-acc = nearest(pal["ACCENT_PRIMARY"])
-theme_str = (f"container=black;border={acc};title={acc};greet={acc};"
-             f"prompt={acc};input=white;text=gray;time={acc};"
-             f"action=gray;button={acc}")
-os.makedirs(f"{home}/.cache/dynamic-theme", exist_ok=True)
-with open(f"{home}/.cache/dynamic-theme/tuigreet.txt", "w") as f:
-    f.write(theme_str + "\n")
+# (tuigreet staging happens in switch-theme.sh via stage-greeter-theme.sh —
+#  one implementation for named and dynamic themes alike)
 
 print(f"palette written: accent #{pal['ACCENT_PRIMARY']} on #{pal['BG_DARK']}"
       f" (contrast {contrast(pal['ACCENT_PRIMARY'], pal['BG_DARK']):.1f}:1)")
-print(f"greeter staged: {acc}")
 PYEOF
