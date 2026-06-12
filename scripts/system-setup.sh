@@ -73,6 +73,12 @@ section "pipx"
 dnf install -y --exclude=gdm --exclude=gdm3 python3-pipx
 info "pipx installed"
 
+section "theming (dynamic wallpaper theme support)"
+dnf install -y --exclude=gdm --exclude=gdm3 matugen adw-gtk3-theme
+sudo -u "$SUDO_USER" gsettings set org.gnome.desktop.interface gtk-theme 'adw-gtk3-dark' || true
+sudo -u "$SUDO_USER" gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark' || true
+info "matugen + adw-gtk3 installed, gsettings applied"
+
 # ══════════════════════════════════════════════════════════════════
 # NOTE: Docker, VSCode, Go, and powertop are intentionally omitted.
 # Run those individually — see the comment block at the top of this

@@ -45,6 +45,20 @@ bash ~/dotfiles/scripts/switch-theme.sh <theme-id>
 
 On apply, the script rewrites configs for every themed component and reloads them live — no logout needed.
 
+### Dynamic (wallpaper-reactive) mode — Linux
+
+```bash
+bash ~/dotfiles/scripts/set-wallpaper.sh --dynamic [image]   # enter dynamic mode
+# afterwards: Super+Shift+W picks a wallpaper and recolors everything
+bash ~/dotfiles/scripts/switch-theme.sh <named-theme>        # leave dynamic mode
+```
+
+matugen extracts a Material palette from the wallpaper (locked to dark
+surfaces + vibrant accents, contrast-enforced) into `themes/dynamic.sh`,
+then the normal switch-theme flow applies it everywhere — including the
+zsh prompt, GTK apps, and a staged tuigreet greeter theme
+(`sudo sh scripts/greeter-apply.sh`, takes effect on reboot).
+
 ### Custom Palettes
 
 | Theme ID | Name | Vibe |

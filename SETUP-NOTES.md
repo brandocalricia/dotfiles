@@ -242,6 +242,55 @@ brightness up/down — see hyprland.conf bindel/bindl block.
 Removed 2026-06-12: Super+period (cliphist), Super+Shift+Print,
 Super+Ctrl+S (screenshot variants).
 
+## Dynamic wallpaper theming (2026-06-12)
+
+One engine, two palette sources: `switch-theme.sh <named>` works as
+always; `switch-theme.sh dynamic` consumes the gitignored
+`themes/dynamic.sh` written by `scripts/generate-dynamic-theme.sh <img>`
+(matugen 3.1, Fedora official repo, used as a JSON palette oracle via
+`--dry-run --json hex -t scheme-vibrant -m dark` — we never use matugen's
+own templating). Dark lock: only `.dark` roles are read; WCAG contrast
+enforced in the generator (4.5:1 text, 3.0:1 accents) by lightening
+foregrounds only; ANSI colors harmonized toward the wallpaper hue capped
+at 15°. Worst-case verified: near-white wallpaper → #161306 surfaces.
+
+**Flow**: `Super+Shift+W` → fuzzel picker → `scripts/set-wallpaper.sh`
+updates the swaybg `exec-once` line in untracked `local.conf` (appends if
+missing), restarts swaybg, and — when current-theme is `dynamic` —
+regenerates the palette and re-runs switch-theme. Enter dynamic mode with
+`set-wallpaper.sh --dynamic [img]`; leave it with any named switch.
+
+**New switch-theme sections (apply to named themes too)**:
+- zsh prompt: writes `~/.config/zsh/prompt-colors.zsh` (p10k truecolor hex
+  overrides, sourced from .zshrc after .p10k.zsh). New terminals pick it
+  up automatically; existing ones need `exec zsh`.
+- GTK: writes `~/.config/gtk-{3.0,4.0}/gtk.css` (libadwaita named colors,
+  Gradience mechanism). Needs `gtk-theme=adw-gtk3-dark` +
+  `color-scheme=prefer-dark` in gsettings (in system-setup.sh). The old
+  `env = GTK_THEME` line was REMOVED from hyprland.conf — do not re-add,
+  it overrides gsettings and breaks libadwaita. Limits: a few deep
+  libadwaita widgets keep stock colors; GTK apps re-read css on restart.
+- greeter staging: `scripts/stage-greeter-theme.sh` maps ACCENT_PRIMARY to
+  a named ANSI color by hue (tuigreet accepts ONLY named colors) into
+  `~/.cache/dynamic-theme/tuigreet.txt`.
+- scratchpad terminals are killed on switch (colors bake at spawn);
+  pyprland respawns them on next toggle.
+
+**Greeter apply (the one system file)**: `sudo sh ~/dotfiles/scripts/greeter-apply.sh`
+validates the staged string (strict whitelists) and rewrites ONLY the
+`--theme '...'` argument in `/etc/greetd/config.toml`. greetd runs the
+command via sh(1) (single quotes required) and reads config **only at
+daemon startup → theme shows after reboot, not logout**. Backup at
+`/etc/greetd/config.toml.pre-theme-backup`; rollback:
+`sudo cp /etc/greetd/config.toml.pre-theme-backup /etc/greetd/config.toml`.
+NEVER touch the greetd PAM stack (see the 2026-06-11 section above).
+
+**Cursors**: deliberately not dynamic — no sane recolor pipeline exists;
+neutral default kept.
+
+New packages: matugen, adw-gtk3-theme (both Fedora official — the
+solopasha includepkgs fence is unchanged).
+
 ## Theme system gotchas (switch-theme.sh)
 
 `scripts/switch-theme.sh` **fully regenerates** waybar `style.css`,
