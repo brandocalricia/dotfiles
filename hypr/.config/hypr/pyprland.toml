@@ -1,0 +1,34 @@
+# Pyprland — scratchpads
+# Daemon started from hyprland.conf: exec-once = /usr/bin/pypr
+# Toggle binds use pypr-client (fast path); see hyprland.conf.
+
+[pyprland]
+plugins = ["scratchpads"]
+
+# Dropdown terminal — Super+grave
+[scratchpads.term]
+animation = "fromTop"
+command = "foot --app-id=dropdown-term"
+class = "dropdown-term"
+size = "92% 40%"
+margin = 8
+lazy = true
+
+# btop monitor — Super+Shift+grave
+[scratchpads.btop]
+animation = "fromTop"
+command = "foot --app-id=dropdown-btop btop"
+class = "dropdown-btop"
+size = "85% 70%"
+margin = 8
+lazy = true
+
+# Template — third slot. Uncomment, rename NAME, add a bind in
+# hyprland.conf: bind = $mod, KEY, exec, pypr-client toggle NAME
+# [scratchpads.NAME]
+# animation = "fromTop"        # or fromBottom / fromLeft / fromRight
+# command = "your-app --flag"
+# class = "your-app-class"     # verify with: hyprctl clients -j | grep class
+# size = "60% 60%"
+# margin = 8
+# lazy = true

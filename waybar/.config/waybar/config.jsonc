@@ -15,7 +15,8 @@
         "window-rewrite": {
             "class<brave-browser>": "󰖟",
             "class<foot>": "󰆍",
-            "class<dropdown-.*>": "",
+            "class<dropdown-term>": "󰞷",
+            "class<dropdown-btop>": "󰊚",
             "class<steam>": "󰓓",
             "class<code|Code>": "󰨞",
             "class<com.spotify.Client|spotify>": "󰓇",
