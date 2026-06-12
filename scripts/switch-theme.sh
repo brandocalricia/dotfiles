@@ -317,13 +317,17 @@ EOF
     pkill fuzzel 2>/dev/null || true
 fi
 
-# ── Fastfetch keyColor ────────────────────────────────────────────
+# ── Fastfetch keyColor + DU logo colors ──────────────────────────
 FASTFETCH_CONF="$HOME/.config/fastfetch/config.jsonc"
 if [ -f "$FASTFETCH_CONF" ]; then
     if [[ "$(uname)" == "Darwin" ]]; then
         sed -i '' "s/\"color\": \"#[0-9a-fA-F]*\"/\"color\": \"#${ACCENT_PRIMARY}\"/" "$FASTFETCH_CONF"
+        sed -i '' "s/\"1\": \"#[0-9a-fA-F]*\"/\"1\": \"#${ACCENT_PRIMARY}\"/" "$FASTFETCH_CONF"
+        sed -i '' "s/\"2\": \"#[0-9a-fA-F]*\"/\"2\": \"#${RED}\"/" "$FASTFETCH_CONF"
     else
         sed -i "s/\"color\": \"#[0-9a-fA-F]*\"/\"color\": \"#${ACCENT_PRIMARY}\"/" "$FASTFETCH_CONF"
+        sed -i "s/\"1\": \"#[0-9a-fA-F]*\"/\"1\": \"#${ACCENT_PRIMARY}\"/" "$FASTFETCH_CONF"
+        sed -i "s/\"2\": \"#[0-9a-fA-F]*\"/\"2\": \"#${RED}\"/" "$FASTFETCH_CONF"
     fi
 fi
 
