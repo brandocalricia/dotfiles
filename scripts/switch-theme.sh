@@ -146,6 +146,9 @@ bright5=${PURPLE}
 bright6=${ACCENT_PRIMARY}
 bright7=${FG_BRIGHT}
 EOF
+    # Scratchpad terminals bake colors at spawn — kill them so pyprland
+    # respawns with the new foot.ini/btop theme on next toggle
+    pkill -f '^foot --app-id=dropdown-' 2>/dev/null || true
 fi
 
 # ── Ghostty terminal ─────────────────────────────────────────────
