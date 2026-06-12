@@ -9,7 +9,21 @@
     "modules-right": ["network", "pulseaudio", "cpu", "memory", "disk", "battery", "tray"],
 
     "hyprland/workspaces": {
-        "format": "{id}",
+        "format": "{id} {windows}",
+        "format-window-separator": " ",
+        "window-rewrite-default": "󰘔",
+        "window-rewrite": {
+            "class<brave-browser>": "󰖟",
+            "class<foot>": "󰆍",
+            "class<dropdown-.*>": "",
+            "class<steam>": "󰓓",
+            "class<code|Code>": "󰨞",
+            "class<com.spotify.Client|spotify>": "󰓇",
+            "class<md.obsidian.Obsidian|obsidian>": "󰠮",
+            "class<org.gnome.Nautilus>": "󰉋",
+            "class<pavucontrol>": "󰕾",
+            "class<nm-connection-editor>": "󰖩"
+        },
         "persistent-workspaces": {
             "*": [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 ]
         },

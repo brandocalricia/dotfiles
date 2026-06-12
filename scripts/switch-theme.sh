@@ -50,14 +50,21 @@ window#waybar {
     padding: 0 6px;
 }
 #workspaces { padding: 0 4px; }
+/* base = occupied: bright chip so windows-elsewhere are visible at a glance */
 #workspaces button {
     padding: 0 8px;
     margin: 4px 2px;
-    color: #${BAR_INACTIVE_WS};
-    background: transparent;
+    color: #${FG_BRIGHT};
+    background: #${BG_MID};
     border-radius: 6px;
     transition: all 0.2s ease;
 }
+/* empty persistent workspaces: dim, no chip */
+#workspaces button.empty {
+    color: #${BAR_INACTIVE_WS};
+    background: transparent;
+}
+/* active must come after .empty: an empty focused workspace has both classes */
 #workspaces button.active {
     color: #${BG_DARK};
     background: #${ACCENT_PRIMARY};
