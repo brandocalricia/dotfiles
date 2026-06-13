@@ -373,20 +373,41 @@ swaybg is still installed; nothing about it was removed.
 New packages: matugen, adw-gtk3-theme (both Fedora official — the
 solopasha includepkgs fence is unchanged).
 
-## Theme system gotchas (switch-theme.sh)
+## Theme output model — generated vs tracked (2026-06-13)
 
-`scripts/switch-theme.sh` **fully regenerates** waybar `style.css`,
-`foot.ini`, `hyprlock.conf`, `fuzzel.ini`, mako `config`, and the ghostty
-theme file from inline templates. Any fix to those files MUST also be made
-in the script's template or the next theme switch reverts it. Applied to the
-templates tonight: waybar `#battery` CSS, foot select-all removal, hyprlock
-NF-ExtraBold family + fingerprint block, fuzzel `terminal=`.
-Added 2026-06-12: waybar workspace-state CSS (occupied/empty/active) and
-fastfetch DU logo colors (`"1"` → ACCENT_PRIMARY, `"2"` → RED seds).
-`config.jsonc` (waybar modules/icons) is NOT regenerated — safe to edit.
+`scripts/switch-theme.sh` writes ONLY gitignored paths. The repo tree stays
+clean in every theme/dynamic mode, and a stray `git add -A` can't overwrite
+blackgold's committed state. Three tiers:
 
-As of tonight fuzzel/mako/ghostty are stowed like everything else, so the
-script writes through symlinks into the repo — keep it that way.
+1. **Gitignored live + tracked `<file>.base` seed** (the `local.conf` idiom).
+   The full-overwrite outputs + fastfetch: `waybar/style.css`, `foot/foot.ini`,
+   `hypr/hyprlock.conf`, `hypr/colors.conf`, `mako/config`, `fuzzel/fuzzel.ini`,
+   `fastfetch/config.jsonc`, `ghostty/themes/active`. switch-theme writes the
+   live file; `install.sh` seeds it from `.base` on fresh install (so first
+   login has valid configs before any switch — e.g. hyprland's
+   `source colors.conf` resolves). **Editing structure**: for the `cat>`
+   outputs edit the heredoc IN switch-theme.sh, then re-render + refresh the
+   `.base` (`switch-theme.sh blackgold` then `cp <live> <live>.base`). For
+   **fastfetch** (only sed-patched, not heredoc-generated) edit
+   `config.jsonc.base`, then re-seed. `.base` files hold the canonical
+   **blackgold** render — keep them in sync if you change blackgold.
+
+2. **Tracked config that references a generated file** (stays hand-editable):
+   - `hypr/hyprland.conf` — `source = ~/.config/hypr/colors.conf`; borders use
+     `$border_active_1/2` + `$border_inactive` (defined in the generated
+     colors.conf). switch-theme NO LONGER sed-patches hyprland.conf.
+   - `ghostty/config` — static `theme = active`; switch-theme writes the
+     gitignored `themes/active` palette (like btop's `active.theme`). The old
+     per-name `ghostty/themes/<name>` files were removed (dead under this model).
+
+3. **Other generated (non-repo or already-ignored)**: btop `active.theme`,
+   zsh `~/.config/zsh/prompt-colors.zsh`, GTK `~/.config/gtk-*/gtk.css`,
+   `themes/dynamic.sh`, btop `dynamic.theme`, tuigreet staging.
+
+fuzzel/mako/ghostty are stowed (directory-level) like everything else — the
+script writes through the symlinks into the repo working tree (now gitignored).
+`install.sh` stows them too (was previously missing from the Linux list).
+Commits 4ea271d & e60d638.
 
 ## Missing vs desktop / app notes
 
