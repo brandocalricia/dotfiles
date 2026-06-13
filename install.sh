@@ -172,7 +172,7 @@ section "Stow dotfiles"
 info "Stowing dotfiles..."
 cd "$DOTFILES"
 if $IS_LINUX; then
-  stow hypr waybar foot btop brave gh zsh fastfetch
+  stow hypr waybar foot btop brave gh zsh fastfetch mako fuzzel ghostty
 fi
 if $IS_MAC; then
   stow ghostty aerospace hypr waybar foot btop brave gh zsh fastfetch mako fuzzel
@@ -188,6 +188,31 @@ if $IS_LINUX; then
     warn "Created ~/.config/hypr/local.conf from example — edit it for this machine (wallpaper path, monitor layout, etc.)"
   fi
 fi
+
+# Theme outputs are gitignored generated files (switch-theme.sh writes them).
+# Seed each from its tracked <file>.base so a fresh install has valid configs
+# BEFORE the first theme switch (e.g. hyprland.conf's `source colors.conf`
+# resolves at first login). See SETUP-NOTES "theme output model".
+section "Seed generated theme files from .base"
+SEED_FILES=(
+  "waybar/.config/waybar/style.css"
+  "foot/.config/foot/foot.ini"
+  "hypr/.config/hypr/hyprlock.conf"
+  "hypr/.config/hypr/colors.conf"
+  "mako/.config/mako/config"
+  "fuzzel/.config/fuzzel/fuzzel.ini"
+  "fastfetch/.config/fastfetch/config.jsonc"
+  "ghostty/.config/ghostty/themes/active"
+)
+for rel in "${SEED_FILES[@]}"; do
+  live="$HOME/.config/${rel#*/.config/}"
+  base="$DOTFILES/$rel.base"
+  if [ ! -f "$live" ] && [ -f "$base" ]; then
+    mkdir -p "$(dirname "$live")"
+    cp "$base" "$live"
+    info "Seeded ${rel#*/.config/} from .base"
+  fi
+done
 
 # ══════════════════════════════════════════════════════════════════
 # LINUX — systemd, Flatpak, kwallet
