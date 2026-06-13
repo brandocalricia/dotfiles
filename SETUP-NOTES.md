@@ -15,6 +15,63 @@ repo; anything marked per-machine lives in untracked files.
   `"adapter": "ACAD"` or it can latch onto a UCSI device.
 - Fingerprint reader present and enrolled (used by hyprlock + PAM).
 
+## Internal microphone (Krackan Point) — FIXED 2026-06-13
+
+**Symptom**: built-in mic produced silence/popping; webcam fine. Default
+capture kept landing on an empty headset jack or a dead "Digital Microphone".
+
+**Two separate firmware bugs on this board** (don't conflate them):
+1. **Phantom ACP**: the BIOS ACPI tables falsely declare an AMD ACP that
+   isn't wired to anything → kernel makes card 2 `acp-pdm-mach`, surfaced as
+   "Digital Microphone". Zero mixer controls, only popping. A ghost — it will
+   never carry audio. (Framework SoftwareFirmwareIssueTracker#166.)
+2. **The real internal mic is on the Realtek ALC285 HDA codec** (card 1, pin
+   node 0x12 `[Fixed] Mic at Int`). It works — proven by direct ALSA capture
+   (`arecord -D hw:1,0` after `amixer -c 1 set 'Internal Mic' cap`). The
+   breakage was **UCM**: WirePlumber's UCM profile exposed only `HiFi__Headset`
+   / `HiFi__Mic1` and never flipped the internal-mic capture switch on, so the
+   ADC stayed locked to the empty jack.
+
+**The fix — disable ALSA UCM for this card in WirePlumber** (NOT a kernel
+module, NOT modprobe, NOT initramfs, NOT a hardware failure — the user's first
+hypothesis, all ruled out by the codec dump + direct-ALSA test). With UCM off,
+ACP falls back to the plain `analog-stereo` profile whose `Internal Microphone`
+port (priority 8900) is auto-selected. Verified key against WirePlumber 0.5
+docs AND the shipped `alsa.lua`: `monitor.alsa.properties` does NOT forward
+`use-ucm` to devices — must use a **device rule** (`monitor.alsa.rules`, applied
+to device props at `prepareDevice`).
+
+**System file (untracked — recreate if lost)**:
+`/etc/wireplumber/wireplumber.conf.d/fw13-mic.conf`
+```
+monitor.alsa.rules = [
+  {
+    matches = [
+      { device.name = "alsa_card.pci-0000_c1_00.6" }
+    ]
+    actions = {
+      update-props = {
+        api.alsa.use-ucm = false
+      }
+    }
+  }
+]
+```
+Apply: `systemctl --user restart wireplumber` (no reboot). Confirm with
+`pw-dump | grep use-ucm` (device shows `api.alsa.use-ucm = False`) and
+`pactl list sources short` (want `...analog-stereo`, not `HiFi__*`).
+
+**Rollback**: `sudo rm /etc/wireplumber/wireplumber.conf.d/fw13-mic.conf` then
+`systemctl --user restart wireplumber`. Single artifact, fully reversible.
+
+**Tradeoff**: UCM off = generic ALSA jack-detection switching instead of UCM
+"HiFi" profiles. Verified after: speakers + internal mic work; headset-jack mic
+is the other analog port (`analog-input-headset-mic`, activates on plug-in,
+untested for lack of a headset). If output switching ever misbehaves, scope the
+rule tighter or revisit. Survived a relogin; should survive reboot (drop-in is
+read at WirePlumber start). **Real upstream fix** is a Framework BIOS update to
+the audio verb table — if one lands, this drop-in can be removed and retested.
+
 ## Per-machine local.conf (untracked — recreate from this if lost)
 
 ```ini
