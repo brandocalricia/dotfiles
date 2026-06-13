@@ -288,6 +288,31 @@ NEVER touch the greetd PAM stack (see the 2026-06-11 section above).
 **Cursors**: deliberately not dynamic — no sane recolor pipeline exists;
 neutral default kept.
 
+### swww animated transitions (swaybg replacement, 2026-06-13)
+
+swww 0.11.2 (solopasha COPR — fence extended to `pyprland,satty,swww`)
+replaces swaybg for animated wallpaper changes. `set-wallpaper.sh` uses
+`swww img <path> --transition-type grow --transition-fps 60
+--transition-duration 1.2`. Daemon: `swww-daemon` (exec-once); the image
+is set by a second exec-once with `--transition-type none` (instant on
+login). Per-machine `local.conf` holds both lines; set-wallpaper seds the
+`swww img` line's path to persist the choice. Verify flags against the
+binary — this version HAS `--transition-duration` (some READMEs don't).
+
+**ROLLBACK to swaybg** (if swww misbehaves):
+1. `git revert <swww-commit>` (or check out the prior set-wallpaper.sh).
+2. In `~/.config/hypr/local.conf`, replace the two swww exec-once lines:
+   ```
+   exec-once = swww-daemon
+   exec-once = sleep 1 && swww img <PATH> --transition-type none
+   ```
+   with the single swaybg line:
+   ```
+   exec-once = swaybg -i <PATH> -m fill
+   ```
+3. Live session: `pkill swww-daemon; swaybg -i <PATH> -m fill & disown`.
+swaybg is still installed; nothing about it was removed.
+
 New packages: matugen, adw-gtk3-theme (both Fedora official — the
 solopasha includepkgs fence is unchanged).
 

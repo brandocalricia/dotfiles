@@ -25,17 +25,23 @@ fi
 img=$(realpath "$img")
 [ -f "$img" ] || { echo "no such image: $img" >&2; exit 1; }
 
-# Persist into local.conf's swaybg exec-once line (create if missing)
-if [ -f "$LOCAL_CONF" ] && grep -q '^exec-once = swaybg' "$LOCAL_CONF"; then
-    sed -i "s|^exec-once = swaybg .*|exec-once = swaybg -i $img -m fill|" "$LOCAL_CONF"
+# Persist into local.conf's 'swww img' exec-once line (the path is what we
+# sed; --transition-type none keeps login instant). Append if missing.
+if [ -f "$LOCAL_CONF" ] && grep -q '^exec-once = sleep .* swww img' "$LOCAL_CONF"; then
+    sed -i "s|^exec-once = sleep .* swww img .*|exec-once = sleep 1 \&\& swww img $img --transition-type none|" "$LOCAL_CONF"
 else
-    echo "exec-once = swaybg -i $img -m fill" >> "$LOCAL_CONF"
-    echo "warn: appended swaybg line to $LOCAL_CONF (was missing)" >&2
+    { echo "exec-once = swww-daemon"
+      echo "exec-once = sleep 1 && swww img $img --transition-type none"; } >> "$LOCAL_CONF"
+    echo "warn: appended swww exec-once lines to $LOCAL_CONF (were missing)" >&2
 fi
 
-# Swap the running wallpaper
-pkill -x swaybg 2>/dev/null || true
-setsid swaybg -i "$img" -m fill >/dev/null 2>&1 < /dev/null &
+# Swap the running wallpaper with an animated transition. Ensure daemon is up.
+if ! swww query >/dev/null 2>&1; then
+    setsid swww-daemon >/dev/null 2>&1 < /dev/null &
+    for _ in 1 2 3 4 5 6 7 8 9 10; do swww query >/dev/null 2>&1 && break; sleep 0.2; done
+fi
+swww img "$img" --transition-type grow --transition-fps 60 --transition-duration 1.2 || \
+    echo "warn: swww img failed (daemon not ready?)" >&2
 
 # Dynamic mode: regenerate palette + reapply everything
 current=$(cat "$HOME/.config/current-theme" 2>/dev/null || echo "")

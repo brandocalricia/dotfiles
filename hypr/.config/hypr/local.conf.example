@@ -1,5 +1,8 @@
 # Machine-specific overrides. Copy this file to local.conf and edit for your host.
 # local.conf is gitignored — each machine maintains its own copy.
 #
-# Wallpaper (required — main config sources this file):
-exec-once = swaybg -i ~/Pictures/wallpapers/YOUR_WALLPAPER.png -m fill
+# Wallpaper (required — main config sources this file).
+# swww gives animated transitions; set-wallpaper.sh seds the 'swww img' path.
+# (Older hosts may still use a single swaybg line — that also works.)
+exec-once = swww-daemon
+exec-once = sleep 1 && swww img ~/Pictures/wallpapers/YOUR_WALLPAPER.png --transition-type none
