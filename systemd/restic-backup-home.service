@@ -1,0 +1,17 @@
+[Unit]
+Description=restic off-device backup of /home to Backblaze B2
+Documentation=file:///home/brandonrobertniehaus/dotfiles/SETUP-NOTES.md
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/restic/b2-home.env
+# Installed copy in a system path: systemd (init_t) cannot exec a user_home_t
+# file under enforcing SELinux. Source of truth is dotfiles/scripts/backup-home.sh.
+ExecStart=/usr/local/sbin/restic-backup-home.sh
+# be gentle on an interactive laptop
+Nice=10
+IOSchedulingClass=idle
+# a backup should never wedge the machine indefinitely
+TimeoutStartSec=2h

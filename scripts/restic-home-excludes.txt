@@ -1,0 +1,52 @@
+# restic exclude file for the off-device /home backup.
+# Philosophy: exclude only clearly regenerable / re-downloadable / high-churn
+# data. Everything NOT listed here IS backed up (SSH/GPG keys, configs,
+# documents, code, uncommitted & UNPUSHED git work incl. .git, shell history).
+# See SETUP-NOTES.md "RESOLVED — off-device backup" for the full rationale.
+# Verified at setup time with: restic backup --dry-run -vv
+
+# XDG + general caches (~1.8G; regenerable)
+/home/*/.cache
+
+# Steam — ~6.5G of re-downloadable game data (native + flatpak install)
+/home/*/.local/share/Steam
+/home/*/.var/app/com.valvesoftware.Steam
+
+# Rust toolchains + crate cache (~1.4G; reinstall via rustup / cargo fetch)
+/home/*/.rustup/toolchains
+/home/*/.cargo/registry
+
+# Browser on-disk caches (profiles/bookmarks/passwords ARE backed up)
+**/Cache
+**/Code Cache
+**/GPUCache
+**/ShaderCache
+**/GrShaderCache
+**/CacheStorage
+**/Crashpad
+**/component_crx_cache
+**/DawnGraphiteCache
+**/DawnWebGPUCache
+
+# Dev build artifacts / dependency caches (regenerable)
+**/node_modules
+**/__pycache__
+**/.pytest_cache
+**/.mypy_cache
+**/.ruff_cache
+/home/*/.npm
+/home/*/go/pkg/mod
+/home/*/.m2/repository
+
+# Flatpak per-app caches (each app's config/data is kept)
+/home/*/.var/app/*/cache
+
+# Trash + thumbnails
+/home/*/.local/share/Trash
+/home/*/.thumbnails
+
+# Container/VM image stores (re-pullable)
+/home/*/.local/share/containers/storage
+
+# Zoom local cache (recordings default to ~/Documents/Zoom, which IS backed up)
+/home/*/.zoom/data

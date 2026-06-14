@@ -1,3 +1,11 @@
+# Secrets must NEVER be committed. The restic backup keeps all secrets in
+# /etc/restic/ (root-owned, 0600, outside this repo), so they cannot be
+# committed regardless — these patterns are a defensive backstop.
+*.pass
+*.env
+*secret*
+*.key
+
 # Logs and cache files
 *.log
 *.cache

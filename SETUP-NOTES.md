@@ -506,13 +506,79 @@ risk on this machine, and because `/boot` is ext4 it also needs an initramfs sna
 helper to actually land in a snapshot. Deferred on purpose — do NOT install without a written
 rollback and a separate approval gate. (This machine has already been to the brink once.)
 
-### OPEN — no off-device backup exists for /home
-We chose snapshots for the SYSTEM only. `/home` is NOT snapshotted and has NO backup. A btrfs
-snapshot is same-disk: it guards against fat-finger/corruption, **NOT disk failure, theft, or
-encryption**. At risk on this single-disk posture: **SSH keys (`~/.ssh`), GPG keys, browser
-profiles, uncommitted work / anything not pushed to git, shell history, and app state under
-`~/.local` & `~/.config`**. FUTURE PROJECT: a real off-device backup (restic/borg to an
-external disk or remote). Until then: `git push` often and keep keys backed up out-of-band.
+### RESOLVED (2026-06-13) — off-device encrypted backup of /home (restic → Backblaze B2)
+Snapshots cover the SYSTEM only and are same-disk (no help against disk failure, theft, or
+full-disk encryption loss). `/home` now has a real off-device, **encrypted** backup via
+**restic 0.18.1** (Fedora repo) to a private **Backblaze B2** bucket. Restore-tested
+end-to-end (single file pulled back from B2, byte-identical sha256).
+
+**Repository**
+- `RESTIC_REPOSITORY=s3:s3.us-west-004.backblazeb2.com/brandon-fedora-home`
+- B2's **S3-compatible** endpoint (restic docs recommend it over the native `b2:` backend).
+- First backup: 1.56 GiB logical → **782 MiB stored** (compressed 1.76×). Incrementals ~20 MiB.
+
+**Where the secrets live (NONE in git / ~/dotfiles)** — all root-owned `0600` under `/etc/restic`:
+- `/etc/restic/home-repo.pass` — restic passphrase (one line). **Also in Bitwarden** ("restic
+  /home backup" note). LOSS = permanent, unrecoverable loss of every backup.
+- `/etc/restic/b2-home.env` — `RESTIC_REPOSITORY` + `AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY`
+  (the B2 keyID/applicationKey) + `RESTIC_PASSWORD_FILE`. B2 key also in Bitwarden.
+- `dotfiles/.gitignore` also blocks `*.pass *.env *secret* *.key` as a backstop.
+
+**What runs it** (source of truth = dotfiles; INSTALLED copies do the work):
+- `scripts/backup-home.sh` → installed to **`/usr/local/sbin/restic-backup-home.sh`**
+- `scripts/restic-home-excludes.txt` → installed to **`/etc/restic/restic-home-excludes.txt`**
+- `systemd/restic-backup-home.{service,timer}` → `/etc/systemd/system/`
+- Timer: `OnCalendar=daily`, `RandomizedDelaySec=30min`, **`Persistent=true`** (a missed run —
+  laptop asleep/off — fires shortly after next boot). System (not user) service: needs root to
+  read `/etc/restic` + all of `/home`. Reinstall after editing: see the three `install -m` lines
+  in the script header, then `restorecon` + `systemctl daemon-reload`.
+
+**Laptop quirks that bit us (don't re-discover these):**
+- **SELinux**: a system service (`init_t`) **cannot exec/read a `user_home_t` file** → the script
+  and exclude file MUST live in system paths (`/usr/local/sbin`, `/etc/restic`), not `/home`.
+  Running from `/home` fails `status=203/EXEC`. `restorecon` the installed script (→ `bin_t`).
+- **No `$HOME` under systemd** → restic runs cacheless (slow, extra B2 calls). Script exports
+  `RESTIC_CACHE_DIR=/var/cache/restic`.
+- **Stale locks**: an interrupted run (laptop sleeps mid-backup) leaves a repo lock. Script runs
+  `restic unlock` at startup — safe because its `flock` guarantees it's the only writer, so any
+  lingering lock is from a dead process.
+
+**Exclude philosophy** (`/etc/restic/restic-home-excludes.txt`): back up the irreplaceable, skip
+the regenerable. Excluded: `.cache`, **Steam (6.5G, re-downloadable)**, `.rustup/toolchains`,
+browser caches, `node_modules`/lang caches, Trash, container image stores. **`.git` is KEPT** —
+unpushed commits/branches/stashes are exactly the local-only data at risk. Anything not excluded
+is backed up (incl. `~/.ssh`, `~/.gnupg` the moment they exist — neither is present yet).
+
+**Retention** (`forget --prune` each run): `--keep-last 3 --keep-daily 7 --keep-weekly 4
+--keep-monthly 12`. (Note: restic only prunes when a snapshot is actually forgotten.)
+
+**EMERGENCY single-file restore** (on this machine, keys still present):
+```
+set -a; sudo -E bash -c '. /etc/restic/b2-home.env; export RESTIC_CACHE_DIR=/var/cache/restic; \
+  restic restore latest --target /tmp/restore --include /home/brandonrobertniehaus/PATH'
+# restored copy lands at /tmp/restore/home/brandonrobertniehaus/PATH
+```
+
+**FULL DISASTER RESTORE to a brand-new machine** (laptop lost/stolen/dead — assume NOTHING local
+survives, `/etc/restic` is gone):
+```
+# 1. install restic (any Fedora; public repo)
+sudo dnf install restic --exclude=gdm
+# 2. from BITWARDEN note "restic /home backup" (master password is in your head, not the laptop):
+export AWS_ACCESS_KEY_ID=<B2 keyID>
+export AWS_SECRET_ACCESS_KEY=<B2 applicationKey>
+export RESTIC_REPOSITORY=s3:s3.us-west-004.backblazeb2.com/brandon-fedora-home
+export RESTIC_PASSWORD=<restic passphrase>
+# 3. verify, then restore
+restic snapshots
+restic restore latest --target /mnt/newhome      # then move contents into the new /home
+```
+**Circular-dependency check (passes):** everything needed lives OFF the laptop — restic (public
+Fedora repo) + all creds & passphrase (Bitwarden cloud, gated only by the master password in your
+head). The `/etc/restic` files die with the laptop, which is exactly why both secrets are mirrored
+in Bitwarden. ⚠️ This doc lives in `~/dotfiles` (on the dead laptop) and on GitHub (may need the
+lost SSH key) — so the **5 export+restore lines above are also stored in the Bitwarden note**. No
+recovery step depends on anything that only existed on the laptop.
 
 ## laptop-doctor (scripts/laptop-doctor.sh) — 2026-06-13
 

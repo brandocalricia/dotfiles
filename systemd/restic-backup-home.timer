@@ -1,0 +1,11 @@
+[Unit]
+Description=Daily restic backup of /home to Backblaze B2
+
+[Timer]
+OnCalendar=daily
+RandomizedDelaySec=30min
+# fire a missed run shortly after the next boot (laptop is often off)
+Persistent=true
+
+[Install]
+WantedBy=timers.target
