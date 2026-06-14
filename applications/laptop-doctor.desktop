@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Laptop Doctor
+Comment=System health check: snapshots, SELinux, btrfs, battery, updates
+Exec=foot -T laptop-doctor bash -lc "/home/brandonrobertniehaus/dotfiles/scripts/laptop-doctor.sh; echo; read -n1 -rsp 'Press any key to close…'"
+Icon=utilities-system-monitor
+Terminal=false
+Categories=System;
+Keywords=health;diagnostics;snapshot;btrfs;battery;
+StartupNotify=false
