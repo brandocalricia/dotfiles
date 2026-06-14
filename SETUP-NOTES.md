@@ -425,3 +425,117 @@ Commits 4ea271d & e60d638.
   ExtraBold" is NOT a family (that bug bit hyprlock's clock).
 - **Brave**: launches as a systemd transient scope (likely DBus activation —
   unverified); crash-looped only under xdm_t enforcement, clean since.
+
+## Btrfs snapshot safety net (snapper) — 2026-06-13
+
+System-level rollback for bad dnf transactions / `/etc` mistakes / botched updates.
+**Config in git does NOT protect against these — this does.** Set up and end-to-end
+*tested* 2026-06-13: a planted `/etc` file was caught by `snapper status` and removed by a
+scoped `undochange`, confirmed gone. Born from the 2026-06-10 near-disaster (~8h recovery).
+
+**What's installed/configured (Fedora 44 / DNF5 — verified, no COPR):**
+- `snapper` 0.13.0 + `libdnf5-plugin-actions`. The DNF4 `python3-dnf-plugin-snapper` is
+  **INERT on dnf5** — do not install it.
+- Config `root` on `/` (subvol `root`, id 256). `.snapshots` = nested subvol id 259.
+  **No fstab entry for `/.snapshots`** — unnecessary on this flat layout; not worth editing a
+  boot-critical file. **`/home` deliberately NOT snapshotted** (see OPEN below).
+- Retention (`/etc/snapper/configs/root`): HOURLY 5 / DAILY 7 / WEEKLY 4 / MONTHLY 0 /
+  YEARLY 0; NUMBER_LIMIT 20 / IMPORTANT 10; EMPTY_PRE_POST_CLEANUP yes; **qgroups OFF**.
+- dnf pre/post hook: `/etc/dnf/libdnf5-plugins/actions.d/snapper.actions` — the
+  libdnf5-actions(8) canonical example **plus `-c number`** added to both `snapper create`
+  calls. Without that tag the pairs never auto-clean (verified vs snapper(8) "Cleanup
+  Algorithms": only snapshots with an algorithm set are ever reaped). Empty `options` field
+  ⇒ `raise_error=0` ⇒ a snapshot failure is logged, never aborts the dnf transaction.
+- Timers: `snapper-timeline.timer` + `snapper-cleanup.timer` enabled (`boot.timer` left off).
+- Layout facts that the recovery steps depend on: fs `/dev/nvme0n1p6`
+  UUID `de09bc27-f149-48e9-a1a8-7ca242c24d46`; fstab mounts `subvol=root` **by name**;
+  `/boot` is ext4 on a SEPARATE partition → **kernels/initramfs are NOT inside snapshots**.
+
+### Break-glass (a) — dnf/`/etc` broke userspace, system still boots
+1. Find the culprit pair: `sudo snapper -c root list` (Description = the dnf command line).
+2. Inspect: `sudo snapper -c root status <pre>..<post>`  (detail: `diff <pre>..<post> <file>`).
+3a. **Surgical, preferred** — revert only the broken file(s):
+    `sudo snapper -c root undochange <pre>..0 /etc/<thing>`
+3b. Undo a whole transaction (reverts its files + rpmdb together, coherently):
+    `sudo snapper -c root undochange <pre>..<post>`
+4. `undochange` is FILE-LEVEL — restart the affected daemons or reboot afterwards.
+- **Phase-3 lesson:** a blanket `undochange <pre>..0` ALSO reverts logs / journal / audit /
+  package-DB churn. SCOPE to specific files unless you truly mean "undo the whole transaction".
+
+### Break-glass (b) — won't boot at all
+Layered, least-risk first. The `rescue` BLS entry runs the SAME root userspace, so it only
+helps with kernel/initramfs problems, NOT root-*content* breakage — for that, use a live USB.
+- **First try — fix the one file from a Fedora live USB** (lowest risk):
+  ```
+  mount -o subvol=root /dev/nvme0n1p6 /mnt
+  # edit/replace the offending file under /mnt/etc/…   (or chroot to run snapper)
+  umount /mnt ; reboot
+  ```
+- **Full rollback — promote a good snapshot to be `root`** (only if root is deeply broken):
+  ```
+  mount -o subvolid=5 /dev/nvme0n1p6 /mnt           # top-level (id 5)
+  ls /mnt/root/.snapshots/                            # pick a good <N>
+  cat /mnt/root/.snapshots/<N>/info.xml              # confirm its date/description
+  mv /mnt/root /mnt/root.broken                       # KEEP the broken one
+  btrfs subvolume snapshot /mnt/root.broken/.snapshots/<N>/snapshot /mnt/root
+  umount /mnt ; reboot                                # fstab mounts subvol=root by name
+  ```
+  - The new `root` has an EMPTY `.snapshots` (history stays inside `root.broken`) and an empty
+    `var/lib/machines` placeholder (subvol 258; systemd recreates it — ignore).
+  - **KEEP `root.broken` until the system is verified healthy** (rollback-of-the-rollback).
+    Reclaim later by deleting its nested subvols first (`.snapshots/<n>/snapshot`,
+    `.snapshots`, `var/lib/machines`) then `btrfs subvolume delete /mnt/root.broken`.
+    It shares extents, so leaving it a while costs almost nothing.
+
+### Kernel update broke boot (SEPARATE from snapshots)
+`/boot` is ext4 → kernels aren't in snapshots. At the GRUB menu (hold Esc/Shift if hidden)
+boot the previous entry `6.19.10-300.fc44` (the `rescue` entry is also there). Snapshot
+rollback will NOT fix a bad kernel — this will.
+
+### rpmdb / WAL caveat (Fedora 44 dnf5)
+F44's dnf5/PackageKit uses an sqlite rpmdb; a full-root *package-state* rollback can in edge
+cases leave the rpmdb inconsistent (the SysGuides `snapper-fedora` project ships a WAL
+checkpoint workaround). This does NOT affect `/etc`/file `undochange` (the common case). If
+after a whole-transaction revert dnf/rpm misbehave: `sudo rpm --rebuilddb`. Research the WAL
+fix before relying on whole-system package-state rollback.
+
+### FUTURE OPTION (NOT installed — needs a separate explicit decision): grub-btrfs
+`grub-btrfs` adds a GRUB submenu to boot any snapshot directly — would turn (b) into a menu
+pick. Tradeoff: it **regenerates grub.cfg / hooks the bootloader**, the single highest brick
+risk on this machine, and because `/boot` is ext4 it also needs an initramfs snapshot-boot
+helper to actually land in a snapshot. Deferred on purpose — do NOT install without a written
+rollback and a separate approval gate. (This machine has already been to the brink once.)
+
+### OPEN — no off-device backup exists for /home
+We chose snapshots for the SYSTEM only. `/home` is NOT snapshotted and has NO backup. A btrfs
+snapshot is same-disk: it guards against fat-finger/corruption, **NOT disk failure, theft, or
+encryption**. At risk on this single-disk posture: **SSH keys (`~/.ssh`), GPG keys, browser
+profiles, uncommitted work / anything not pushed to git, shell history, and app state under
+`~/.local` & `~/.config`**. FUTURE PROJECT: a real off-device backup (restic/borg to an
+external disk or remote). Until then: `git push` often and keep keys backed up out-of-band.
+
+## laptop-doctor (scripts/laptop-doctor.sh) — 2026-06-13
+
+One-shot system health check. Run `bash ~/dotfiles/scripts/laptop-doctor.sh`, or fuzzel →
+**Laptop Doctor** (launches in foot, holds open with a keypress). Themed via the active theme
+(`~/.config/current-theme` → `themes/<name>.sh`, sourced best-effort with a plain fallback —
+the diagnostic never breaks if theming is missing). Needs sudo once (fingerprint) for the
+SELinux / btrfs / snapshot / `/etc` checks. Checks: failed systemd units (system + user),
+SELinux denials this boot, disk + snapshot space, btrfs device-stats + scrub, BAT1 health
+(`charge_full` vs `charge_full_design` — this Framework board exposes **µAh `charge_*`**, not
+`energy_*`), pending `/etc` `.rpmnew/.rpmsave` (escalates greetd PAM to CRITICAL), pending dnf
+updates.
+
+Launcher `applications/laptop-doctor.desktop` (tracked) is symlinked into
+`~/.local/share/applications/`; `install.sh` deliberately left unmodified. Exec uses ABSOLUTE
+paths — the session PATH has no `~/.local/bin` and a `.desktop` Exec does not expand `$HOME`.
+
+### SELinux denial baseline (so the doctor's count isn't alarming)
+Known-benign denials seen under full enforcement. The doctor marks AVCs **CRITICAL only if an
+`xdm_t` denial appears** (the greetd regression); everything else is a warning pointing here:
+- `tlp_t` running `comm="ps"` denied `dac_override` — TLP power polling; cosmetic, known
+  Fedora issue, predates the snapshot work, and is the bulk of the count.
+- `snapperd_t` denied `{ reload }` on `init_t` (tclass=system) — snapperd nudging systemd to
+  reload; denied but harmless (snapper works fully). New with the 2026-06-13 snapper install.
+Neither is fixed — a custom policy module is added risk for zero functional gain. If an
+`xdm_t` denial ever appears, see the greetd section: login-confinement has regressed.
