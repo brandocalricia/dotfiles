@@ -4,9 +4,13 @@
     "height": 36,
     "spacing": 4,
 
+    // modules-right is per-machine (battery only exists on the laptop) — it lives in
+    // ~/.config/waybar/local.jsonc (gitignored; copy from local.jsonc.example). waybar
+    // merges includes for keys not defined here, so modules-right must live ONLY there.
+    "include": ["~/.config/waybar/local.jsonc"],
+
     "modules-left": ["hyprland/workspaces"],
     "modules-center": ["clock"],
-    "modules-right": ["network", "pulseaudio", "cpu", "memory", "disk", "battery", "tray"],
 
     "hyprland/workspaces": {
         "format": "{id} {windows}",

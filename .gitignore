@@ -11,8 +11,9 @@
 *.cache
 *.tmp
 
-# Per-machine Hyprland overrides (each host maintains its own copy)
+# Per-machine overrides (each host maintains its own copy; seed from *.example)
 hypr/.config/hypr/local.conf
+waybar/.config/waybar/local.jsonc
 
 # Generated at runtime by switch-theme.sh / btop itself
 btop/.config/btop/themes/active.theme

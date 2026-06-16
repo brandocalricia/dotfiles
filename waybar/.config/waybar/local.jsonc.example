@@ -1,0 +1,11 @@
+{
+    // Per-machine waybar overrides. Copy this file to local.jsonc and edit for your host.
+    // local.jsonc is gitignored — each machine maintains its own copy.
+    // config.jsonc `include`s this file; modules-right lives here so a battery-less
+    // desktop can omit "battery" while the laptop keeps it. All module *definitions*
+    // (battery, cpu, …) stay in config.jsonc; this only chooses what appears on the right.
+    //
+    // Laptop:  [..., "disk", "battery", "tray"]
+    // Desktop: [..., "disk", "tray"]   (no battery)
+    "modules-right": ["network", "pulseaudio", "cpu", "memory", "disk", "battery", "tray"]
+}
