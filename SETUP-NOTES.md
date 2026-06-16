@@ -605,3 +605,87 @@ Known-benign denials seen under full enforcement. The doctor marks AVCs **CRITIC
   reload; denied but harmless (snapper works fully). New with the 2026-06-13 snapper install.
 Neither is fixed — a custom policy module is added risk for zero functional gain. If an
 `xdm_t` denial ever appears, see the greetd section: login-confinement has regressed.
+
+---
+
+# Desktop (brandon-fedora) — onboarded 2026-06-15
+
+The second consumer of this repo. Everything below is **this machine's** state; all
+machine-specific values live in untracked files (`local.conf`, `waybar/local.jsonc`) or
+gitignored generated files, so the **tracked configs are identical to the laptop's**.
+
+## Hardware
+- **CPU/GPU**: Ryzen 7 7800X3D; **two GPUs** — discrete **RX 7800 XT** (Navi 32) + the CPU's
+  **Raphael iGPU**. Hyprland drives both monitors off the 7800 XT via the `drm` backend; no
+  `AQ_DRM_DEVICES` override was needed (verified: both panels enumerate, both display).
+- **Monitors**: DP-1 Viewteck GFV24CB **1920x1080@165** (left, 0x0); HDMI-A-1 AOC Q27G3WG8
+  **2560x1440@144** (right, 1920x0).
+- **Storage**: dual NVMe. Root **and** /home are **btrfs on `/dev/nvme0n1p3`** (subvols
+  `root`, `home`) — different from the laptop (`nvme0n1p6`, separate ext4 `/boot`). Any
+  snapper recovery doc for this box must use THESE facts, not the laptop's.
+- **No battery** (a Logitech wireless-mouse `hidpp_battery_0` shows in `power_supply` — see
+  waybar note). **No fingerprint reader.**
+
+## Login: SDDM, NOT greetd
+Fedora 44 **KDE edition** → display manager is **`plasmalogin.service` (SDDM)**. The greetd
+sections of this doc (PAM/SELinux `xdm_t` fix, tuigreet theming) **do not apply here**.
+`switch-theme.sh` calls `stage-greeter-theme.sh` with `|| true`, so the greeter-staging step
+is a harmless no-op on this box. **Never run `scripts/greeter-apply.sh` here** — there is no
+`/etc/greetd`.
+
+## Per-machine `~/.config/hypr/local.conf` (untracked — recreate if lost)
+```ini
+monitor = DP-1, 1920x1080@165, 0x0, 1
+monitor = HDMI-A-1, 2560x1440@143.91, 1920x0, 1
+bind = SUPER, E, exec, dolphin                 # file manager (laptop: nautilus)
+# Screenshots — GMMK Pro 75% has NO Print key, so remap off Print:
+bind = SUPER CTRL, S, exec, ~/dotfiles/scripts/screenshot.sh annotate   # region -> satty
+bind = SUPER ALT,  S, exec, ~/dotfiles/scripts/screenshot.sh full       # full -> clip+file
+exec-once = swww-daemon
+exec-once = sleep 1 && swww img ~/Pictures/wallpapers/alps.png --transition-type none
+```
+Monitors were **removed from the tracked `hyprland.conf`** (they were this desktop's values
+living in a shared file) and now live here. The tracked `hyprland.conf` is hardware-agnostic.
+The tracked `Print` / `Super+Print` screenshot binds are dead on this keyboard (no Print key)
+and harmless; `Super+Shift+S` (fast region→clip) is tracked and works as-is.
+
+## Waybar battery — per-machine include
+This desktop has no battery, so the tracked `config.jsonc` no longer hardcodes `modules-right`
+(which contained `battery`). It now `include`s `~/.config/waybar/local.jsonc` (gitignored;
+seed from `local.jsonc.example`). This desktop's copy omits `battery`:
+```jsonc
+{ "modules-right": ["network", "pulseaudio", "cpu", "memory", "disk", "tray"] }
+```
+Verified in `waybar -l debug`: include resolves, **zero** battery references (so it can't fall
+back to the Logitech mouse battery). All module *definitions* stay shared in `config.jsonc`.
+
+## COPR fence — BROADER than the laptop's (important)
+This desktop's ashbuk repo ships hyprland/hyprlock/hypridle but **not** `hyprutils`,
+`hyprland-qt-support`, `hyprland-qtutils`; those come from **solopasha** (the only repo with a
+new-enough `hyprutils ≥ 0.8.4` / `libhyprutils.so.9` that ashbuk's hyprland 0.55.x needs).
+So the solopasha fence here is:
+```
+includepkgs=pyprland satty swww hyprutils hyprland-qt-support hyprland-qtutils
+```
+A fence of only `pyprland satty swww` (the laptop's) would be **too tight here** — it would
+block `hyprutils` updates and break the next hyprland upgrade. solopasha's own
+hyprland/hyprlock/hypridle/aquamarine stay **blocked** (ashbuk authoritative). After any
+`dnf copr` command that regenerates the repo file, re-add the line; confirm with
+`dnf check-upgrade` offering no hyprland/aquamarine from solopasha.
+
+## Packages installed for parity / GTK
+`pyprland 2.4.7`, `satty 0.20.0`, `swww 0.11.2` (fenced solopasha); `matugen 3.1.0`,
+`adw-gtk3-theme 6.4` (Fedora). GTK: `gsettings set org.gnome.desktop.interface gtk-theme
+adw-gtk3-dark` + `color-scheme prefer-dark` (do NOT add `env = GTK_THEME`). Active theme:
+**material**. ghostty/greetd/tuigreet intentionally not installed.
+
+## Laptop follow-ups when it next `git pull`s (to stay in sync, no tracked divergence)
+1. **Monitors**: the tracked `hyprland.conf` no longer has monitor lines — confirm the
+   laptop's `local.conf` keeps its `monitor = eDP-1, 2880x1920@120, 0x0, 2` line (it does).
+2. **Waybar**: create `~/.config/waybar/local.jsonc` (from `local.jsonc.example`) **with**
+   battery: `["network","pulseaudio","cpu","memory","disk","battery","tray"]` — otherwise the
+   laptop's right modules vanish.
+
+## snapper on this desktop
+See the dedicated desktop-snapper section (added when set up) — uses `nvme0n1p3` btrfs facts,
+NOT the laptop's. restic /home backup is a planned separate follow-up.
