@@ -686,6 +686,62 @@ adw-gtk3-dark` + `color-scheme prefer-dark` (do NOT add `env = GTK_THEME`). Acti
    battery: `["network","pulseaudio","cpu","memory","disk","battery","tray"]` — otherwise the
    laptop's right modules vanish.
 
-## snapper on this desktop
-See the dedicated desktop-snapper section (added when set up) — uses `nvme0n1p3` btrfs facts,
-NOT the laptop's. restic /home backup is a planned separate follow-up.
+## Btrfs snapshot safety net (snapper) — desktop, 2026-06-15
+
+System-level rollback for bad dnf transactions / `/etc` mistakes. **Config in git does NOT
+protect against these — this does.** Set up and end-to-end *tested* 2026-06-15 (planted
+`/etc` file caught by `snapper status`, removed by scoped `undochange` → PASS).
+
+**Installed/configured (Fedora 44 / DNF5 — no COPR):**
+- `snapper` 0.13.0 + `libdnf5-plugin-actions` 5.4.2.1. (The DNF4 `python3-dnf-plugin-snapper`
+  is inert on dnf5 — do not install it.)
+- Config `root` on `/`. Retention HOURLY 5 / DAILY 7 / WEEKLY 4 / MONTHLY 0 / YEARLY 0;
+  NUMBER_LIMIT 20 / IMPORTANT 10; EMPTY_PRE_POST_CLEANUP yes; **qgroups OFF** (QGROUP empty).
+- dnf pre/post hook: `/etc/dnf/libdnf5-plugins/actions.d/snapper.actions` — libdnf5-actions(8)
+  canonical example **plus `-c number`** on both `snapper create` calls (without that tag the
+  pairs never auto-clean). Empty options field ⇒ `raise_error=0` ⇒ a snapshot failure is
+  logged, never aborts the dnf transaction. Verified: `dnf reinstall tree` produced a
+  numbered pre/post pair described by the dnf command line.
+- Timers: `snapper-timeline.timer` + `snapper-cleanup.timer` enabled (`boot.timer` left off).
+- **`/home` deliberately NOT snapshotted** (root-only). Same-disk snapshots don't protect
+  `/home` against disk failure/theft; that's the job of the planned **restic → B2** follow-up
+  (NOT yet set up — `/home` currently has no off-device backup).
+
+**Layout facts the recovery steps depend on (THIS desktop — NOT the laptop's):**
+- fs `/dev/nvme0n1p3`, UUID `455fb839-80fa-41c2-94d4-5ff8caf21dad`; subvols `root` (→`/`) and
+  `home` (→`/home`); fstab mounts `subvol=root` **by name**.
+- `/boot` is **ext4 on a SEPARATE partition** (`nvme0n1p2`); EFI is `nvme0n1p1` (vfat) →
+  **kernels/initramfs are NOT inside snapshots.**
+
+### Break-glass (a) — dnf/`/etc` broke userspace, system still boots
+1. `sudo snapper -c root list` (Description = the dnf command line).
+2. `sudo snapper -c root status <pre>..<post>` (detail: `diff <pre>..<post> <file>`).
+3a. **Surgical, preferred** — revert only the broken file(s):
+    `sudo snapper -c root undochange <pre>..0 /etc/<thing>`
+3b. Whole transaction: `sudo snapper -c root undochange <pre>..<post>`
+4. `undochange` is FILE-LEVEL — restart affected daemons or reboot afterwards.
+- **Lesson (seen in the self-test):** a range `undochange` also reverts `/var/log`, journal,
+  audit, package-DB churn. **SCOPE to specific files** unless you truly mean "undo everything".
+
+### Break-glass (b) — won't boot at all (use a Fedora live USB)
+- **Fix one file (lowest risk):**
+  ```
+  mount -o subvol=root /dev/nvme0n1p3 /mnt
+  # edit/replace the offending file under /mnt/etc/…
+  umount /mnt ; reboot
+  ```
+- **Full rollback — promote a good snapshot to be `root`:**
+  ```
+  mount -o subvolid=5 /dev/nvme0n1p3 /mnt          # top-level
+  ls /mnt/root/.snapshots/ ; cat /mnt/root/.snapshots/<N>/info.xml   # pick + confirm <N>
+  mv /mnt/root /mnt/root.broken                     # KEEP the broken one
+  btrfs subvolume snapshot /mnt/root.broken/.snapshots/<N>/snapshot /mnt/root
+  umount /mnt ; reboot                              # fstab mounts subvol=root by name
+  ```
+  Keep `root.broken` until verified healthy (rollback-of-the-rollback).
+
+### Kernel update broke boot (SEPARATE from snapshots)
+`/boot` is ext4 → kernels aren't in snapshots. At the GRUB menu boot the previous kernel
+entry. Snapshot rollback will NOT fix a bad kernel.
+
+restic /home off-device backup is a planned separate follow-up session.
