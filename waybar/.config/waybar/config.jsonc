@@ -13,6 +13,9 @@
     "modules-center": ["clock"],
 
     "hyprland/workspaces": {
+        // false -> each monitor's bar shows only that monitor's workspaces
+        // (paired with the per-output persistent-workspaces map below).
+        "all-outputs": false,
         "format": "{id} {windows}",
         "format-window-separator": " ",
         "window-rewrite-default": "󰘔",
@@ -29,8 +32,15 @@
             "class<pavucontrol>": "󰕾",
             "class<nm-connection-editor>": "󰖩"
         },
+        // Per-output map. Keys for outputs a host doesn't have are ignored, so
+        // this stays correct on every machine:
+        //   desktop  : main HDMI-A-1 shows 1-5, secondary DP-1 shows 6-10
+        //              (mirrors the hyprland split in ~/.config/hypr/local.conf)
+        //   laptop   : single eDP-1 shows all of 1-10
         "persistent-workspaces": {
-            "*": [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 ]
+            "HDMI-A-1": [ 1, 2, 3, 4, 5 ],
+            "DP-1": [ 6, 7, 8, 9, 10 ],
+            "eDP-1": [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 ]
         },
         "on-click": "activate",
         "on-scroll-up": "hyprctl dispatch workspace e-1",
