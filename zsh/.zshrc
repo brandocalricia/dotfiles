@@ -36,6 +36,11 @@ alias ls='eza --icons --group-directories-first'
 alias ll='eza -l --icons --group-directories-first --git'
 alias la='eza -la --icons --group-directories-first --git'
 alias find='fd'
+
+# Rocket League OFFLINE training with BakkesMod (-noeac). Online ranked/casual
+# stays on the Heroic Play button, untouched.
+alias rl-train='$HOME/.local/bin/rl-train.sh'
+
 eval "$(zoxide init zsh)"
 [ -f /usr/share/fzf/shell/key-bindings.zsh ] && source /usr/share/fzf/shell/key-bindings.zsh
 
@@ -56,3 +61,4 @@ export PATH=$PATH:$HOME/go/bin
 
 export PATH="$HOME/.npm-global/bin:$PATH"
 export PATH="$HOME/.local/bin:$PATH"
+alias rl-map-extract='$HOME/.local/bin/rl-map-extract.sh'
