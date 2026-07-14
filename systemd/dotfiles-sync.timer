@@ -1,0 +1,13 @@
+[Unit]
+Description=Periodically sync dotfiles config to the shared repo
+
+[Timer]
+# First run 3 min after login (pull the other machine's overnight changes),
+# then every 15 min. Persistent catches up a missed run after suspend/resume —
+# important on the laptop, which sleeps on lid close.
+OnStartupSec=3min
+OnUnitActiveSec=15min
+Persistent=true
+
+[Install]
+WantedBy=default.target

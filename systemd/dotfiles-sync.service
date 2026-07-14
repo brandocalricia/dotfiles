@@ -1,0 +1,13 @@
+[Unit]
+Description=Auto-commit + push dotfiles config changes to the shared repo
+Documentation=file://%h/dotfiles/CLAUDE.md
+# Don't run when the network is definitely down (best-effort; script also checks).
+After=network-online.target
+
+[Service]
+Type=oneshot
+# %h expands to the user's home. Script cds to $DOTFILES or ~/dotfiles.
+ExecStart=%h/dotfiles/scripts/dotfiles-sync.sh
+# Never let a stuck git op hang the session.
+TimeoutStartSec=120
+Nice=10

@@ -11,7 +11,11 @@
 *.cache
 *.tmp
 
-# Per-machine overrides (each host maintains its own copy; seed from *.example)
+# Per-machine overrides. The real content is TRACKED per host as
+# local.<hostname>.conf / local.<hostname>.jsonc so every machine's config lives
+# in the repo and is visible to the others. The bare names below are host-selected
+# SYMLINKS (created by scripts/apply-host-local.sh) pointing at this host's file —
+# they differ per machine, so they stay ignored. Seed a new host from *.example.
 hypr/.config/hypr/local.conf
 waybar/.config/waybar/local.jsonc
 
