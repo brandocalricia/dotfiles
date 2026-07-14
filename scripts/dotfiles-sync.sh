@@ -6,8 +6,9 @@
 # (bare local.*, style.css, colors.conf, secrets) are never committed — see
 # .gitignore. Safe on 2 machines via pull --rebase --autostash.
 #
-# Driven by the dotfiles-sync.timer (every ~15 min) + once on login. Also runnable
-# by hand: `dotfiles-sync` (see the alias install.sh / zshrc sets up).
+# Driven by the dotfiles-sync.timer (every ~15 min) + shortly after login. Run by
+# hand any time with: systemctl --user start dotfiles-sync.service
+# (or directly: ~/dotfiles/scripts/dotfiles-sync.sh).
 set -uo pipefail
 
 REPO="${DOTFILES:-$HOME/dotfiles}"
@@ -21,7 +22,8 @@ if ! git ls-remote --exit-code origin >/dev/null 2>&1; then
   exit 0
 fi
 
-host="$(hostnamectl --static 2>/dev/null || hostname)"
+host="$(hostnamectl --static 2>/dev/null || true)"
+host="${host:-$(hostname)}"   # --static can print empty; fall back to hostname
 
 # Always pull first so we build on the other machine's latest.
 git pull --rebase --autostash --quiet || { log "rebase hit a conflict — resolve manually in $REPO"; exit 2; }

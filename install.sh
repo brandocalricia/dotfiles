@@ -179,13 +179,16 @@ if $IS_MAC; then
 fi
 installed "dotfiles (stow)"
 
-# local.conf is gitignored (machine-specific). Create from example if missing
-# so that hyprland.conf's `source=` line never errors on a fresh install.
+# Per-host config: the shared configs include the bare local.conf / local.jsonc,
+# which are host-selected SYMLINKS at this machine's TRACKED local.<host>.* file.
+# apply-host-local.sh creates the symlinks (seeding local.<host>.* from *.example
+# on a brand-new machine) for both hypr + waybar. Idempotent. On a new host, edit
+# the seeded local.<host>.* files, then the sync timer auto-commits them.
 if $IS_LINUX; then
-  LOCAL_CONF="$HOME/.config/hypr/local.conf"
-  if [ ! -f "$LOCAL_CONF" ]; then
-    cp "$DOTFILES/hypr/.config/hypr/local.conf.example" "$LOCAL_CONF"
-    warn "Created ~/.config/hypr/local.conf from example — edit it for this machine (wallpaper path, monitor layout, etc.)"
+  if "$DOTFILES/scripts/apply-host-local.sh"; then
+    installed "per-host local config (apply-host-local.sh)"
+  else
+    warn "apply-host-local.sh failed — set up ~/.config/{hypr,waybar}/local.* by hand"
   fi
 fi
 
@@ -231,6 +234,13 @@ After=graphical-session-pre.target
 EOF
   systemctl --user daemon-reload
   installed "systemd hyprland-session.target"
+
+  info "Installing dotfiles-sync timer (auto-commit+push config changes)..."
+  cp "$DOTFILES/systemd/dotfiles-sync.service" \
+     "$DOTFILES/systemd/dotfiles-sync.timer" ~/.config/systemd/user/
+  systemctl --user daemon-reload
+  systemctl --user enable --now dotfiles-sync.timer
+  installed "systemd dotfiles-sync.timer (auto config sync)"
 
   section "Linux: Flatpaks"
   info "Installing Flatpaks..."
