@@ -28,6 +28,14 @@ host="${host:-$(hostname)}"   # --static can print empty; fall back to hostname
 # Always pull first so we build on the other machine's latest.
 git pull --rebase --autostash --quiet || { log "rebase hit a conflict — resolve manually in $REPO"; exit 2; }
 
+# CRITICAL: `pull --rebase --autostash` exits 0 even when re-applying the autostash
+# CONFLICTS, leaving unmerged paths. A blind `git add -A` would then commit conflict
+# markers (this actually happened once). Never commit a conflicted tree — bail loudly.
+if [ -n "$(git ls-files --unmerged)" ]; then
+  log "unmerged paths after pull (autostash conflict) — NOT committing; fix by hand in $REPO"
+  exit 2
+fi
+
 # Anything to commit?
 if [ -z "$(git status --porcelain)" ]; then
   git push --quiet 2>/dev/null || true   # push any local commits made offline
