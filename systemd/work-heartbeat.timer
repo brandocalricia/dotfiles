@@ -1,0 +1,14 @@
+[Unit]
+Description=Periodically write this host's work heartbeat
+
+[Timer]
+# Same shape as dotfiles-sync.timer: quick first run after login/enable so the
+# other machine sees us promptly, then a steady cadence. Persistent catches up
+# a missed run after suspend/resume (laptop sleeps on lid close).
+OnStartupSec=1min
+OnActiveSec=1min
+OnUnitActiveSec=5min
+Persistent=true
+
+[Install]
+WantedBy=default.target

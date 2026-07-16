@@ -1,0 +1,10 @@
+[Unit]
+Description=Write this host's work heartbeat to the Syncthing-shared ~/code
+Documentation=file://%h/dotfiles/CLAUDE.md
+
+[Service]
+Type=oneshot
+# %h expands to the user's home. Script writes ~/code/.sync-status/<host>.status.
+ExecStart=%h/dotfiles/scripts/work-status.sh update
+TimeoutStartSec=60
+Nice=10
