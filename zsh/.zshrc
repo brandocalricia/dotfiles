@@ -66,3 +66,6 @@ export PATH="$HOME/.local/bin:$PATH"
 alias rl-train='$HOME/.local/bin/rl-train.sh'
 alias rl-map-extract='$HOME/.local/bin/rl-map-extract.sh'
 alias rl-map-download='$HOME/.local/bin/rl-map-download.sh'
+
+# Cross-machine work awareness (Syncthing-shared ~/code heartbeats)
+alias work-status='$HOME/dotfiles/scripts/work-status.sh'

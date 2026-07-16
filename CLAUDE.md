@@ -30,6 +30,32 @@ desktop's waybar `local.jsonc`).
   timer). Existing machine, manual: `cp systemd/dotfiles-sync.* ~/.config/systemd/user/
   && systemctl --user daemon-reload && systemctl --user enable --now dotfiles-sync.timer`.
 
+## Cross-machine WORK sync (~/code via Syncthing) — both machines
+
+**Goal:** projects (incl. uncommitted WIP) mirror between laptop & desktop, and each
+machine can see what the other was last doing. Config sync (above) is separate.
+
+- **Transport:** Syncthing (P2P, no cloud), user service `syncthing.service`,
+  sharing `~/code` as folder id `code`. GUI at `http://127.0.0.1:8384`.
+- **Convention:** projects live under `~/code` — that whole tree syncs both ways.
+- **Awareness:** each host writes ONLY its own heartbeat to
+  `~/code/.sync-status/<host>.status` (project / branch / last-touched file /
+  timestamps — no write conflicts by design; Syncthing carries the files).
+  Writer: `scripts/work-status.sh update`, driven by `work-heartbeat.timer`
+  (every 5 min; unit source in `systemd/`, deployed to `~/.config/systemd/user/`).
+  Reader: `work-status` (zsh alias → `scripts/work-status.sh`) prints all hosts.
+- **New machine:** install.sh does everything except pairing. Manual on an
+  existing machine: install syncthing (`--exclude=gdm`!), `mkdir -p ~/code`,
+  `systemctl --user enable --now syncthing.service`,
+  `syncthing cli config folders add --id code --label code --path ~/code`,
+  `cp systemd/work-heartbeat.* ~/.config/systemd/user/ && systemctl --user
+  daemon-reload && systemctl --user enable --now work-heartbeat.timer`.
+- **One-time device pairing (needs both machines up):** on each GUI
+  (127.0.0.1:8384) → Add Remote Device (IDs: `syncthing cli show system | rg myID`),
+  accept on the other side, then share folder `code` with the new device and
+  accept the folder on the receiving end (point it at `~/code`).
+  Laptop `fedora` device ID: `YNY5WM2-XC2PYS3-XKKGQOK-HFCELUE-ASMFA3N-63QIK7N-FG6WTCN-VKZLEAF`.
+
 ## Framework Laptop 13 (host `fedora`, Ryzen AI 7 350)
 
 ### Bluetooth

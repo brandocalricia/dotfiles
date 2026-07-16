@@ -31,13 +31,15 @@ skipped()   { SKIPPED+=("$1"); warn "$1 already installed, skipping"; }
 # LINUX — Fedora package setup
 # ══════════════════════════════════════════════════════════════════
 if $IS_LINUX; then
+  # NEVER install/touch GDM — a GDM install once locked the user out of the
+  # machine. Every dnf call below carries --exclude=gdm.
   section "Linux: system update"
   info "Updating system..."
-  sudo dnf upgrade -y --quiet
+  sudo dnf upgrade -y --quiet --exclude=gdm
 
   section "Linux: RPM Fusion"
   info "Enabling RPM Fusion..."
-  sudo dnf install -y --quiet \
+  sudo dnf install -y --quiet --exclude=gdm \
     "https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm" \
     "https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm"
 
@@ -47,14 +49,14 @@ if $IS_LINUX; then
 
   section "Linux: Brave browser repo"
   info "Adding Brave browser repo..."
-  sudo dnf install -y --quiet dnf-plugins-core
+  sudo dnf install -y --quiet --exclude=gdm dnf-plugins-core
   sudo dnf config-manager addrepo \
     --from-repofile=https://brave-browser-rpm-release.s3.brave.com/brave-browser.repo
   sudo rpm --import https://brave-browser-rpm-release.s3.brave.com/brave-core.asc 2>/dev/null || true
 
   section "Linux: dnf packages"
   info "Installing packages..."
-  sudo dnf install -y --quiet \
+  sudo dnf install -y --quiet --exclude=gdm \
     `# Hyprland stack` \
     hyprland xdg-desktop-portal-hyprland waybar foot fuzzel mako \
     hyprlock hypridle swaybg cliphist grim slurp wl-clipboard \
@@ -62,6 +64,8 @@ if $IS_LINUX; then
     `# Terminal tools` \
     zsh git gh stow btop htop bat eza fd-find ripgrep fzf \
     zoxide fastfetch unzip tree inxi xxd NetworkManager-tui \
+    `# Cross-machine work sync` \
+    syncthing \
     `# Dev tools` \
     nodejs \
     `# Apps` \
@@ -242,6 +246,23 @@ EOF
   systemctl --user enable --now dotfiles-sync.timer
   installed "systemd dotfiles-sync.timer (auto config sync)"
 
+  info "Setting up cross-machine work sync (Syncthing ~/code + heartbeat)..."
+  mkdir -p ~/code
+  systemctl --user enable --now syncthing.service
+  # Give syncthing a moment to generate its config on first run, then make sure
+  # ~/code is a shared folder (id "code"). Idempotent: skip if already there.
+  sleep 3
+  if ! syncthing cli config folders list 2>/dev/null | grep -qx code; then
+    syncthing cli config folders add --id code --label code --path ~/code \
+      && info "Syncthing folder 'code' added" \
+      || warn "Couldn't add Syncthing folder — add ~/code via http://127.0.0.1:8384"
+  fi
+  cp "$DOTFILES/systemd/work-heartbeat.service" \
+     "$DOTFILES/systemd/work-heartbeat.timer" ~/.config/systemd/user/
+  systemctl --user daemon-reload
+  systemctl --user enable --now work-heartbeat.timer
+  installed "Syncthing ~/code + work-heartbeat.timer (work-status CLI)"
+
   section "Linux: Flatpaks"
   info "Installing Flatpaks..."
   flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
@@ -286,6 +307,8 @@ echo "  2. bash ~/dotfiles/scripts/switch-theme.sh nord"
 if $IS_LINUX; then
   echo "  3. Log out → select Hyprland at SDDM login screen"
   echo "  4. Set wallpaper: swaybg -i ~/Pictures/wallpapers/alps.png -m fill &"
+  echo "  5. Pair Syncthing with the other machine (one-time, needs both):"
+  echo "     http://127.0.0.1:8384 → Add Remote Device → share folder 'code'"
   echo ""
   warn "Note: Brave repo may need manual setup if the GPG key import failed."
   warn "Note: Steam/Docker/OpenRGB not included — install manually if needed."
