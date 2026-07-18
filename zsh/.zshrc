@@ -81,3 +81,6 @@ command -v direnv >/dev/null 2>&1 && eval "$(direnv hook zsh)"
 # atuin — encrypted, cross-machine shell history (binds Ctrl-R + Up).
 # Sourced LAST so it wins the Ctrl-R binding over fzf/oh-my-zsh.
 command -v atuin >/dev/null 2>&1 && eval "$(atuin init zsh)"
+
+# jot — capture a thought into the Obsidian brain from anywhere: jot buy cables
+jot() { "$HOME/dotfiles/scripts/jot.sh" "$@"; }

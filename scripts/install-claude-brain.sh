@@ -9,7 +9,13 @@ set -uo pipefail
 DOTFILES="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 CLAUDE_DIR="$HOME/.claude"
 BRAIN="$HOME/Documents/Brain/Claude"
-mkdir -p "$CLAUDE_DIR" "$BRAIN/Sessions" "$BRAIN/Memory"
+mkdir -p "$CLAUDE_DIR" "$BRAIN/Sessions" "$BRAIN/Memory" "$BRAIN/Rollups"
+
+# 0. Seed starter brain notes if missing (so the SessionStart hook works even
+#    before Syncthing pairs). The real INDEX/Dashboard sync in and win.
+for f in INDEX.md Dashboard.md README.md; do
+  [ -f "$BRAIN/$f" ] || { cp "$DOTFILES/claude/brain-seed/$f" "$BRAIN/$f" 2>/dev/null && echo "[+] seeded $f"; }
+done
 
 # 1. Global pointer — don't clobber a customized one that already references the brain.
 if [ ! -f "$CLAUDE_DIR/CLAUDE.md" ] || ! grep -q 'Documents/Brain' "$CLAUDE_DIR/CLAUDE.md" 2>/dev/null; then

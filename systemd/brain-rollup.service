@@ -1,0 +1,6 @@
+[Unit]
+Description=Weekly Obsidian brain rollup (self-curation digest)
+
+[Service]
+Type=oneshot
+ExecStart=%h/dotfiles/scripts/brain-rollup.sh
