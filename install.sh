@@ -284,6 +284,12 @@ EOF
     git config --global --add include.path "$HOME/dotfiles/git/gitconfig-shared"
     installed "git shared config (delta pager + SSH commit signing)"
   fi
+  # Generate this machine's own ed25519 key if missing (needed for SSH signing).
+  if [ ! -f ~/.ssh/id_ed25519 ]; then
+    mkdir -p ~/.ssh && chmod 700 ~/.ssh
+    ssh-keygen -t ed25519 -C "brandocalricia@gmail.com" -f ~/.ssh/id_ed25519 -N "" -q
+    installed "ed25519 SSH key generated (add to GitHub as a Signing Key)"
+  fi
   # allowed_signers for local signature verification
   mkdir -p ~/.config/git
   [ -f ~/.ssh/id_ed25519.pub ] && \

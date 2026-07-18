@@ -19,21 +19,25 @@ else
   echo "[=] global CLAUDE.md already points at the brain"
 fi
 
-# 2. SessionEnd hook — merged idempotently (won't duplicate).
+# 2. Hooks — SessionStart (inject brain) + SessionEnd (log session). Idempotent.
 settings="$CLAUDE_DIR/settings.json"
 [ -f "$settings" ] || echo '{}' > "$settings"
-hookcmd="$DOTFILES/scripts/claude-session-log.sh"
+startcmd="$DOTFILES/scripts/claude-brain-context.sh"
+endcmd="$DOTFILES/scripts/claude-session-log.sh"
 if command -v jq >/dev/null 2>&1; then
   tmp=$(mktemp)
-  jq --arg cmd "$hookcmd" '
+  jq --arg s "$startcmd" --arg e "$endcmd" '
     .hooks = (.hooks // {}) |
+    .hooks.SessionStart = ((.hooks.SessionStart // [])
+      | if any(.[]?.hooks[]?; .command == $s) then .
+        else . + [{"hooks":[{"type":"command","command":$s,"timeout":15}]}] end) |
     .hooks.SessionEnd = ((.hooks.SessionEnd // [])
-      | if any(.[]?.hooks[]?; .command == $cmd) then .
-        else . + [{"hooks":[{"type":"command","command":$cmd,"timeout":20}]}] end)
+      | if any(.[]?.hooks[]?; .command == $e) then .
+        else . + [{"hooks":[{"type":"command","command":$e,"timeout":20}]}] end)
   ' "$settings" > "$tmp" && mv "$tmp" "$settings" \
-    && echo "[+] SessionEnd auto-log hook ensured" || echo "[!] jq merge failed"
+    && echo "[+] SessionStart + SessionEnd hooks ensured" || echo "[!] jq merge failed"
 else
-  echo "[!] jq missing — add the SessionEnd hook manually"
+  echo "[!] jq missing — add the hooks manually"
 fi
 
 # 3. Seed the memory mirror.
