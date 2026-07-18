@@ -781,3 +781,49 @@ runs one detection pass immediately.
 **If the clock is ever wrong again**: `journalctl -t auto-timezone` shows every
 decision; `systemctl start auto-timezone.service` forces a re-check;
 `curl -s https://ipapi.co/timezone/` shows what geolocation currently thinks.
+
+## Quality-of-life pass + Obsidian brain — 2026-07-17
+
+Big optimization pass. All reproducible via `install.sh`; privileged bits in one
+idempotent script. Nothing here touches the display manager; every dnf carries
+`--exclude=gdm`.
+
+### Privileged installer — `scripts/install-qol.sh` (`sudo bash`)
+- **Power: TLP → power-profiles-daemon.** TLP removed (reversible: reinstall tlp +
+  `systemctl enable --now tlp` + `dnf remove power-profiles-daemon`), ppd enabled,
+  profile `balanced`. Recommended on Fedora AMD; integrates with waybar toggle.
+- **CLI tools:** atuin, git-delta, direnv, tealdeer, duf, procs, du-dust from Fedora
+  repos; lazygit from COPR `atim/lazygit`.
+- **Auto-updates:** `scripts/auto-update.sh` + `systemd/system/auto-update.{service,timer}`
+  → daily. Takes a **snapper pre-snapshot**, downloads ALL updates (staged, zero
+  change), applies **security** advisories only, updates flatpaks, notifies if feature
+  updates are staged. Full upgrades stay a manual `sudo dnf upgrade` (instant from cache).
+  Chosen because the dnf5 snapper *plugin* isn't installed (snapshots are hourly-timeline
+  only), so the script makes its own rollback point.
+- **fwupd:** `fwupd-refresh.timer` enabled (metadata only). **Never auto-flashes.**
+  Apply manually: `fwupdmgr refresh && fwupdmgr update` (may reboot).
+- **zram → zstd** (`/etc/systemd/zram-generator.conf`); **GRUB timeout → 1s**.
+
+### git (user scope) — `git/gitconfig-shared`, included from `~/.gitconfig`
+delta pager, **SSH commit signing** (ed25519 `~/.ssh/id_ed25519`, allowedSigners at
+`~/.config/git/allowed_signers`), identity, `init.defaultBranch=main`, `pull.rebase`,
+rerere, aliases. Signing verified end-to-end so `dotfiles-sync` auto-commits still work.
+Manual: upload key to GitHub — `gh ssh-key add ~/.ssh/id_ed25519.pub --type signing`.
+
+### Battery charge limit — MANUAL (BIOS)
+`cros_charge_control` is loaded but exposes no threshold sysfs on this board/kernel,
+and no `framework_tool` in repos → OS-level capping unavailable. Set the limit in the
+**Framework BIOS** (reboot → F2/setup → Power → charge limit) to **85%** (higher than
+the 80% ideal but still a big longevity win; battery was ~100% health when set).
+
+### Obsidian brain (`~/Documents/Brain`) ⇄ Claude
+- **Synced** via Syncthing (folder id `brain`) laptop⇄desktop → now cross-machine +
+  in the restic backup. `.stignore` excludes per-machine `.obsidian/workspace*`.
+- **`Claude/INDEX.md`** — curated context Claude reads first. **`Claude/Sessions/`** —
+  dated auto-log. **`Claude/Memory/`** — mirror of `~/.claude/.../memory/`.
+- **Read path:** global `~/.claude/CLAUDE.md` points every session at the vault.
+- **Auto-capture:** `scripts/claude-session-log.sh` runs as a **SessionEnd hook**
+  (`~/.claude/settings.json`) — appends a record per session + refreshes the memory
+  mirror. Wired by `scripts/install-claude-brain.sh` (idempotent jq merge).
+- Human side: enable Obsidian **Dataview** (+ optionally Smart Connections) in the GUI
+  to query `Claude/Sessions`. (Community plugins are a one-time GUI trust step.)

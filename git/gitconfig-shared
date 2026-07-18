@@ -1,0 +1,56 @@
+# Shared git config — tracked in dotfiles, included from ~/.gitconfig on every
+# machine (the machine-specific ~/.gitconfig keeps the `gh` credential helper).
+# Added 2026-07-17.
+[user]
+	name = Brandon Niehaus
+	email = brandocalricia@gmail.com
+	signingkey = ~/.ssh/id_ed25519.pub
+[init]
+	defaultBranch = main
+[pull]
+	rebase = true
+[push]
+	autoSetupRemote = true
+[fetch]
+	prune = true
+[rerere]
+	enabled = true
+[column]
+	ui = auto
+[branch]
+	sort = -committerdate
+[merge]
+	conflictstyle = zdiff3
+[diff]
+	colorMoved = default
+	algorithm = histogram
+
+# ── delta: better diffs/pager ────────────────────────────────────────────────
+[core]
+	pager = delta
+[interactive]
+	diffFilter = delta --color-only
+[delta]
+	navigate = true
+	line-numbers = true
+	hyperlinks = true
+[delta "light-mode"]
+	light = false
+
+# ── SSH commit signing (verified commits, no GPG needed) ─────────────────────
+[gpg]
+	format = ssh
+[gpg "ssh"]
+	allowedSignersFile = ~/.config/git/allowed_signers
+[commit]
+	gpgsign = true
+[tag]
+	gpgsign = true
+
+# ── handy aliases ────────────────────────────────────────────────────────────
+[alias]
+	st = status -sb
+	lg = log --graph --oneline --decorate --all
+	last = log -1 HEAD --stat
+	unstage = restore --staged
+	amend = commit --amend --no-edit

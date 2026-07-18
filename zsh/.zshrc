@@ -69,3 +69,15 @@ alias rl-map-download='$HOME/.local/bin/rl-map-download.sh'
 
 # Cross-machine work awareness (Syncthing-shared ~/code heartbeats)
 alias work-status='$HOME/dotfiles/scripts/work-status.sh'
+
+# ── QoL tooling (2026-07-17) ─────────────────────────────────────────────────
+# Each guarded so the shell still starts fine on a machine missing the tool.
+alias lg='lazygit'
+command -v dust >/dev/null 2>&1 && alias du='dust'      # tree-style disk usage
+command -v duf  >/dev/null 2>&1 && alias df='duf'       # prettier df
+command -v procs >/dev/null 2>&1 && alias ps='procs'    # modern ps
+# direnv — per-project env auto-loading
+command -v direnv >/dev/null 2>&1 && eval "$(direnv hook zsh)"
+# atuin — encrypted, cross-machine shell history (binds Ctrl-R + Up).
+# Sourced LAST so it wins the Ctrl-R binding over fzf/oh-my-zsh.
+command -v atuin >/dev/null 2>&1 && eval "$(atuin init zsh)"

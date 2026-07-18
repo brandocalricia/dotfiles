@@ -257,6 +257,12 @@ EOF
       && info "Syncthing folder 'code' added" \
       || warn "Couldn't add Syncthing folder — add ~/code via http://127.0.0.1:8384"
   fi
+  # Obsidian brain vault — also mirrored via Syncthing (folder id "brain").
+  if [ -d ~/Documents/Brain ] && ! syncthing cli config folders list 2>/dev/null | grep -qx brain; then
+    syncthing cli config folders add --id brain --label Brain --path ~/Documents/Brain \
+      && info "Syncthing folder 'brain' added" \
+      || warn "Couldn't add Brain folder — add ~/Documents/Brain via http://127.0.0.1:8384"
+  fi
   cp "$DOTFILES/systemd/work-heartbeat.service" \
      "$DOTFILES/systemd/work-heartbeat.timer" ~/.config/systemd/user/
   systemctl --user daemon-reload
@@ -267,6 +273,26 @@ EOF
   info "Installing auto-timezone (IP geolocation -> system timezone)..."
   sudo bash "$DOTFILES/scripts/install-auto-timezone.sh"
   installed "auto-timezone (location-aware clock + RTC in UTC)"
+
+  section "Linux: quality-of-life pass (2026-07-17)"
+  info "power-profiles-daemon, CLI tools, auto-updates, zram/grub tunes..."
+  sudo bash "$DOTFILES/scripts/install-qol.sh"
+  installed "QoL: ppd + atuin/delta/lazygit/direnv/tealdeer/duf/procs/dust + auto-update.timer + zram-zstd + grub"
+
+  # git: include the shared config (delta, SSH signing, aliases) from ~/.gitconfig
+  if ! git config --global --get-all include.path 2>/dev/null | grep -qF 'dotfiles/git/gitconfig-shared'; then
+    git config --global --add include.path "$HOME/dotfiles/git/gitconfig-shared"
+    installed "git shared config (delta pager + SSH commit signing)"
+  fi
+  # allowed_signers for local signature verification
+  mkdir -p ~/.config/git
+  [ -f ~/.ssh/id_ed25519.pub ] && \
+    printf '%s %s\n' "brandocalricia@gmail.com" "$(cat ~/.ssh/id_ed25519.pub)" > ~/.config/git/allowed_signers
+
+  section "Linux: Obsidian brain ⇄ Claude"
+  info "Wiring the Claude session-log hook + brain pointer..."
+  bash "$DOTFILES/scripts/install-claude-brain.sh"
+  installed "Claude brain (global CLAUDE.md + SessionEnd auto-log hook)"
 
   section "Linux: Flatpaks"
   info "Installing Flatpaks..."

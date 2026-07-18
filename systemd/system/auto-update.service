@@ -1,0 +1,13 @@
+[Unit]
+Description=Staged/security auto-updates (snapper-protected)
+Documentation=https://github.com/brandocalricia/dotfiles
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/auto-update.sh
+# Big first download after a gap can be slow; don't let the 2h default kill it.
+TimeoutStartSec=3h
+Nice=10
+IOSchedulingClass=idle
