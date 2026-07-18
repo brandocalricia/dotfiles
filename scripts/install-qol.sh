@@ -23,11 +23,13 @@ DNF="dnf install -y --quiet --exclude=gdm"
 # Reversible:  sudo dnf install tlp tlp-rdw && sudo systemctl enable --now tlp
 #              && sudo dnf remove power-profiles-daemon
 say "Power management → power-profiles-daemon"
-rpm -q power-profiles-daemon >/dev/null 2>&1 || $DNF power-profiles-daemon
-if rpm -q tlp >/dev/null 2>&1; then
+# Remove TLP FIRST — its tlp-pd sub-package owns the same D-Bus service files as
+# power-profiles-daemon, so ppd won't install while TLP is present.
+if rpm -q tlp >/dev/null 2>&1 || rpm -q tlp-pd >/dev/null 2>&1; then
   systemctl disable --now tlp.service 2>/dev/null || true
-  dnf remove -y --quiet tlp tlp-rdw 2>/dev/null || systemctl mask tlp.service
+  dnf remove -y --quiet tlp tlp-rdw tlp-pd 2>/dev/null || systemctl mask tlp.service
 fi
+rpm -q power-profiles-daemon >/dev/null 2>&1 || $DNF power-profiles-daemon
 systemctl enable --now power-profiles-daemon.service 2>/dev/null || true
 powerprofilesctl set balanced 2>/dev/null || true
 ok "ppd active ($(powerprofilesctl get 2>/dev/null || echo '?')); tlp removed/disabled"
