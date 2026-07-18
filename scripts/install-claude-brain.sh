@@ -50,4 +50,13 @@ fi
 for md in "$HOME"/.claude/projects/*/memory; do
   [ -d "$md" ] && cp -f "$md"/*.md "$BRAIN/Memory/" 2>/dev/null || true
 done
+
+# 4. Weekly self-curation rollup (user timer, no sudo).
+if [ -f "$DOTFILES/systemd/brain-rollup.timer" ]; then
+  mkdir -p "$HOME/.config/systemd/user"
+  cp "$DOTFILES/systemd/brain-rollup.service" "$DOTFILES/systemd/brain-rollup.timer" "$HOME/.config/systemd/user/"
+  systemctl --user daemon-reload 2>/dev/null || true
+  systemctl --user enable --now brain-rollup.timer 2>/dev/null && echo "[+] brain-rollup.timer enabled (weekly)" || true
+fi
+
 echo "[+] Claude brain wired. Restart Claude Code / open /hooks once for the hook to load."
