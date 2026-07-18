@@ -289,6 +289,10 @@ EOF
   [ -f ~/.ssh/id_ed25519.pub ] && \
     printf '%s %s\n' "brandocalricia@gmail.com" "$(cat ~/.ssh/id_ed25519.pub)" > ~/.config/git/allowed_signers
 
+  info "Installing latest atuin client (Fedora pkg too old to sync)..."
+  bash "$DOTFILES/scripts/install-atuin-latest.sh" || warn "atuin latest fetch failed"
+  installed "atuin latest in ~/.local/bin"
+
   section "Linux: Obsidian brain ⇄ Claude"
   info "Wiring the Claude session-log hook + brain pointer..."
   bash "$DOTFILES/scripts/install-claude-brain.sh"
