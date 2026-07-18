@@ -3,5 +3,5 @@
     // local.jsonc is gitignored — each machine maintains its own copy.
     // config.jsonc `include`s this file; modules-right lives here so this
     // laptop keeps "battery" while a battery-less desktop omits it.
-    "modules-right": ["network", "pulseaudio", "cpu", "memory", "disk", "battery", "tray"]
+    "modules-right": ["custom/caffeine", "network", "pulseaudio", "cpu", "memory", "disk", "battery", "tray"]
 }
