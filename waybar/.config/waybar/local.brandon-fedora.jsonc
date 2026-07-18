@@ -1,0 +1,5 @@
+{
+    // brandon-fedora DESKTOP — no battery (battery-less; a Logitech mouse battery
+    // exists in power_supply, so we must NOT let waybar fall back to it).
+    "modules-right": ["custom/caffeine", "network", "pulseaudio", "cpu", "memory", "disk", "tray"]
+}

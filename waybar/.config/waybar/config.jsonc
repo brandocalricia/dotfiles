@@ -104,6 +104,21 @@
         "on-click": "pavucontrol"
     },
 
+    "custom/caffeine": {
+        // Keep-awake toggle (Option A): SIGSTOP/SIGCONT on hypridle. When ON, all
+        // idle timers (display-off, auto-lock, suspend) are paused. See
+        // ~/.config/hypr/caffeine-toggle.sh. Placed next to network in local.jsonc.
+        "return-type": "json",
+        "exec": "~/.config/hypr/caffeine-toggle.sh status",
+        "on-click": "~/.config/hypr/caffeine-toggle.sh toggle",
+        // The script signals waybar (SIGRTMIN+9) AFTER it flips state, so refresh
+        // from that signal only — exec-on-event would race and re-read stale state.
+        "exec-on-event": false,
+        "interval": 5,
+        "signal": 9,
+        "tooltip": true
+    },
+
     "tray": {
         "icon-size": 14,
         "spacing": 8

@@ -50,7 +50,7 @@ window#waybar {
     color: #c89412;
     font-weight: 600;
 }
-#cpu, #memory, #disk, #network, #pulseaudio, #battery, #tray {
+#cpu, #memory, #disk, #network, #pulseaudio, #battery, #custom-caffeine, #tray {
     padding: 0 10px;
     margin: 4px 3px;
     background: #2a1f1a;
@@ -58,8 +58,14 @@ window#waybar {
     border-radius: 6px;
     transition: all 0.2s ease;
 }
-#cpu:hover, #memory:hover, #disk:hover, #network:hover, #pulseaudio:hover, #battery:hover {
+#cpu:hover, #memory:hover, #disk:hover, #network:hover, #pulseaudio:hover, #battery:hover, #custom-caffeine:hover {
     background: #3d0d0a;
+}
+/* caffeine keep-awake toggle: dim when off, filled amber chip when on */
+#custom-caffeine.inactive { color: #8a7a5e; }
+#custom-caffeine.active {
+    color: #1a1612;
+    background: #c89412;
 }
 #cpu { color: #d4a13a; }
 #memory { color: #b87333; }
