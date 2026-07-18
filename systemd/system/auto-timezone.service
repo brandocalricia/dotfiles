@@ -1,0 +1,9 @@
+[Unit]
+Description=Set system timezone from IP geolocation
+Documentation=https://github.com/brandocalricia/dotfiles
+After=network-online.target chronyd.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/auto-timezone

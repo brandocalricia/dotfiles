@@ -263,6 +263,11 @@ EOF
   systemctl --user enable --now work-heartbeat.timer
   installed "Syncthing ~/code + work-heartbeat.timer (work-status CLI)"
 
+  section "Linux: location-aware timezone"
+  info "Installing auto-timezone (IP geolocation -> system timezone)..."
+  sudo bash "$DOTFILES/scripts/install-auto-timezone.sh"
+  installed "auto-timezone (location-aware clock + RTC in UTC)"
+
   section "Linux: Flatpaks"
   info "Installing Flatpaks..."
   flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo

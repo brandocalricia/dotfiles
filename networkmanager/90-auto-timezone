@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# NetworkManager dispatcher hook: re-check timezone whenever the network
+# state changes, so the clock updates the instant you connect somewhere new.
+# Installed to /etc/NetworkManager/dispatcher.d/ (must be root:root, 0755,
+# and not group/other-writable or NM will refuse to run it).
+interface="$1"
+action="$2"
+
+case "$action" in
+  up|connectivity-change|dhcp4-change|dhcp6-change)
+    systemctl start --no-block auto-timezone.service
+    ;;
+esac

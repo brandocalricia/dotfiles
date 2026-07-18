@@ -745,3 +745,39 @@ protect against these — this does.** Set up and end-to-end *tested* 2026-06-15
 entry. Snapshot rollback will NOT fix a bad kernel.
 
 restic /home off-device backup is a planned separate follow-up session.
+
+## Location-aware timezone (auto-timezone) — FIXED 2026-07-17
+
+**Symptom**: travelling with the laptop, the wall clock never followed the
+timezone. It was statically pinned to `America/Los_Angeles` while physically in
+Mountain Time, so the clock read an hour behind. `chronyd` (NTP) keeps the
+*clock* correct but never touches the *timezone* — nothing on a bare Hyprland
+setup does (that toggle lives in GNOME Settings, which isn't installed).
+
+**Also fixed the same session**: `timedatectl` reported `RTC in local TZ: yes`
+(`LocalRTC=yes`). systemd warns this breaks DST/timezone changes and corrupts
+the clock on dual-boot — set to UTC.
+
+**The fix** — a small `curl`-based detector, no Python/Rust deps (Fedora has no
+`tzupdate`/`automatic-timezoned` package, and geoclue WiFi geolocation is
+overkill/flaky). Files, all tracked in this repo:
+- `scripts/auto-timezone.sh` → `/usr/local/bin/auto-timezone`. Queries IP
+  geolocation (ipapi.co → ip-api.com → ipwho.is fallback), validates the result
+  is a real `/usr/share/zoneinfo` entry, and only calls `timedatectl
+  set-timezone` when it actually changed. Toasts the desktop via notify-send.
+- `systemd/system/auto-timezone.{service,timer}` → `/etc/systemd/system/`.
+  Timer runs on boot (+20s) and hourly. Service is a root oneshot (setting the
+  clock needs root — this is why it's a *system* unit, not a user one).
+- `networkmanager/90-auto-timezone` → `/etc/NetworkManager/dispatcher.d/`
+  (must be `root:root 0755` or NM ignores it). Fires the detector the instant a
+  connection comes up, so the zone updates immediately on landing somewhere new.
+
+**Install / reinstall (idempotent)**:
+`sudo bash ~/dotfiles/scripts/install-auto-timezone.sh`
+Also runs automatically from the main `install.sh` (Linux branch). The installer
+copies the files, sets `set-local-rtc 0`, ensures NTP, enables the timer, and
+runs one detection pass immediately.
+
+**If the clock is ever wrong again**: `journalctl -t auto-timezone` shows every
+decision; `systemctl start auto-timezone.service` forces a re-check;
+`curl -s https://ipapi.co/timezone/` shows what geolocation currently thinks.
