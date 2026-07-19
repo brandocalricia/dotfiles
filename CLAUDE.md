@@ -82,13 +82,25 @@ machine can see what the other was last doing. Config sync (above) is separate.
   `pactl set-card-profile bluez_card.<MAC_underscored> a2dp-sink`
   (or blueman → right-click device → Audio Profile → High Fidelity Playback A2DP).
 
-### Caffeine / idle-inhibit waybar toggle — TODO (deferred)
-Porting the desktop's caffeine module is **pending**: its implementation lives in the
-desktop's (previously gitignored) `local.jsonc`, which wasn't in the repo. Once the
-desktop runs the sync above, its `local.brandon-fedora.jsonc` will be committed and
-the laptop can mirror the exact module + icons into `local.fedora.jsonc`. `hypridle`
-is already installed and autostarted (`hyprland.conf` exec-once) — the idle daemon
-the toggle drives.
+### Caffeine / idle-inhibit waybar toggle — DONE 2026-07-18 (shared)
+Implemented as **shared** config (both machines), not per-host: the `custom/caffeine`
+module lives in `waybar/config.jsonc`, its amber-chip CSS in `style.css.base`, and the
+toggle in `hypr/.config/hypr/caffeine-toggle.sh` (stow-linked to `~/.config/hypr/`).
+The toggle **kills/relaunches `hypridle`** (ON = hypridle killed, so NO idle timers
+exist → no blank/lock/suspend; OFF = relaunch via `hyprctl dispatch exec` for a clean
+Wayland connection). It signals waybar with `SIGRTMIN+9` after flipping state. The only
+per-host bit is putting `"custom/caffeine"` in each host's `modules-right`
+(`local.<host>.jsonc`) — both hosts now have it. `hypridle` is installed + autostarted
+(`hyprland.conf` exec-once) on both. For the amber styling to render, run
+`scripts/switch-theme.sh <theme>` once (regenerates `style.css` from `.base`).
+
+### Power daemon — desktop keeps `tuned-ppd` (2026-07-18)
+On `brandon-fedora`, `install-qol.sh`'s `power-profiles-daemon` install silently fails:
+Fedora 44 ships **`tuned-ppd`** (active), which owns the same power-profiles D-Bus
+service and conflicts with ppd. Left as-is — tuned-ppd is the F44 default and the DE/
+waybar widgets talk to the same D-Bus API. Consequence: **no `powerprofilesctl` CLI**
+on the desktop (harmless — battery-less). To force ppd instead:
+`sudo dnf swap tuned-ppd power-profiles-daemon`. The laptop is likely on tuned-ppd too.
 
 ## Laptop vs desktop differences
 - **waybar:** laptop `modules-right` includes `battery`; desktop omits it.
