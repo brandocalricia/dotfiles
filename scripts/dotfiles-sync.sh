@@ -46,7 +46,14 @@ ensure_session_helpers() {
   command -v hyprctl >/dev/null 2>&1 || return 0
 
   local watcher="$HOME/.config/hypr/captive-portal-watch.sh"
-  if [ -x "$watcher" ] && ! pgrep -f '[c]aptive-portal-watch\.sh' >/dev/null 2>&1; then
+  [ -x "$watcher" ] || return 0
+  # Reliable presence check via the watcher's own flock (NOT process-name
+  # matching, which false-positives on any command line mentioning the script).
+  # If we can grab the lock here, no watcher holds it → none is running → launch
+  # one. The watcher re-grabs the same lock for its lifetime, guaranteeing a
+  # singleton even against a simultaneous exec-once launch.
+  local lock="$rt/captive-portal-watch.lock"
+  if ( exec 9>"$lock" && flock -n 9 ) 2>/dev/null; then
     HYPRLAND_INSTANCE_SIGNATURE="$sig" hyprctl dispatch exec "$watcher" >/dev/null 2>&1 \
       && log "started captive-portal watcher into the running Hyprland session"
   fi

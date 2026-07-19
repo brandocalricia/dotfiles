@@ -35,6 +35,16 @@ LOG="${CAPTIVE_PORTAL_LOG:-${XDG_RUNTIME_DIR:-/tmp}/captive-portal-watch.log}"
 
 log() { printf '%s %s\n' "$(date '+%H:%M:%S' 2>/dev/null || echo '--:--:--')" "$*" >> "$LOG" 2>/dev/null || true; }
 
+# Singleton via flock: hold an exclusive lock for our whole lifetime. Both the
+# Hyprland exec-once AND the dotfiles-sync self-heal may try to launch us, so a
+# second instance must be harmless — it fails the lock and exits immediately.
+# This makes "launch unconditionally" safe and prevents duplicate browsers on a
+# real portal. (Skipped when CAPTIVE_PORTAL_LOCK=none, e.g. unit tests.)
+if [ "${CAPTIVE_PORTAL_LOCK:-}" != "none" ] && command -v flock >/dev/null 2>&1; then
+  exec 9>"${XDG_RUNTIME_DIR:-/tmp}/captive-portal-watch.lock" 2>/dev/null || true
+  flock -n 9 || { log "another instance holds the lock — exiting"; exit 0; }
+fi
+
 open_portal() {
   if [ -n "${CAPTIVE_PORTAL_DRYRUN:-}" ]; then
     log "DRYRUN portal detected → would notify + open $PROBE_URL"
