@@ -1,37 +1,48 @@
 #!/usr/bin/env bash
-# rusty-bar-watch.sh — make the Rusty's Retirement bar dynamic, responsive, and
-# host-agnostic (works on the desktop's HDMI-A-1 and the laptop's single screen).
+# rusty-bar-watch.sh — dock the Rusty's Retirement (gamescope) bar and reserve its
+# space dynamically. Host-agnostic (desktop HDMI-A-1, laptop eDP-1).
 #
 # Rusty's Retirement runs inside gamescope (a fixed-size window it can't force-
-# fullscreen out of; host window class = "gamescope"). gamescope opens it off-
-# position and the game can't be docked by static rules, so this watcher:
-#   * snaps the gamescope window to the bottom of workspace 1, on whatever monitor
-#     workspace 1 lives on;
-#   * reserves that window's height on that monitor ONLY while workspace 1 is the
-#     one being viewed there — so no other workspace/monitor is ever squished, and
-#     the reserve is dropped the instant you leave ws1 or close the game.
-# Everything keys off the gamescope window, so nothing else is affected.
-# Singleton via flock. Self-heals a fresh launch every poll. Started at login.
+# fullscreen out of; host window class = "gamescope"). gamescope opens it centred,
+# so this watcher snaps it to the bottom of workspace 1 on whatever monitor hosts
+# ws1, and reserves that window's height on that monitor ONLY while ws1 is the
+# workspace being viewed there — so nothing else is squished and the reserve clears
+# the instant you leave ws1 or close the game.
+#
+# ROBUSTNESS (learned the hard way): a watcher must not outlive its Hyprland
+# instance. After a logout/relogin Hyprland gets a NEW instance signature + socket;
+# a survivor from the old instance would keep hitting a dead socket AND hold a
+# global lock, blocking the fresh watcher. So:
+#   * the flock is PER-INSTANCE (keyed on HYPRLAND_INSTANCE_SIGNATURE) — every login
+#     starts a working watcher regardless of any stale survivors;
+#   * if hyprctl stops responding (our instance died), we exit and release the lock.
 set -u
 
 WS=1            # workspace the bar lives on ("profile 1")
 POLL=0.35       # seconds between checks
 SNAP_TOL=12     # px drift tolerated before re-snapping
+DEAD_MAX=8      # consecutive hyprctl failures => our Hyprland instance is gone
 
-exec 9>"${XDG_RUNTIME_DIR:-/tmp}/rusty-bar-watch.lock"
-flock -n 9 || exit 0        # another instance already running -> quit quietly
+SIG="${HYPRLAND_INSTANCE_SIGNATURE:-nosig}"
+exec 9>"${XDG_RUNTIME_DIR:-/tmp}/rusty-bar-watch.${SIG}.lock"
+flock -n 9 || exit 0        # a watcher for THIS instance already runs -> quit
 
-resmon=""; reserved=0
-set_reserve(){ # $1 monitor-name  $2 px
-  hyprctl keyword monitor "$1,addreserved,0,$2,0,0" >/dev/null 2>&1
-  resmon="$1"; reserved="$2"
-}
+resmon=""; reserved=0; fails=0
+set_reserve(){ hyprctl keyword monitor "$1,addreserved,0,$2,0,0" >/dev/null 2>&1; resmon="$1"; reserved="$2"; }
 drop_reserve(){ [ -n "$resmon" ] && [ "$reserved" != 0 ] && hyprctl keyword monitor "$resmon,addreserved,0,0,0,0" >/dev/null 2>&1; reserved=0; }
 trap 'drop_reserve; exit 0' INT TERM
 trap drop_reserve EXIT
 
 while :; do
-  # gamescope (Rusty) window: "addr x y ws monIdx height"  (empty line if absent)
+  mons="$(hyprctl monitors -j 2>/dev/null)"
+  # Health: if our Hyprland instance is dead, hyprctl fails -> release lock and exit.
+  if [ -z "$mons" ] || ! printf '%s' "$mons" | grep -q '"id"'; then
+    fails=$((fails+1)); [ "$fails" -ge "$DEAD_MAX" ] && exit 0
+    sleep "$POLL"; continue
+  fi
+  fails=0
+
+  # gamescope (Rusty) window: "addr x y ws monIdx height" (empty if absent)
   read -r addr x y gws gmon gh < <(hyprctl clients -j 2>/dev/null | python3 -c '
 import json,sys
 try: cs=json.load(sys.stdin)
@@ -47,14 +58,13 @@ for c in cs:
     drop_reserve; resmon=""; sleep "$POLL"; continue
   fi
 
-  # Make sure it's on ws1; if we had to move it, re-read next loop.
   if [ "${gws:-0}" != "$WS" ]; then
     hyprctl dispatch movetoworkspacesilent "$WS,address:$addr" >/dev/null 2>&1
     sleep "$POLL"; continue
   fi
 
-  # Geometry + visible-workspace of the monitor the bar is on (found by index).
-  read -r mname mx my mw mh mactive < <(hyprctl monitors -j 2>/dev/null | python3 -c '
+  # Geometry + visible workspace of the monitor the bar is on (matched by index).
+  read -r mname mx my mw mh mactive < <(printf '%s' "$mons" | python3 -c '
 import json,sys
 want='"${gmon:--1}"'
 for m in json.load(sys.stdin):
@@ -70,7 +80,6 @@ for m in json.load(sys.stdin):
     hyprctl dispatch movewindowpixel "exact $tx $ty,address:$addr" >/dev/null 2>&1
   fi
 
-  # Reserve only while ws1 is the one being viewed on this monitor.
   if [ "${mactive:-0}" = "$WS" ]; then
     { [ "$resmon" != "$mname" ] || [ "$reserved" != "$H" ]; } && set_reserve "$mname" "$H"
   else
