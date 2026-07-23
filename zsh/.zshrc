@@ -84,3 +84,4 @@ command -v atuin >/dev/null 2>&1 && eval "$(atuin init zsh)"
 
 # jot — capture a thought into the Obsidian brain from anywhere: jot buy cables
 jot() { "$HOME/dotfiles/scripts/jot.sh" "$@"; }
+export YDOTOOL_SOCKET="$XDG_RUNTIME_DIR/.ydotool_socket"
