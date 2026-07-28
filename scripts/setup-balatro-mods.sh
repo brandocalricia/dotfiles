@@ -113,6 +113,33 @@ for entry in "${MODS[@]}"; do
   cp -a "$src"/. "$dest"/
 done
 
+# --- 3b. patch All in Jest <-> Talisman crash (upstream bug) -----------------
+# AiJ 0.6.6b compares native numbers against to_big() results in the aureate_coin
+# finisher blind path + a couple jokers. With Talisman active, to_big() returns a
+# big-number TABLE, and Lua 5.1 can't compare table-vs-number -> crash entering
+# Ante 8 ("attempt to compare table with number"). Fix = wrap the bare operand in
+# to_big() too (idempotent: no-op without Talisman). Mirrors AiJ's own line-4 style.
+# Idempotent: the patched form has an extra "to_big(" so these never double-apply.
+patch_allinjest() {
+  local aij="$MODS_DIR/AllInJest"
+  local -a subs=(
+    "$aij/Items/Blinds/Finisher/aureate_coin.lua|math.abs(G.GAME.current_round.aij_aureate_coin_blind.spent_money) > to_big(0)|to_big(math.abs(G.GAME.current_round.aij_aureate_coin_blind.spent_money)) > to_big(0)"
+    "$aij/Utils/functions.lua|local original_chips = G.GAME.blind.aij_original_chips > to_big(0)|local original_chips = to_big(G.GAME.blind.aij_original_chips) > to_big(0)"
+    "$aij/Utils/functions.lua|if chips_text_integer < to_big(desired_chip_amount) then|if to_big(chips_text_integer) < to_big(desired_chip_amount) then"
+    "$aij/Items/Jokers/opening_move.lua|G.GAME.current_round.hands_played <= to_big(0)|to_big(G.GAME.current_round.hands_played) <= to_big(0)"
+  )
+  for s in "${subs[@]}"; do
+    IFS='|' read -r file from to <<< "$s"
+    [ -f "$file" ] || continue
+    grep -qF "$to" "$file" && continue          # already patched
+    grep -qF "$from" "$file" || continue         # upstream changed this line; skip
+    FROM="$from" TO="$to" perl -i -pe 's/\Q$ENV{FROM}\E/$ENV{TO}/g' "$file"
+    luajit -bl "$file" /dev/null 2>/dev/null || die "AiJ patch broke $file syntax — restore from backup"
+  done
+  say "Patched All in Jest <-> Talisman comparison crash"
+}
+patch_allinjest
+
 # --- 4. permissions (archives carry Windows bits) ----------------------------
 say "Fixing permissions (755 dirs / 644 files)"
 find "$MODS_DIR" -type d -exec chmod 755 {} +
