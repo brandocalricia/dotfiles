@@ -150,6 +150,35 @@ patch_allinjest() {
 }
 patch_allinjest
 
+# --- 3b2. AiJ preload stub (boot-abort fix) ----------------------------------
+# AiJ's card.lua lovely-patches reference the global `All_in_Jest` (18 sites).
+# Title/menu cards run those patches BEFORE Steamodded loads AiJ -> nil-index crash
+# that aborts the boot before Steamodded can load the content mods (deck shows Red,
+# All_in_Jest stays nil). Fix: inject one line at the top of card.lua defining a safe
+# stub so those reads/calls don't crash; AiJ's nevernamed.lua overwrites it on load.
+patch_allinjest_stub() {
+  local t="$MODS_DIR/AllInJest/lovely/lovely.toml"
+  [ -f "$t" ] || return 0
+  grep -q 'aij_preload_stub' "$t" && return 0
+  cat >> "$t" <<'TOML'
+
+# aij_preload_stub — define All_in_Jest before AiJ loads so early card.lua patches
+# don't crash on a nil global and abort the boot. nevernamed.lua overwrites it.
+[[patches]]
+[patches.pattern]
+target = "card.lua"
+pattern = "Card = Moveable:extend()"
+position = "after"
+match_indent = true
+payload = '''
+All_in_Jest = All_in_Jest or {config = {}, has_patches = function() return false end, add_patch = function() end}
+'''
+TOML
+  python3 -c "import tomllib;tomllib.load(open('$t','rb'))" 2>/dev/null || die "AiJ stub broke lovely.toml"
+  say "Injected All in Jest preload stub (boot-abort fix)"
+}
+patch_allinjest_stub
+
 # --- 3c. remove Bunco's broken "Infinite redebuff fix" (boot crash) ----------
 # Bunco 5.4.8b inserts `if not from_debuff then` before the Credit Card check in
 # Card:add_to_deck (opener), and inserts the matching `end` before a set_blind line
