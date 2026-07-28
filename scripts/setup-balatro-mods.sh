@@ -127,6 +127,13 @@ patch_allinjest() {
     "$aij/Utils/functions.lua|local original_chips = G.GAME.blind.aij_original_chips > to_big(0)|local original_chips = to_big(G.GAME.blind.aij_original_chips) > to_big(0)"
     "$aij/Utils/functions.lua|if chips_text_integer < to_big(desired_chip_amount) then|if to_big(chips_text_integer) < to_big(desired_chip_amount) then"
     "$aij/Items/Jokers/opening_move.lua|G.GAME.current_round.hands_played <= to_big(0)|to_big(G.GAME.current_round.hands_played) <= to_big(0)"
+    # SMODS-nil guards: AiJ's Card:set_cost patches call SMODS.find_card unguarded.
+    # Title-screen cards run set_cost BEFORE Steamodded finishes loading SMODS ->
+    # "card.lua: attempt to index global 'SMODS'" crash that also aborts the mod load.
+    # Guarding with 'SMODS and' makes them no-op until SMODS exists (then work normally).
+    "$aij/lovely/lovely.toml|local has_chef = next(SMODS.find_card(\"j_aij_chef\"))|local has_chef = SMODS and next(SMODS.find_card(\"j_aij_chef\"))"
+    "$aij/lovely/lovely.toml|local has_note = next(SMODS.find_card(\"j_aij_infuriating_note\"))|local has_note = SMODS and next(SMODS.find_card(\"j_aij_infuriating_note\"))"
+    "$aij/lovely/lovely.toml|if next(SMODS.find_card(\"j_aij_pace\")) and self.ability.set == 'Joker' then|if SMODS and next(SMODS.find_card(\"j_aij_pace\")) and self.ability.set == 'Joker' then"
   )
   for s in "${subs[@]}"; do
     IFS='|' read -r file from to <<< "$s"
@@ -134,9 +141,12 @@ patch_allinjest() {
     grep -qF "$to" "$file" && continue          # already patched
     grep -qF "$from" "$file" || continue         # upstream changed this line; skip
     FROM="$from" TO="$to" perl -i -pe 's/\Q$ENV{FROM}\E/$ENV{TO}/g' "$file"
-    luajit -bl "$file" /dev/null 2>/dev/null || die "AiJ patch broke $file syntax — restore from backup"
+    case "$file" in
+      *.lua)  luajit -bl "$file" /dev/null 2>/dev/null || die "AiJ patch broke $file (lua syntax)" ;;
+      *.toml) python3 -c "import tomllib;tomllib.load(open('$file','rb'))" 2>/dev/null || die "AiJ patch broke $file (toml syntax)" ;;
+    esac
   done
-  say "Patched All in Jest <-> Talisman comparison crash"
+  say "Patched All in Jest crashes (Talisman big-num compares + SMODS-nil set_cost)"
 }
 patch_allinjest
 
