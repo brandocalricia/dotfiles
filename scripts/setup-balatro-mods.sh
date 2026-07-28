@@ -19,14 +19,9 @@ APPID=2379780
 LOVELY_VER="v0.9.0"   # ethangreen-dev/lovely-injector — Windows build (runs under Proton)
 
 # name | download URL  (codeload src-zip for repos w/o a built asset; branch zip where no release)
-# NOTE: Talisman was REMOVED. With Cryptid dropped, nothing needs it, and it was
-# the 4th mod rewriting Card:add_to_deck (with Bunco/MoreFluff/AllInJest). That
-# 4-way lovely-patch overlap drops an 'end' on Lovely's re-patch pass -> boot crash
-# "card.lua: 'end' expected". Removing Talisman cuts the overlap and fixes it. Save
-# data has no Talisman big-numbers, so it's safe. Re-add ONLY if you add Cryptid, and
-# expect to also need to resolve the add_to_deck conflict.
 MODS=(
   "smods|https://codeload.github.com/Steamodded/smods/zip/refs/tags/1.0.0-beta-1814a"
+  "Talisman|https://codeload.github.com/SpectralPack/Talisman/zip/refs/tags/v2.7"
   "MoreFluff|https://github.com/notmario/MoreFluff/releases/download/1.6.0-rc3/MoreFluff.zip"
   "AllInJest|https://codeload.github.com/survovoaneend/All-In-Jest/zip/refs/tags/0.6.6b"
   "Bunco|https://codeload.github.com/jumbocarrot0/Bunco/zip/refs/tags/v5.4.8b-JumboFork"
@@ -144,6 +139,24 @@ patch_allinjest() {
   say "Patched All in Jest <-> Talisman comparison crash"
 }
 patch_allinjest
+
+# --- 3c. remove Bunco's broken "Infinite redebuff fix" (boot crash) ----------
+# Bunco 5.4.8b inserts `if not from_debuff then` before the Credit Card check in
+# Card:add_to_deck (opener), and inserts the matching `end` before a set_blind line
+# that (on this game/SMODS version) no longer matches its pattern -> opener applied,
+# closer skipped -> unclosed function -> boot crash "card.lua: 'end' expected". The
+# feature is already non-functional here (closer never matches), so we delete the whole
+# group (2 openers + 1 closer) between its header comment and the next patch. Idempotent
+# (no-op once removed). This is what actually caused the crash — NOT Talisman.
+patch_bunco() {
+  local f="$MODS_DIR/Bunco/lovely.toml"
+  [ -f "$f" ] || return 0
+  grep -q '# Infinite redebuff fix' "$f" || return 0
+  perl -0777 -i -pe 's/# Infinite redebuff fix.*?(?=# Drawstep bypassing)//s' "$f"
+  grep -q '# Infinite redebuff fix' "$f" && die "Bunco patch failed (marker still present)"
+  say "Removed Bunco's broken Infinite-redebuff patch (add_to_deck boot crash)"
+}
+patch_bunco
 
 # --- 4. permissions (archives carry Windows bits) ----------------------------
 say "Fixing permissions (755 dirs / 644 files)"
