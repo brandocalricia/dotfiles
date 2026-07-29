@@ -85,15 +85,22 @@ MODS_DIR="$SAVE_DIR/Mods"
 mkdir -p "$MODS_DIR"
 
 # --- 3. install each mod, auto-detecting the real mod root -------------------
-# The mod root is the SHALLOWEST dir containing a Steamodded manifest:
-#   a *.json with "id"+"prefix", OR a *.lua/.toml carrying a STEAMODDED HEADER.
-# This survives version bumps (wrapper folder names change with the tag).
+# The mod root is the SHALLOWEST dir containing a Steamodded manifest, detected by:
+#   * a file literally named manifest.json or metadata.json (Steamodded's own
+#     manifest.json has NO "id" field, so we must match by filename — this is what
+#     was silently mis-detecting smods and installing src/preflight/ as "smods"),
+#   * a *.json containing "id": (MoreFluff/Bunco/JokerDisplay/DebugPlus),
+#   * a *.lua carrying a STEAMODDED HEADER (Talisman/Cartomancer/Incantation/Nopeus).
+# NOTE: lovely.toml is deliberately NOT a marker — Handy's zip has a stray lovely.toml
+# at the wrapper root while the real mod is in HandyBalatro/.
 mod_root() {
   local base="$1" best="" bestdepth=9999 f d depth
   while IFS= read -r f; do
+    [ -n "$f" ] || continue
     d=$(dirname "$f"); depth=$(awk -F/ '{print NF}' <<< "$d")
     if [ "$depth" -lt "$bestdepth" ]; then best="$d"; bestdepth=$depth; fi
   done < <(
+    find "$base" -type f \( -name manifest.json -o -name metadata.json \) 2>/dev/null
     grep -rlE '"id"[[:space:]]*:' "$base" --include='*.json' 2>/dev/null
     grep -rlE 'STEAMODDED HEADER' "$base" --include='*.lua' 2>/dev/null
   )
