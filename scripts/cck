@@ -13,16 +13,59 @@
 # Pro. Use cck when Pro is rate-limited, not to replace it.
 set -uo pipefail
 
-if [ -z "${MOONSHOT_API_KEY:-}" ]; then
-  cat >&2 <<'EOF'
+# Pick the key up even when the caller isn't an interactive zsh — a bare `sh -c`,
+# a systemd unit, or anything Hyprland spawns never sources ~/.zshrc.
+if [ -z "${MOONSHOT_API_KEY:-}" ] && [ -f "$HOME/.config/secrets.env" ]; then
+  # shellcheck disable=SC1091
+  . "$HOME/.config/secrets.env"
+fi
+
+case "${MOONSHOT_API_KEY:-}" in
+  ""|PASTE_YOUR_KIMI_KEY_HERE)
+    cat >&2 <<'EOF'
 cck: MOONSHOT_API_KEY is not set.
 
   1. Get a key at https://platform.kimi.ai/console/api-keys
-  2. Add to ~/.zshrc (or a file it sources):
+     (sign in -> User Center -> API Keys -> create)
+  2. Put it in ~/.config/secrets.env — already sourced by ~/.zshrc, and
+     deliberately outside ~/dotfiles, which auto-commits and pushes:
        export MOONSHOT_API_KEY="sk-..."
-  3. Open a new terminal, or: source ~/.zshrc
+  3. source ~/.config/secrets.env   (or open a new terminal)
 EOF
-  exit 1
+    exit 1
+    ;;
+esac
+
+# `cck --check` — verify the account before blaming Claude Code. Two failure
+# modes look identical from inside the TUI: a zero balance and a model the
+# account cannot see. Both surface here in one call.
+if [ "${1:-}" = "--check" ]; then
+  echo "checking account..." >&2
+  models=$(curl -s --max-time 20 https://api.moonshot.ai/v1/models \
+    -H "Authorization: Bearer $MOONSHOT_API_KEY")
+  if [ -z "$models" ]; then echo "cck: no response from api.moonshot.ai" >&2; exit 1; fi
+  if printf '%s' "$models" | grep -q '"error"'; then
+    printf '%s\n' "$models" | jq -r '.error.message // .' >&2; exit 1
+  fi
+  echo "models available to this key:" >&2
+  printf '%s' "$models" | jq -r '.data[] | "  \(.id)  ctx=\(.context_length)"' >&2
+  want="${KIMI_MODEL:-kimi-k3}"; want="${want%%[*}"
+  if printf '%s' "$models" | jq -e --arg m "$want" '.data[] | select(.id==$m)' >/dev/null 2>&1; then
+    echo "configured model '$want' is available." >&2
+  else
+    echo "WARNING: configured model '$want' is NOT in the list above." >&2
+    echo "  Set a different one:  KIMI_MODEL='kimi-k2.7-code' cck" >&2
+  fi
+  echo "sending a 1-token test..." >&2
+  r=$(curl -s --max-time 45 https://api.moonshot.ai/anthropic/v1/messages \
+    -H "Authorization: Bearer $MOONSHOT_API_KEY" -H "anthropic-version: 2023-06-01" \
+    -H "content-type: application/json" \
+    -d "{\"model\":\"$want\",\"max_tokens\":8,\"messages\":[{\"role\":\"user\",\"content\":\"hi\"}]}")
+  if printf '%s' "$r" | grep -q '"error"'; then
+    printf 'FAILED: %s\n' "$(printf '%s' "$r" | jq -r '.error.message // .')" >&2; exit 1
+  fi
+  echo "OK — account is funded and '$want' responds." >&2
+  exit 0
 fi
 
 # kimi-k3 thinks by default and works as-is. kimi-k2.7-code requires thinking to

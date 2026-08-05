@@ -52,6 +52,22 @@ if git -C "$cwd" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   gitinfo=" · \`$root\`@${br:-?}"
 fi
 day=$(date +%Y-%m-%d); ts=$(date +%H:%M); host=$(hostname -s 2>/dev/null || hostname)
+# Redact secrets before anything reaches the vault. The goal line is the user's
+# FIRST prompt verbatim, and a session that opens by pasting an API key would
+# otherwise write that key into Brain/Claude/Sessions/ — which Syncthing copies
+# to the laptop and restic ships to B2. Cheap insurance on a one-way mistake.
+redact() {
+  printf '%s' "$1" | sed -E \
+    -e 's/\b(sk|pk|rk|ak)-[A-Za-z0-9_-]{16,}/[REDACTED-KEY]/g' \
+    -e 's/\bghp_[A-Za-z0-9]{20,}/[REDACTED-GITHUB-TOKEN]/g' \
+    -e 's/\bgh[pousr]_[A-Za-z0-9]{20,}/[REDACTED-GITHUB-TOKEN]/g' \
+    -e 's/\bxox[baprs]-[A-Za-z0-9-]{10,}/[REDACTED-SLACK-TOKEN]/g' \
+    -e 's/\bAKIA[0-9A-Z]{16}\b/[REDACTED-AWS-KEY]/g' \
+    -e 's/(eyJ[A-Za-z0-9_-]{10,})\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}/[REDACTED-JWT]/g' \
+    -e 's/\b[A-Za-z0-9_-]*(API|SECRET|TOKEN|PASSWORD|PASSWD|PRIVATE)[A-Za-z0-9_-]*[[:space:]]*[=:][[:space:]]*[^[:space:]]{8,}/[REDACTED-SECRET]/gI'
+}
+goal=$(redact "$goal")
+
 file="$SESS/$day.md"
 [ -f "$file" ] || printf -- '---\ntags: [claude/session]\ndate: %s\n---\n# Sessions — %s\n\n' "$day" "$day" > "$file"
 
