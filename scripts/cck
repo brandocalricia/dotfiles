@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+# cck — Claude Code running on Kimi K3, as OVERFLOW for the Pro plan.
+#
+# Why this is a separate launcher and not a settings.json change:
+# putting ANTHROPIC_BASE_URL in ~/.claude/settings.json routes *every* session
+# to Moonshot — including the Obsidian brain hooks and any agent you didn't mean
+# to move. This way `claude` stays on the Anthropic plan and `cck` is opt-in per
+# terminal, so nothing silently changes underneath you.
+#
+# On the economics: metered K3 is NOT cheaper than a Pro subscription for this
+# workload. Measured usage for Jul 7 – Aug 5 was ~291M tokens (96% cache reads),
+# which prices at roughly $155/mo on Moonshot's $3/$15/$0.30 card versus $20 for
+# Pro. Use cck when Pro is rate-limited, not to replace it.
+set -uo pipefail
+
+if [ -z "${MOONSHOT_API_KEY:-}" ]; then
+  cat >&2 <<'EOF'
+cck: MOONSHOT_API_KEY is not set.
+
+  1. Get a key at https://platform.kimi.ai/console/api-keys
+  2. Add to ~/.zshrc (or a file it sources):
+       export MOONSHOT_API_KEY="sk-..."
+  3. Open a new terminal, or: source ~/.zshrc
+EOF
+  exit 1
+fi
+
+# kimi-k3 thinks by default and works as-is. kimi-k2.7-code requires thinking to
+# be enabled explicitly (Tab in the TUI) or requests fail outright.
+export ANTHROPIC_BASE_URL="https://api.moonshot.ai/anthropic"
+export ANTHROPIC_AUTH_TOKEN="$MOONSHOT_API_KEY"
+export ANTHROPIC_MODEL="${KIMI_MODEL:-kimi-k3[1m]}"
+export ANTHROPIC_DEFAULT_OPUS_MODEL="$ANTHROPIC_MODEL"
+export ANTHROPIC_DEFAULT_SONNET_MODEL="$ANTHROPIC_MODEL"
+export ANTHROPIC_DEFAULT_HAIKU_MODEL="$ANTHROPIC_MODEL"
+export CLAUDE_CODE_SUBAGENT_MODEL="$ANTHROPIC_MODEL"
+export CLAUDE_CODE_AUTO_COMPACT_WINDOW="1048576"
+
+# An API key set here would outrank the auth token and break the Moonshot call.
+unset ANTHROPIC_API_KEY
+
+echo "cck: $ANTHROPIC_MODEL via api.moonshot.ai  (metered — \$3/\$15 per MTok)" >&2
+echo "cck: verify inside with /status; your brain hooks run unchanged." >&2
+
+exec claude "$@"

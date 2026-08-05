@@ -85,3 +85,7 @@ command -v atuin >/dev/null 2>&1 && eval "$(atuin init zsh)"
 # jot — capture a thought into the Obsidian brain from anywhere: jot buy cables
 jot() { "$HOME/dotfiles/scripts/jot.sh" "$@"; }
 export YDOTOOL_SOCKET="$XDG_RUNTIME_DIR/.ydotool_socket"
+
+# Local secrets — deliberately OUTSIDE ~/dotfiles, which auto-commits and pushes
+# every 15 minutes. Never put a key in the dotfiles repo. chmod 600.
+[ -f ~/.config/secrets.env ] && source ~/.config/secrets.env
