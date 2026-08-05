@@ -1,0 +1,11 @@
+[Unit]
+Description=Weekly vault health audit
+
+[Timer]
+# Runs before the Sunday 20:00 rollup so the digest sees a fresh score.
+OnCalendar=Sun 19:30
+Persistent=true
+RandomizedDelaySec=300
+
+[Install]
+WantedBy=timers.target

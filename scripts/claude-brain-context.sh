@@ -22,10 +22,29 @@ fi
 inbox=""
 [ -f "$BRAIN/Inbox.md" ] && inbox=$(grep '^- \[ \]' "$BRAIN/Inbox.md" 2>/dev/null | head -n 15)
 
-# Nothing to inject → stay silent (fresh machine before Syncthing).
-[ -z "$index$recent$inbox" ] && exit 0
+# Vault health (written by brain-doctor.py; timer keeps it fresh).
+health=""
+if [ -f "$BRAIN/.health-score" ]; then
+  read -r hscore hnotes hdate < "$BRAIN/.health-score"
+  stale=""
+  if [ -n "${hdate:-}" ]; then
+    age=$(( ( $(date +%s) - $(date -d "$hdate" +%s 2>/dev/null || date +%s) ) / 86400 ))
+    [ "$age" -gt 10 ] && stale=" (audit ${age}d stale — run \`brain-doctor.py --all\`)"
+  fi
+  health="Vault health: **${hscore}/100** · ${hnotes} notes · checked ${hdate}${stale}. Detail: \`Claude/Health.md\`."
+  # Surface the top unwritten concepts so gaps are visible without being asked.
+  if [ -f "$BRAIN/Health.md" ]; then
+    queue=$(sed -n '/^## Write queue/,/^## /p' "$BRAIN/Health.md" | grep '^- \*\*' | head -n 5)
+    [ -n "$queue" ] && health=$(printf '%s\nTop unwritten concepts (linked but never written):\n%s' "$health" "$queue")
+  fi
+fi
 
-ctx=$(printf '# Knowledge base (auto-loaded from ~/Documents/Brain/Claude)\n\nThe user'"'"'s persistent brain — treat as current context. Keep INDEX.md'"'"'s "Active threads" current as work changes; log meaningful decisions to today'"'"'s Sessions note.\n\n%s\n' "$index")
+# Nothing to inject → stay silent (fresh machine before Syncthing).
+[ -z "$index$recent$inbox$health" ] && exit 0
+
+ctx=$(printf '# Knowledge base (auto-loaded from ~/Documents/Brain/Claude)\n\nThe user'"'"'s persistent brain — treat as current context. Keep INDEX.md'"'"'s "Active threads" current as work changes; log meaningful decisions to today'"'"'s Sessions note.\n' )
+[ -n "$health" ] && ctx=$(printf '%s\n## Vault health\n%s\n' "$ctx" "$health")
+ctx=$(printf '%s\n%s\n' "$ctx" "$index")
 [ -n "$inbox" ] && ctx=$(printf '%s\n\n## Open captures (Inbox / jot) — surface these if relevant\n%s\n' "$ctx" "$inbox")
 [ -n "$recent" ] && ctx=$(printf '%s\n\n---\n## Recent session history\n%s\n' "$ctx" "$recent")
 

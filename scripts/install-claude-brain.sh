@@ -59,4 +59,19 @@ if [ -f "$DOTFILES/systemd/brain-rollup.timer" ]; then
   systemctl --user enable --now brain-rollup.timer 2>/dev/null && echo "[+] brain-rollup.timer enabled (weekly)" || true
 fi
 
+# 5. Weekly vault health audit + safe auto-repair (brain-doctor).
+if [ -f "$DOTFILES/systemd/brain-doctor.timer" ]; then
+  mkdir -p "$HOME/.config/systemd/user"
+  cp "$DOTFILES/systemd/brain-doctor.service" "$DOTFILES/systemd/brain-doctor.timer" "$HOME/.config/systemd/user/"
+  systemctl --user daemon-reload 2>/dev/null || true
+  systemctl --user enable --now brain-doctor.timer 2>/dev/null && echo "[+] brain-doctor.timer enabled (weekly)" || true
+fi
+
+# 6. Vault slash commands (/brain, /brain-audit, /brain-fix, /brain-note).
+if [ -d "$DOTFILES/claude/commands" ]; then
+  mkdir -p "$CLAUDE_DIR/commands"
+  cp -f "$DOTFILES/claude/commands"/*.md "$CLAUDE_DIR/commands/" 2>/dev/null \
+    && echo "[+] vault slash commands installed"
+fi
+
 echo "[+] Claude brain wired. Restart Claude Code / open /hooks once for the hook to load."

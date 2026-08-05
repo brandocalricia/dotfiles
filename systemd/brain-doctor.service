@@ -1,0 +1,9 @@
+[Unit]
+Description=Obsidian vault health audit + safe auto-repair
+
+[Service]
+Type=oneshot
+# --fix and --archive are mechanical and reversible (aliases, frontmatter,
+# empty dirs, clutter moved to ~/Documents/Brain-archive). --unlink rewrites
+# note bodies, so it stays manual: run `brain-doctor.py --unlink` or /brain-fix.
+ExecStart=%h/dotfiles/scripts/brain-doctor.py --fix --archive --dedupe
