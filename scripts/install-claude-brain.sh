@@ -30,18 +30,22 @@ settings="$CLAUDE_DIR/settings.json"
 [ -f "$settings" ] || echo '{}' > "$settings"
 startcmd="$DOTFILES/scripts/claude-brain-context.sh"
 endcmd="$DOTFILES/scripts/claude-session-log.sh"
+promptcmd="$DOTFILES/scripts/brain-retrieve.py"
 if command -v jq >/dev/null 2>&1; then
   tmp=$(mktemp)
-  jq --arg s "$startcmd" --arg e "$endcmd" '
+  jq --arg s "$startcmd" --arg e "$endcmd" --arg p "$promptcmd" '
     .hooks = (.hooks // {}) |
     .hooks.SessionStart = ((.hooks.SessionStart // [])
       | if any(.[]?.hooks[]?; .command == $s) then .
         else . + [{"hooks":[{"type":"command","command":$s,"timeout":15}]}] end) |
+    .hooks.UserPromptSubmit = ((.hooks.UserPromptSubmit // [])
+      | if any(.[]?.hooks[]?; .command == $p) then .
+        else . + [{"hooks":[{"type":"command","command":$p,"timeout":10}]}] end) |
     .hooks.SessionEnd = ((.hooks.SessionEnd // [])
       | if any(.[]?.hooks[]?; .command == $e) then .
         else . + [{"hooks":[{"type":"command","command":$e,"timeout":20}]}] end)
   ' "$settings" > "$tmp" && mv "$tmp" "$settings" \
-    && echo "[+] SessionStart + SessionEnd hooks ensured" || echo "[!] jq merge failed"
+    && echo "[+] SessionStart + UserPromptSubmit + SessionEnd hooks ensured" || echo "[!] jq merge failed"
 else
   echo "[!] jq missing — add the hooks manually"
 fi

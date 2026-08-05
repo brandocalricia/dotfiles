@@ -370,6 +370,28 @@ DEDUPE_EXEMPT = {
 }
 
 
+def snapshot() -> Path | None:
+    """Tar the vault before anything irreversible. The vault is not a git repo
+    (a .git dir inside a Syncthing share corrupts under concurrent sync), so this
+    is the only local undo that exists. Keeps the 10 most recent.
+    """
+    snap_dir = Path.home() / ".local" / "share" / "brain-snapshots"
+    snap_dir.mkdir(parents=True, exist_ok=True)
+    stamp = datetime.now().strftime("%Y-%m-%dT%H%M%S")
+    dest = snap_dir / f"brain-{stamp}.tar.gz"
+    import subprocess
+    r = subprocess.run(
+        ["tar", "czf", str(dest), "-C", str(VAULT.parent), VAULT.name],
+        capture_output=True,
+    )
+    if r.returncode != 0:
+        return None
+    old = sorted(snap_dir.glob("brain-*.tar.gz"))[:-10]
+    for f in old:
+        f.unlink(missing_ok=True)
+    return dest
+
+
 def dedupe(v: Vault, a: dict, dry: bool) -> list[str]:
     """Archive the unreferenced copy of a colliding title. Nothing is deleted.
 
@@ -383,11 +405,18 @@ def dedupe(v: Vault, a: dict, dry: bool) -> list[str]:
         if stem in DEDUPE_EXEMPT:
             continue
         uniq = sorted(set(paths))
-        ranked = sorted(uniq, key=lambda p: (-a["inbound"][p], -len(v.text.get(p, ""))))
+        # Rank by: most inbound links, then filed in a real folder over dumped at
+        # the vault root, then longest.
+        ranked = sorted(
+            uniq,
+            key=lambda p: (-a["inbound"][p], p.parent == VAULT, -len(v.text.get(p, ""))),
+        )
         keep, losers = ranked[0], ranked[1:]
-        # Only act when there is a clear winner: something must reference it.
+        # Nothing references any copy: only safe to act if the loser is a root-level
+        # stray and the keeper is properly filed. Otherwise a human should look.
         if a["inbound"][keep] == 0 and stem != "_post-metrics":
-            continue
+            if not (keep.parent != VAULT and all(p.parent == VAULT for p in losers)):
+                continue
         for p in losers:
             if a["inbound"][p] > 0:
                 continue  # both referenced — needs a human merge, leave it
@@ -515,9 +544,16 @@ def main() -> int:
         return 1
 
     dry = args.dry_run
+    actions: list[str] = []
+
+    # Anything that moves or rewrites files gets a restore point first.
+    if not dry and (args.fix or args.unlink or args.archive or args.dedupe):
+        snap = snapshot()
+        if snap:
+            actions.append(f"snapshot → `{snap}`")
+
     v = Vault(VAULT)
     a = v.analyse()
-    actions: list[str] = []
 
     if args.archive or args.dedupe:
         moved = []
