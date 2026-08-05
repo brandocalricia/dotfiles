@@ -27,8 +27,8 @@ VAULT = Path(os.environ.get("BRAIN_VAULT", Path.home() / "Documents" / "Brain"))
 EXCLUDE = ("Claude/Sessions/", "Claude/Rollups/", "04-Archive/", "03-Resources/ChatHistory/")
 SKIP_DIRS = {".git", ".obsidian", ".stfolder", ".trash"}
 
-MAX_NOTES = 3
-MAX_CHARS = 2200
+MAX_NOTES = 3       # plus at most one linked neighbour (see the graph hop)
+MAX_CHARS = 2800
 MIN_SCORE = 6  # below this the match is coincidental; stay quiet
 
 STOP = set("""
@@ -61,9 +61,52 @@ MECHANICAL = re.compile(
 )
 
 
+def stem(w: str) -> str:
+    """Crude, deliberately conservative stemmer.
+
+    Matching below is substring-based, so "note" already finds "notes" — but not
+    the reverse. Reducing the *query* term to its stem fixes that direction,
+    which is most of the misses: the user types "vaults"/"retrieving" and the
+    note says "vault"/"retrieve".
+    """
+    if w.endswith("ies") and len(w) > 5:
+        return w[:-3] + "y"
+    if w.endswith("ing") and len(w) > 6:
+        return w[:-3]
+    if w.endswith("ed") and len(w) > 5:
+        return w[:-2]
+    if w.endswith("s") and not w.endswith(("ss", "us", "is")) and len(w) > 4:
+        return w[:-1]
+    return w
+
+
 def terms(prompt: str) -> set[str]:
     words = re.findall(r"[A-Za-z][A-Za-z0-9'-]{2,}", prompt.lower())
-    return {w for w in words if len(w) >= 4 and w not in STOP}
+    return {stem(w) for w in words if len(w) >= 4 and w not in STOP}
+
+
+ALIAS_RE = re.compile(r"^aliases:\s*(.+)$", re.M)
+LINK_RE = re.compile(r"\[\[([^\]|#]+)")
+
+
+def aliases(text: str) -> str:
+    """The note's aliases, as one lowercase blob to substring-match against.
+
+    An alias is the user's own second name for a note — the whole point is that
+    they'll type that name instead of the filename. Not matching on it is the
+    single most avoidable miss.
+    """
+    if not text.startswith("---"):
+        return ""
+    end = text.find("\n---", 3)
+    fm = text[:end] if end != -1 else text[:600]
+    out = []
+    for m in ALIAS_RE.finditer(fm):
+        out.append(m.group(1))
+    # YAML list form: `aliases:` followed by `  - foo` lines.
+    for m in re.finditer(r"^aliases:\s*$((?:\n\s+-\s*.+)+)", fm, re.M):
+        out.append(m.group(1))
+    return re.sub(r"[\[\]\"',-]", " ", " ".join(out)).lower()
 
 
 def notes() -> list[Path]:
@@ -141,8 +184,11 @@ def main() -> int:
         return 0
 
     scores: dict[Path, int] = defaultdict(int)
+    weak: dict[Path, int] = {}          # every note that matched at all
     matched: dict[Path, set[str]] = defaultdict(set)
     bodies: dict[Path, str] = {}
+    outlinks: dict[Path, set[str]] = {}  # note -> link targets it names
+    by_name: dict[str, Path] = {}        # lowercase title/alias -> note
 
     for p in notes():
         try:
@@ -150,12 +196,18 @@ def main() -> int:
         except OSError:
             continue
         low = text.lower()
-        stem = p.stem.lower()
+        title = p.stem.lower()
+        alias = aliases(text)
         headings = " ".join(re.findall(r"^#{1,3} .*", text, re.M)).lower()
+
+        outlinks[p] = {m.strip().lower() for m in LINK_RE.findall(text)}
+        by_name.setdefault(title, p)
+        for a in alias.split():
+            by_name.setdefault(a, p)
 
         score, in_title, head_terms = 0, False, 0
         for t in q:
-            in_name = t in stem
+            in_name = t in title or t in alias
             in_head = t in headings
             n = low.count(t)
             if not (in_name or in_head or n):
@@ -164,13 +216,15 @@ def main() -> int:
             in_title |= in_name
             head_terms += in_head
             score += 8 * in_name + 3 * in_head + min(n, 4)
+        if score:
+            weak[p] = score
+            bodies[p] = text
         # A single shared word is a coincidence; two or more is a topic. Beyond
         # that the note must be *about* the question: its filename matches, or
         # two separate query terms hit its headings. One generic word in one
         # heading is how "parse a csv" drags in the publishing pipeline note.
         if len(matched[p]) >= 2 and (in_title or head_terms >= 2):
             scores[p] = score
-            bodies[p] = text
 
     if not scores:
         return 0
@@ -181,6 +235,28 @@ def main() -> int:
     ranked = [(p, s) for p, s in ranked if s >= MIN_SCORE and s >= top * 0.5]
     if not ranked:
         return 0
+
+    # One graph hop. A vault is a graph, not a pile of documents: the note that
+    # explains the answer is often the one the best match *links to*, under a
+    # name the prompt never used. So take the top hit's neighbourhood — what it
+    # links to, and what links to it — and admit the strongest neighbour that
+    # also matched the query at all. The query-match floor is what keeps this
+    # from dragging in an arbitrary neighbour and violating constraint #1.
+    best = ranked[0][0]
+    chosen = {p for p, _ in ranked}
+    names = {best.stem.lower()} | set(aliases(bodies[best]).split())
+    neigh = {by_name[t] for t in outlinks.get(best, ()) if t in by_name}
+    neigh |= {p for p, links in outlinks.items() if links & names}
+    cands = [
+        (weak[p], p) for p in neigh
+        if p not in chosen and weak.get(p, 0) >= 3
+    ]
+    if cands:
+        cands.sort(reverse=True)
+        ranked.append((cands[0][1], cands[0][0]))
+        linked = cands[0][1]
+    else:
+        linked = None
 
     if os.environ.get("BRAIN_RETRIEVE_DEBUG"):
         for p, s in ranked:
@@ -196,7 +272,8 @@ def main() -> int:
     ]
     for p, s in ranked:
         rel = p.relative_to(VAULT).as_posix()
-        parts.append(f"## `{rel}`")
+        via = " — linked from the note above" if p is linked else ""
+        parts.append(f"## `{rel}`{via}")
         ex = excerpt(bodies[p], matched[p])
         if ex:
             parts.append(ex)

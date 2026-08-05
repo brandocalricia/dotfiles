@@ -40,8 +40,28 @@ if [ "$peek_mode" != "1" ] && [ -d "$BRAIN/Sessions" ]; then
 fi
 
 # Open Inbox captures (from `jot`) — unchecked items only, capped.
+# Each item is stamped with the date heading it sits under and, once it's been
+# sitting for more than a week, an explicit age. Without that a capture just
+# rots quietly: it shows up identically on day 1 and day 90, so it reads as
+# "new" forever and never gets handled.
 inbox=""
-[ -f "$BRAIN/Inbox.md" ] && inbox=$(grep '^- \[ \]' "$BRAIN/Inbox.md" 2>/dev/null | head -n 15)
+if [ -f "$BRAIN/Inbox.md" ]; then
+  inbox=$(awk -v today="$(date +%s)" '
+    /^## [0-9]{4}-[0-9]{2}-[0-9]{2}/ { day = $2; next }
+    /^- \[ \]/ {
+      age = -1
+      if (day != "") {
+        cmd = "date -d " day " +%s 2>/dev/null"
+        cmd | getline t; close(cmd)
+        if (t > 0) age = int((today - t) / 86400)
+      }
+      if (age > 7)  { printf "%s · **%dd old**\n", $0, age }
+      else          { print $0 }
+    }
+  ' "$BRAIN/Inbox.md" 2>/dev/null | head -n 15)
+  inbox_stale=$(printf '%s' "$inbox" | grep -c 'd old\*\*' || true)
+  [ "${inbox_stale:-0}" -gt 0 ] && inbox=$(printf '%s\n(%s capture(s) older than a week — ask whether to handle or drop them.)' "$inbox" "$inbox_stale")
+fi
 
 # Vault health (written by brain-doctor.py; timer keeps it fresh).
 health=""
