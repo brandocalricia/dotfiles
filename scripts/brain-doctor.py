@@ -31,6 +31,12 @@ REPORT = VAULT / "Claude" / "Health.md"
 SCORE_CACHE = VAULT / "Claude" / ".health-score"
 
 SKIP_DIRS = {".git", ".obsidian", ".stfolder", ".trash", "node_modules"}
+# Machine-maintained mirrors living inside the vault. Claude/Memory is a
+# flattened copy of the per-project auto-memory dirs: its [[links]] are memory
+# slugs, not vault notes, and every re-sync resurrected them as "broken links"
+# and dragged the score a few points until the next repair. A mirror is not
+# notes — audit and repair both leave it alone.
+MIRROR_DIRS = {"Claude/Memory"}
 # Folders whose contents are transcripts/exports, not notes. Archived, not deleted.
 CLUTTER_DIRS = ["copilot"]
 # Directories that must survive being empty (Obsidian/workflow entry points).
@@ -78,7 +84,10 @@ LINK_RE = re.compile(r"\[\[([^\]]+?)\]\]", re.S)
 def walk_notes(root: Path) -> list[Path]:
     out = []
     for dirpath, dirnames, filenames in os.walk(root):
-        dirnames[:] = [d for d in dirnames if d not in SKIP_DIRS]
+        rel = Path(dirpath).relative_to(root)
+        dirnames[:] = [d for d in dirnames
+                       if d not in SKIP_DIRS
+                       and str(rel / d) not in MIRROR_DIRS]
         for fn in filenames:
             if fn.endswith(".md"):
                 out.append(Path(dirpath) / fn)
