@@ -72,7 +72,7 @@ fi
 # be enabled explicitly (Tab in the TUI) or requests fail outright.
 export ANTHROPIC_BASE_URL="https://api.moonshot.ai/anthropic"
 export ANTHROPIC_AUTH_TOKEN="$MOONSHOT_API_KEY"
-export ANTHROPIC_MODEL="${KIMI_MODEL:-kimi-k3[1m]}"
+export ANTHROPIC_MODEL="${KIMI_MODEL:-kimi-k3}"
 export ANTHROPIC_DEFAULT_OPUS_MODEL="$ANTHROPIC_MODEL"
 export ANTHROPIC_DEFAULT_SONNET_MODEL="$ANTHROPIC_MODEL"
 export ANTHROPIC_DEFAULT_HAIKU_MODEL="$ANTHROPIC_MODEL"
