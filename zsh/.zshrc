@@ -1,5 +1,13 @@
 typeset -g POWERLEVEL9K_INSTANT_PROMPT=quiet
-[[ $- == *i* ]] && fastfetch
+# Width-aware fetch. Side-by-side (logo left, info right) needs ~82 cols before
+# the info column starts wrapping into a mess; below that — a tiling WM giving
+# foot half the screen — stack the logo ON TOP so the info gets the full width
+# and never wraps. The 29-col "du" logo + padding + longest info line is the 82.
+ff() {
+  if [[ ${COLUMNS:-80} -lt 82 ]]; then fastfetch --logo-position top
+  else fastfetch; fi
+}
+[[ $- == *i* ]] && ff
 # Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
 # Initialization code that may require console input (password prompts, [y/n]
 # confirmations, etc.) must go above this block; everything else may go below.
@@ -106,7 +114,7 @@ if [[ $- == *i* ]]; then
   TRAPWINCH() {
     if [[ $_ff_fresh == 1 ]] && command -v fastfetch >/dev/null 2>&1; then
       print -rn -- $'\e[3J\e[H\e[2J'   # drop scrollback, home, clear screen
-      fastfetch
+      ff                                # width-aware: stacks when narrow
     fi
     # Redraw the prompt in place (also what p10k wants after a resize).
     zle reset-prompt 2>/dev/null
