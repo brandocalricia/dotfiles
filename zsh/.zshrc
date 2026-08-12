@@ -89,3 +89,26 @@ export YDOTOOL_SOCKET="$XDG_RUNTIME_DIR/.ydotool_socket"
 # Local secrets — deliberately OUTSIDE ~/dotfiles, which auto-commits and pushes
 # every 15 minutes. Never put a key in the dotfiles repo. chmod 600.
 [ -f ~/.config/secrets.env ] && source ~/.config/secrets.env
+
+# ── Keep the fastfetch "du" logo crisp across resizes ────────────────────────
+# fastfetch prints its ASCII logo once, at line 2. In a tiling WM, opening a
+# second window narrows foot, foot reflows its scrollback, and the wide logo
+# can't un-wrap — so it garbles. There is no foot/fastfetch option to prevent
+# that; the only real fix is to redraw. While the terminal is still FRESH (no
+# command run yet), reprint the fetch at the new width on every resize; once a
+# command has run, resizing behaves normally so scrollback is never disturbed.
+if [[ $- == *i* ]]; then
+  _ff_fresh=1
+  autoload -Uz add-zsh-hook
+  _ff_mark_used() { _ff_fresh=0 }
+  add-zsh-hook preexec _ff_mark_used
+  # zsh calls TRAPWINCH on SIGWINCH after it has updated COLUMNS/LINES.
+  TRAPWINCH() {
+    if [[ $_ff_fresh == 1 ]] && command -v fastfetch >/dev/null 2>&1; then
+      print -rn -- $'\e[3J\e[H\e[2J'   # drop scrollback, home, clear screen
+      fastfetch
+    fi
+    # Redraw the prompt in place (also what p10k wants after a resize).
+    zle reset-prompt 2>/dev/null
+  }
+fi
