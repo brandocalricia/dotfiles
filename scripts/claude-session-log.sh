@@ -6,6 +6,12 @@
 # Receives hook JSON on stdin: { session_id, transcript_path, cwd, reason, ... }
 set -uo pipefail
 
+# Recall-bench sessions are throwaway grok -p runs. Do not append them to the
+# real working-day SessionEnd note.
+if [ "${BRAIN_RECALL_BENCH-}" = "1" ]; then
+  exit 0
+fi
+
 BRAIN="$HOME/Documents/Brain/Claude"
 SESS="$BRAIN/Sessions"
 mkdir -p "$SESS" "$BRAIN/Memory" 2>/dev/null || exit 0
