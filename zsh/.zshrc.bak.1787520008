@@ -120,9 +120,3 @@ if [[ $- == *i* ]]; then
     zle reset-prompt 2>/dev/null
   }
 fi
-
-# >>> grok installer >>>
-export PATH="$HOME/.grok/bin:$PATH"
-fpath=(~/.grok/completions/zsh $fpath)
-autoload -Uz compinit && compinit -C
-# <<< grok installer <<<
