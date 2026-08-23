@@ -498,6 +498,24 @@ def grok_cmd(prompt: str, *, resume: str | None = None) -> list[str]:
     ]
     if resume:
         cmd.extend(["--resume", resume])
+    # --always-approve still honors deny rules. Round-3 "remove cake" and
+    # "youtube / hypridle" sessions used docker nsenter + python writes to
+    # mutate live CAKE and hypridle; these deny those classes of command.
+    cmd.extend([
+        "--deny", "Bash(docker*)",
+        "--deny", "Bash(podman*)",
+        "--deny", "Bash(*qdisc*)",
+        "--deny", "Bash(sudo *)",
+        "--deny", "Bash(sudo)",
+        "--deny", "Bash(*50-cake-eno1*)",
+        "--deny", "Bash(*hypridle.conf*)",
+        "--deny", "Bash(*autoclick*)",
+        "--deny", "Bash(*ydotool*)",
+        "--deny", "Bash(*peek*)",
+        "--deny", "Bash(hyprctl dispatch*)",
+        "--deny", "Bash(grim*)",
+        "--deny", "Bash(*dolphin*)",
+    ])
     return cmd
 
 

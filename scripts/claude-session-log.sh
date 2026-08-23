@@ -57,6 +57,17 @@ def load_args(raw):
     return {}
 def homeish(p):
     return re.sub(r"^/home/[^/]+/", "~/", p)
+def unwrap_user(text):
+    """Grok TUI wraps prompts in <user_query>; skip other harness XML."""
+    if not text or text.isspace():
+        return ""
+    text = text.strip()
+    m = re.search(r"<user_query>\s*(.*?)\s*</user_query>", text, re.S)
+    if m:
+        return m.group(1).strip()
+    if text.startswith("<") or text.startswith("Caveat"):
+        return ""
+    return text
 try:
     lines = path.read_text(encoding="utf-8", errors="ignore").splitlines()
 except OSError:
@@ -76,7 +87,8 @@ for line in lines:
                 text = content
             elif isinstance(content, list):
                 text = " ".join(b.get("text") or "" for b in content if isinstance(b, dict) and b.get("type") == "text")
-            if text and not text.isspace() and not text.startswith("<") and not text.startswith("Caveat"):
+            text = unwrap_user(text)
+            if text:
                 prompts.append(text)
         elif role == "assistant" and isinstance(content, list):
             for b in content:
@@ -103,12 +115,11 @@ for line in lines:
                     texts.append(b.get("text") or "")
                 elif isinstance(b, str):
                     texts.append(b)
-        text = " ".join(texts).strip()
+        text = unwrap_user(" ".join(texts))
         if not text:
             continue
-        if "prompt_index" in ev or (not text.startswith("<") and not text.startswith("Caveat")):
-            if not text.startswith("<"):
-                prompts.append(text)
+        if "prompt_index" in ev or not text.startswith("Caveat"):
+            prompts.append(text)
     elif t == "assistant":
         for tc in ev.get("tool_calls") or []:
             if not isinstance(tc, dict):
@@ -186,7 +197,15 @@ file="$SESS/$day.md"
 } >> "$file"
 
 # ── Refresh the memory mirror (real copies → synced + graphed) ───────────────
+# Claude per-project auto-memory (overlap month). Flattened on purpose — see
+# install-claude-brain.sh for why we do not try to round-trip this.
 for md in "$HOME"/.claude/projects/*/memory; do
   [ -d "$md" ] && cp -f "$md"/*.md "$BRAIN/Memory/" 2>/dev/null || true
 done
+# Grok one-fact files written at ~/.grok/memory/*.md (not the MEMORY.md index,
+# not imported-from-claude/ which would clobber the Claude-shaped copies, not
+# per-session sqlite dirs). Overlap-month: Claude flatten stays the source of
+# the existing 20; new Grok facts land here too so Syncthing sees them.
+find "$HOME/.grok/memory" -maxdepth 1 -name '*.md' ! -name 'MEMORY.md' \
+  -exec cp -f {} "$BRAIN/Memory/" \; 2>/dev/null || true
 exit 0

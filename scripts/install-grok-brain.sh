@@ -21,10 +21,72 @@ startcmd="$DOTFILES/scripts/claude-brain-context.sh"
 endcmd="$DOTFILES/scripts/claude-session-log.sh"
 promptcmd="$DOTFILES/scripts/brain-retrieve.py"
 stopcmd="$DOTFILES/scripts/brain-capture-check.py"
+recallcmd="$DOTFILES/scripts/brain-recall-check.py"
 guardcmd="$DOTFILES/scripts/grok-cwd-guard.sh"
 mcpcmd="$DOTFILES/scripts/brain-mcp-server.py"
 telcmd="$DOTFILES/scripts/grok-telemetry-guard.sh"
-chmod +x "$startcmd" "$endcmd" "$promptcmd" "$stopcmd" "$guardcmd" "$mcpcmd" "$telcmd" 2>/dev/null || true
+chmod +x "$startcmd" "$endcmd" "$promptcmd" "$stopcmd" "$recallcmd" "$guardcmd" "$mcpcmd" "$telcmd" 2>/dev/null || true
+
+if [ "${1-}" = "--dry-run" ]; then
+  cat <<PLAN
+install-grok-brain.sh --dry-run (no writes)
+host=$(hostname -s 2>/dev/null || hostname)
+GROK_DIR=$GROK_DIR
+DOTFILES=$DOTFILES
+BRAIN=$BRAIN
+
+Would chmod +x:
+  $startcmd
+  $endcmd
+  $promptcmd
+  $stopcmd
+  $recallcmd
+  $guardcmd
+  $mcpcmd
+  $telcmd
+
+Would write $GROK_DIR/hooks/brain.json
+  SessionStart: claude-brain-context.sh + grok-cwd-guard.sh
+  UserPromptSubmit: brain-retrieve.py
+  Stop: brain-recall-check.py THEN brain-capture-check.py
+  SessionEnd: claude-session-log.sh
+  PreToolUse: grok-cwd-guard.sh
+
+Would upsert marked block in $GROK_DIR/config.toml
+  [features] telemetry=false feedback=false
+  [telemetry] trace_upload=false (and mixpanel/otel off)
+  [compat.claude] skills/rules/agents/mcps/hooks/sessions = true
+  [memory] enabled=true  [memory.session] save_on_end=true
+  [mcp_servers.brain] $mcpcmd
+  [permission] deny Read/Edit on .env, secrets.env, credentials, ssh, gnupg
+
+Would mkdir -p:
+  $GROK_DIR/{hooks,rules,memory}
+  $BRAIN/{Sessions,Memory,Rollups}
+
+Would seed $GROK_DIR/rules/brain-session-context.md via SessionStart script
+Would copy/write $GROK_DIR/rules/brain-search-obligation.md
+
+Would install user systemd units (if present in repo):
+  grok-telemetry-guard.path + .service → enable --now
+  then run $telcmd
+
+Would NOT touch:
+  ~/.claude/  CLAUDE.md  settings.json  settings.local.json
+  ~/Documents/Brain note bodies (except creating empty Sessions/Memory/Rollups dirs)
+  display manager, sudo, NetworkManager
+
+zsh grok() wrapper: lives in ~/dotfiles/zsh/.zshrc (stowed). This script
+does not rewrite .zshrc. Laptop gets it on the next dotfiles pull + stow.
+PLAN
+  if grep -q 'grok() {' "$HOME/.zshrc" 2>/dev/null; then
+    echo "zsh grok() wrapper: PRESENT in ~/.zshrc"
+  else
+    echo "zsh grok() wrapper: MISSING from ~/.zshrc — pull+stow ~/dotfiles (zsh/.zshrc)"
+  fi
+  echo "Claude hooks: $( [ -f "$HOME/.claude/settings.json" ] && echo PRESENT, left alone || echo none )"
+  exit 0
+fi
 
 # 1. Native hooks file (always-trusted global). Identical command paths are
 #    deduplicated against ~/.claude/settings.json if Claude-compat is on.
@@ -44,6 +106,7 @@ cat > "$GROK_DIR/hooks/brain.json" <<EOF
     }],
     "Stop": [{
       "hooks": [
+        {"type": "command", "command": "$recallcmd", "timeout": 10},
         {"type": "command", "command": "$stopcmd", "timeout": 10}
       ]
     }],
@@ -189,6 +252,13 @@ if [ -f "$DOTFILES/systemd/grok-telemetry-guard.path" ]; then
   systemctl --user enable --now grok-telemetry-guard.path 2>/dev/null \
     && echo "[+] grok-telemetry-guard.path enabled" || true
   "$telcmd" && echo "[+] telemetry guard OK" || echo "[!] telemetry guard FAIL (see above)"
+fi
+
+if grep -q 'grok() {' "$HOME/.zshrc" 2>/dev/null; then
+  echo "[+] zsh grok() wrapper present in ~/.zshrc (stowed from dotfiles/zsh/.zshrc)"
+else
+  echo "[!] zsh grok() wrapper MISSING from ~/.zshrc"
+  echo "    Pull ~/dotfiles and restow zsh so grok() regenerates context before launch."
 fi
 
 echo "[+] Grok brain wired. Restart Grok / run \`grok inspect\` to confirm hooks + MCP."

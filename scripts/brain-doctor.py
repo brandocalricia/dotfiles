@@ -76,6 +76,16 @@ def is_scaffold_target(name: str) -> bool:
     return len(name.split()) >= 5 and not name.lower().startswith("moc")
 
 LINK_RE = re.compile(r"\[\[([^\]]+?)\]\]", re.S)
+# English words people write ABOUT linking (`[[links]]`, "never invent [[wikilinks]]").
+# These are not note titles. Counting them as missing notes was a false positive
+# (Grok-Migration-Plan, Leaving-Claude, session notes). Skip them entirely.
+PROSE_LINK_TARGETS = re.compile(
+    r"^(links?|wikilinks?|notes?|tags?|folder|example)$", re.I
+)
+
+
+def is_prose_link_target(name: str) -> bool:
+    return bool(PROSE_LINK_TARGETS.match((name or "").strip()))
 
 
 # --------------------------------------------------------------------------
@@ -121,11 +131,17 @@ def split_frontmatter(text: str) -> tuple[dict | None, str, str]:
 
 
 def link_targets(text: str) -> list[str]:
-    """Wikilink targets, with embedded newlines collapsed and anchors stripped."""
+    """Wikilink targets, with embedded newlines collapsed and anchors stripped.
+
+    Drops common English words used in prose or inline code about linking
+    (`[[links]]`, never invent `[[wikilinks]]`) so they are not missing notes.
+    """
+    # Backtick-wrapped wikilinks are code/prose about linking, not graph edges.
+    stripped = re.sub(r"`\[\[[^\]]+\]\]`", " ", text)
     out = []
-    for raw in LINK_RE.findall(text):
+    for raw in LINK_RE.findall(stripped):
         t = re.sub(r"\s+", " ", raw.split("|")[0].split("#")[0]).strip()
-        if t:
+        if t and not is_prose_link_target(t):
             out.append(t)
     return out
 
