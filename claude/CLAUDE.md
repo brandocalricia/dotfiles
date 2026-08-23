@@ -15,6 +15,11 @@ never have to type a slash command to get value out of it:
   prefer them over general knowledge, cite them by path, and say so plainly if they
   contradict you or are out of date. The hook stays silent when nothing matches,
   so no block simply means the vault has nothing on this; don't announce that.
+  **Grok Build 1.0.5: that injection is DEGRADED** (stdout/stderr/exit codes do
+  not reach the model — probed). On Grok, before answering ANY question about the
+  user's projects, setup, decisions, tools, machines, games, or history, call the
+  `brain_search` tool with their prompt first. Not optional. Claude Code still
+  gets the auto-injected block and should keep using it.
 - **Logged for you automatically.** A SessionEnd hook writes a factual record of
   every session to `Brain/Claude/Sessions/<date>.md`. You do NOT need to log what
   happened.

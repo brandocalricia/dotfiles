@@ -72,7 +72,20 @@ if [ "$is_brain_git" -eq 1 ]; then
 fi
 
 if [ "$has_env" -eq 1 ]; then
-  warn "GROK CWD GUARD: WARNING — this repo contains ${env_path}. Deny rules should block Read/Edit of .env; still do not launch Grok from a secrets repo if you can avoid it. The 0.2.93 tarball vector was tracked files + history, so a gitignored .env is the read-file vector, not the tarball — both are still a risk if deny rules fail."
+  env_dir=$(dirname "$env_path")
+  tracked=0
+  if git -C "$env_dir" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    rel=$(realpath --relative-to="$(git -C "$env_dir" rev-parse --show-toplevel)" "$env_path" 2>/dev/null || true)
+    if [ -n "$rel" ] && git -C "$env_dir" ls-files --error-unmatch "$rel" >/dev/null 2>&1; then
+      tracked=1
+    fi
+  fi
+  if [ "$tracked" -eq 1 ]; then
+    deny "GROK CWD GUARD: refused. ${env_path} is TRACKED in git — that is the 0.2.93 tarball vector. Move the secrets out of the repo (or gitignore them) before launching Grok here."
+  fi
+  # gitignored .env: Read/Edit deny rules cover the tool layer. Warn every session
+  # because a bash wrapper (python app.py that loads dotenv) still runs.
+  warn "GROK CWD GUARD: WARNING — gitignored ${env_path} is present. Deny rules block Read/Edit of **/.env at the tool layer; do not assume a subprocess cannot load it. Prefer not launching Grok from a secrets repo."
 fi
 
 exit 0

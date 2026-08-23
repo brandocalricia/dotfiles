@@ -215,19 +215,46 @@ def _prompt_from_payload(payload: dict) -> str:
     return ""
 
 
-def main() -> int:
-    try:
-        payload = json.load(sys.stdin)
-    except (json.JSONDecodeError, ValueError):
-        return 0
-    _dump_stdin(payload)
-    prompt = _prompt_from_payload(payload)
+STATUS_PATH = Path.home() / ".cache" / "brain-hooks" / "retrieval-status.json"
 
+
+def write_heartbeat(*, prompt: str, ctx: str | None, harness: str) -> None:
+    """Record whether retrieval ran and whether automatic injection can work.
+
+    Grok 1.0.5 ignores UserPromptSubmit stdout/stderr/exit codes (probed
+    2026-08-23). Claude consumes hookSpecificOutput. Do not mark Grok as
+    confirmed just because the hook found notes.
+    """
+    try:
+        STATUS_PATH.parent.mkdir(parents=True, exist_ok=True)
+        grok = harness == "grok"
+        STATUS_PATH.write_text(json.dumps({
+            "ts": __import__("datetime").datetime.now(
+                __import__("datetime").timezone.utc
+            ).isoformat(),
+            "harness": harness,
+            "prompt_preview": (prompt or "")[:120],
+            "matched": bool(ctx),
+            "nchars": len(ctx or ""),
+            "automatic_injection": "degraded" if grok else "working",
+            "confirmed": (not grok),
+        }, indent=2) + "\n", encoding="utf-8")
+    except OSError:
+        pass
+
+
+def retrieve(prompt: str) -> str | None:
+    """Search the vault. Returns the formatted context block, or None if silent.
+
+    This is the single ranking implementation. The UserPromptSubmit hook, the
+    MCP server, and any other caller must go through here — do not fork it.
+    """
+    prompt = (prompt or "").strip()
     if len(prompt) < 12 or MECHANICAL.search(prompt) or not VAULT.is_dir():
-        return 0
+        return None
     q = terms(prompt)
     if len(q) < 2:
-        return 0
+        return None
 
     scores: dict[Path, int] = defaultdict(int)
     weak: dict[Path, int] = {}          # every note that matched at all
@@ -273,14 +300,14 @@ def main() -> int:
             scores[p] = score
 
     if not scores:
-        return 0
+        return None
     ranked = sorted(scores.items(), key=lambda kv: -kv[1])[:MAX_NOTES]
     top = ranked[0][1]
     # Keep runners-up only if they're in the same league as the best match;
     # a far-behind third note is filler, not context.
     ranked = [(p, s) for p, s in ranked if s >= MIN_SCORE and s >= top * 0.5]
     if not ranked:
-        return 0
+        return None
 
     # One graph hop. A vault is a graph, not a pile of documents: the note that
     # explains the answer is often the one the best match *links to*, under a
@@ -325,7 +352,22 @@ def main() -> int:
             parts.append(ex)
         parts.append("")
 
-    ctx = "\n".join(parts)[:MAX_CHARS]
+    return "\n".join(parts)[:MAX_CHARS]
+
+
+def main() -> int:
+    try:
+        payload = json.load(sys.stdin)
+    except (json.JSONDecodeError, ValueError):
+        return 0
+    _dump_stdin(payload)
+    prompt = _prompt_from_payload(payload)
+    grok = bool(os.environ.get("GROK_HOOK_EVENT"))
+    harness = "grok" if grok else "claude"
+    ctx = retrieve(prompt)
+    write_heartbeat(prompt=prompt, ctx=ctx, harness=harness)
+    if not ctx:
+        return 0
     event_name = (
         os.environ.get("GROK_HOOK_EVENT")
         or payload.get("hookEventName")

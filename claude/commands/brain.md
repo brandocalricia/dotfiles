@@ -1,5 +1,5 @@
 ---
-description: Answer a question from the Obsidian vault, citing your own notes
+description: "ALWAYS invoke this skill (do not wait for /brain) before answering questions about the user's projects, machines, Fedora/Hyprland setup, config, games (Megabonk, BonkScanner, BakkesMod, Balatro, Geometry Dash, Rusty's Retirement), peek, bwllm, dotfiles, vault/brain, past decisions, or anything they might have written down. Search their Obsidian vault first. Required, not optional."
 argument-hint: <question>
 allowed-tools: Bash, Read, Grep, Glob
 ---
@@ -13,6 +13,8 @@ Vault root: `~/Documents/Brain`. Notes live mainly in `02-Notes/`, `03-Resources
 
 Procedure:
 
+0. If the `brain_search` tool exists, call it first with the user's prompt verbatim
+   and treat its "From your vault" block as the primary source. Then continue.
 1. Search widely before answering — `grep -ril` across the vault for the key terms,
    then follow `[[wikilinks]]` out of the strongest hits one hop. MOC notes
    (`MOC — *.md`) are hubs; they often point at the good material faster than grep.

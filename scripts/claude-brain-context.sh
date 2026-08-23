@@ -94,6 +94,21 @@ ctx=$(printf '%s\n%s\n' "$ctx" "$index")
 [ -n "$inbox" ] && ctx=$(printf '%s\n\n## Open captures (Inbox / jot) — surface these if relevant\n%s\n' "$ctx" "$inbox")
 [ -n "$recent" ] && ctx=$(printf '%s\n\n---\n## Recent session history\n%s\n' "$ctx" "$recent")
 
+# Retrieval-status banner. Grok 1.0.5 cannot inject UserPromptSubmit stdout
+# (probed exhaustively 2026-08-23). Must be visible every session, not once.
+generated=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+status_line="Retrieval: **CONFIRMED WORKING** on Claude Code (UserPromptSubmit additionalContext)."
+if [ -n "${GROK_HOOK_EVENT-}" ] || [ "${source}" = "new" ]; then
+  status_line="Retrieval: **DEGRADED** on Grok Build 1.0.5. UserPromptSubmit stdout/stderr/exit codes do not reach the model. Before answering questions about the user's projects, setup, decisions, tools, machines, games, or history, call \`brain_search\` with their prompt first. Not optional."
+fi
+if [ -f "$HOME/.cache/brain-hooks/retrieval-status.json" ] && command -v jq >/dev/null; then
+  hts=$(jq -r '.ts // empty' "$HOME/.cache/brain-hooks/retrieval-status.json" 2>/dev/null || true)
+  hmatch=$(jq -r '.matched // empty' "$HOME/.cache/brain-hooks/retrieval-status.json" 2>/dev/null || true)
+  [ -n "$hts" ] && status_line=$(printf '%s Last hook heartbeat: %s (matched=%s).' "$status_line" "$hts" "$hmatch")
+fi
+banner=$(printf '## Retrieval status\n%s\n_generated %s, may be one session behind unless `grok` was launched via the zsh wrapper._\n' "$status_line" "$generated")
+ctx=$(printf '%s\n%s\n' "$banner" "$ctx")
+
 # Hard cap total size (~6000 chars) as a final guard.
 ctx=$(printf '%s' "$ctx" | head -c 6000)
 
@@ -101,6 +116,7 @@ ctx=$(printf '%s' "$ctx" | head -c 6000)
 # 2026-08-23: hook ran in 22ms, INDEX never reached the API). Side-channel:
 # write the same payload into ~/.grok/rules/ so the NEXT Grok session loads it
 # as a home rule. Claude does not read that directory; overlap stays intact.
+# Same-session re-read of rules files does NOT reach the model (probed).
 if [ -n "${GROK_HOOK_EVENT-}" ] || [ "${source}" = "new" ]; then
   mkdir -p "$HOME/.grok/rules" 2>/dev/null || true
   {

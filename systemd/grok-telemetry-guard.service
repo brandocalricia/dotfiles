@@ -1,0 +1,6 @@
+[Unit]
+Description=Grok Build telemetry/trace-upload guard (fail loud)
+
+[Service]
+Type=oneshot
+ExecStart=%h/dotfiles/scripts/grok-telemetry-guard.sh

@@ -78,6 +78,29 @@ alias rl-map-download='$HOME/.local/bin/rl-map-download.sh'
 # Cross-machine work awareness (Syncthing-shared ~/code heartbeats)
 alias work-status='$HOME/dotfiles/scripts/work-status.sh'
 
+# Grok Build: regenerate vault SessionStart context BEFORE the TUI loads, so
+# ~/.grok/rules/brain-session-context.md is this launch, not last session.
+# SessionStart cannot inject into the same session (probed); this wrapper is
+# the same-session-freshness path. `command grok` skips the function.
+grok() {
+  if [ -x "$HOME/dotfiles/scripts/claude-brain-context.sh" ]; then
+    printf '%s' '{"source":"startup","hookEventName":"session_start"}' \
+      | GROK_HOOK_EVENT=session_start "$HOME/dotfiles/scripts/claude-brain-context.sh" \
+      >/dev/null 2>&1 || true
+  fi
+  if [ "${1-}" = "trace" ]; then
+    local has_local=0 a
+    for a in "$@"; do
+      [ "$a" = "--local" ] && has_local=1
+    done
+    if [ "$has_local" -eq 0 ]; then
+      echo "grok wrapper: refusing remote trace upload; adding --local" >&2
+      set -- "$@" --local
+    fi
+  fi
+  command grok "$@"
+}
+
 # ── QoL tooling (2026-07-17) ─────────────────────────────────────────────────
 # Each guarded so the shell still starts fine on a machine missing the tool.
 alias lg='lazygit'

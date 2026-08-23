@@ -1,0 +1,10 @@
+[Unit]
+Description=Watch Grok binary for updates and re-check trace-upload kill switches
+
+[Path]
+PathModified=%h/.grok/downloads/grok-linux-x86_64
+PathChanged=%h/.grok/downloads/grok-linux-x86_64
+Unit=grok-telemetry-guard.service
+
+[Install]
+WantedBy=default.target

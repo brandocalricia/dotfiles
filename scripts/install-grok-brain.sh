@@ -22,7 +22,9 @@ endcmd="$DOTFILES/scripts/claude-session-log.sh"
 promptcmd="$DOTFILES/scripts/brain-retrieve.py"
 stopcmd="$DOTFILES/scripts/brain-capture-check.py"
 guardcmd="$DOTFILES/scripts/grok-cwd-guard.sh"
-chmod +x "$startcmd" "$endcmd" "$promptcmd" "$stopcmd" "$guardcmd" 2>/dev/null || true
+mcpcmd="$DOTFILES/scripts/brain-mcp-server.py"
+telcmd="$DOTFILES/scripts/grok-telemetry-guard.sh"
+chmod +x "$startcmd" "$endcmd" "$promptcmd" "$stopcmd" "$guardcmd" "$mcpcmd" "$telcmd" 2>/dev/null || true
 
 # 1. Native hooks file (always-trusted global). Identical command paths are
 #    deduplicated against ~/.claude/settings.json if Claude-compat is on.
@@ -100,6 +102,11 @@ save_on_end = true
 enabled = true
 min_score = 0.7
 
+[mcp_servers.brain]
+command = "{home}/dotfiles/scripts/brain-mcp-server.py"
+enabled = true
+startup_timeout_sec = 15
+
 [permission]
 deny = [
   "Read(**/.env)",
@@ -162,5 +169,27 @@ if [ -x "$startcmd" ]; then
     || echo "[=] SessionStart seed skipped (vault not present yet?)"
 fi
 
-echo "[+] Grok brain wired. Restart Grok / run \`grok inspect\` to confirm hooks."
+# Obligation rule (static; SessionStart does not overwrite this file)
+cp -f "$DOTFILES/claude/brain-search-obligation.md" "$GROK_DIR/rules/brain-search-obligation.md" 2>/dev/null \
+  || cat > "$GROK_DIR/rules/brain-search-obligation.md" <<'EOF'
+# Vault retrieval — standing obligation (Grok Build)
+
+Automatic vault injection via UserPromptSubmit is **DEGRADED** on Grok Build 1.0.5.
+**Before answering ANY question about the user's projects, setup, decisions, tools,
+machines, games, config, or history, you MUST call the `brain_search` tool with
+their prompt (verbatim) first.** Not optional.
+EOF
+
+# Telemetry path unit — re-checks kill switches when the binary is replaced.
+if [ -f "$DOTFILES/systemd/grok-telemetry-guard.path" ]; then
+  mkdir -p "$HOME/.config/systemd/user"
+  cp "$DOTFILES/systemd/grok-telemetry-guard.path" "$DOTFILES/systemd/grok-telemetry-guard.service" \
+    "$HOME/.config/systemd/user/"
+  systemctl --user daemon-reload 2>/dev/null || true
+  systemctl --user enable --now grok-telemetry-guard.path 2>/dev/null \
+    && echo "[+] grok-telemetry-guard.path enabled" || true
+  "$telcmd" && echo "[+] telemetry guard OK" || echo "[!] telemetry guard FAIL (see above)"
+fi
+
+echo "[+] Grok brain wired. Restart Grok / run \`grok inspect\` to confirm hooks + MCP."
 echo "    Claude setup was not touched. Keep using install-claude-brain.sh too."
