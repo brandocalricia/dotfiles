@@ -15,12 +15,14 @@ so Claude always knows your context and every session leaves a durable record.
   transcript path). Claude also writes richer summaries here for substantive work.
 - **`Memory/`** — a mirror of Claude's structured memory
   (`~/.claude/.../memory/`), copied in on each session end so it's graphed in
-  Obsidian, synced across machines, and backed up. **Read-only mirror** — edit
-  the real memory via Claude, not these copies.
+  Obsidian and Syncthing-replicated across machines. Off-device restic→B2 of
+  `/home` is the backup, once a snapshot has actually completed on that machine.
+  **Read-only mirror** — edit the real memory via Claude, not these copies.
 
 ## Sync & safety
 The whole `Brain` vault is a Syncthing folder (`id: brain`) shared laptop ⇄ PC,
-so this knowledge lives on both machines and rides along in the restic backup.
+so this knowledge lives on both machines. Syncthing is replication, not backup
+(deletes propagate). Off-device copy is restic→B2 of `/home`.
 
 ## Query it (Dataview)
 Once the Dataview plugin is enabled, e.g. list recent sessions:

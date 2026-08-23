@@ -513,9 +513,13 @@ full-disk encryption loss). `/home` now has a real off-device, **encrypted** bac
 end-to-end (single file pulled back from B2, byte-identical sha256).
 
 **Repository**
-- `RESTIC_REPOSITORY=s3:s3.us-west-004.backblazeb2.com/brandon-fedora-home`
+- Laptop (`fedora`): `RESTIC_REPOSITORY=s3:s3.us-west-004.backblazeb2.com/brandon-fedora-home`
+- Desktop (`brandon-fedora`): `s3:s3.us-west-004.backblazeb2.com/brandon-desktop-home`
+  (separate bucket; do not assume they share snapshots). Desktop first snapshot had
+  never completed as of 2026-08-23 — 2026-06-15 run was SIGTERM'd by a power-key
+  shutdown at 37 min, and `restic-backup-home.timer` was never enabled afterwards.
 - B2's **S3-compatible** endpoint (restic docs recommend it over the native `b2:` backend).
-- First backup: 1.56 GiB logical → **782 MiB stored** (compressed 1.76×). Incrementals ~20 MiB.
+- Laptop first backup: 1.56 GiB logical → **782 MiB stored** (compressed 1.76×). Incrementals ~20 MiB.
 
 **Where the secrets live (NONE in git / ~/dotfiles)** — all root-owned `0600` under `/etc/restic`:
 - `/etc/restic/home-repo.pass` — restic passphrase (one line). **Also in Bitwarden** ("restic

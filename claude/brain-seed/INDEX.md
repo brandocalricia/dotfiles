@@ -15,7 +15,9 @@ the real one syncs in from the other machine via Syncthing.)
 
 ## Cross-machine plumbing
 - Config: dotfiles auto-sync. Work: Syncthing `~/code`. Brain: Syncthing `~/Documents/Brain`.
-- Shell history: `atuin`. Backups: restic→B2 (`/home`) + snapper (system).
+- Shell history: `atuin`. Backups: restic→B2 of `/home` + snapper (system).
+  Syncthing is replication, not backup. Live vault is `~/Documents/Brain`;
+  `~/Brain` is a stale duplicate if it still exists.
 
 ## Active threads (edit me as things change)
 - (add current projects / goals here)

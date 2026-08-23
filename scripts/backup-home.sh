@@ -14,8 +14,41 @@ ENV_FILE=/etc/restic/b2-home.env
 EXCLUDES=/etc/restic/restic-home-excludes.txt
 LOG=/var/log/restic-backup-home.log
 LOCKFILE=/run/restic-backup-home.lock
+STATUS_SYS=/var/lib/restic-backup-home/status.json
 
 log() { printf '%s  %s\n' "$(date -Is)" "$*" | tee -a "$LOG"; }
+
+# User-readable status for SessionStart / brain-status. No secrets.
+# systemd has no $HOME, so also copy next to the live vault owner's cache.
+status_user_path() {
+  local d
+  for d in /home/*; do
+    if [[ -d "$d/Documents/Brain" ]]; then
+      printf '%s/.cache/brain-hooks/restic-status.json' "$d"
+      return 0
+    fi
+  done
+  return 1
+}
+
+write_status() {
+  local state=$1 rc=${2:-0} snap=${3:-}
+  local now userp tmp
+  now=$(date -Is)
+  install -d -m 755 /var/lib/restic-backup-home
+  tmp=$(mktemp)
+  printf '{"state":"%s","rc":%s,"snapshot":"%s","finished":"%s","hostname":"%s"}\n' \
+    "$state" "$rc" "$snap" "$now" "$(hostname)" > "$tmp"
+  install -m 644 "$tmp" "$STATUS_SYS"
+  if userp=$(status_user_path); then
+    install -d -m 755 "$(dirname "$userp")"
+    install -m 644 "$tmp" "$userp"
+    # if we wrote into a user's home as root, give it back
+    local home; home=$(dirname "$(dirname "$(dirname "$userp")")")
+    chown "$(stat -c %U:%G "$home")" "$userp" 2>/dev/null || true
+  fi
+  rm -f "$tmp"
+}
 
 # --- load secrets (systemd also injects these via EnvironmentFile; harmless) ---
 if [[ ! -r "$ENV_FILE" ]]; then
@@ -40,6 +73,9 @@ exec 9>"$LOCKFILE"
 if ! flock -n 9; then
   log "another backup run is in progress; exiting"; exit 0
 fi
+# Do not write state=ok on this path. A skip is not a successful snapshot.
+STATUS_WRITTEN=0
+trap 'rc=$?; if [[ ${STATUS_WRITTEN:-0} -eq 0 ]]; then write_status failed "$rc"; fi' EXIT
 
 # --- clear stale repo lock from a previously interrupted run ---
 # 'restic unlock' only removes locks whose owning process is dead. The flock
@@ -54,8 +90,11 @@ if ! restic snapshots >/dev/null 2>&1; then
 fi
 
 log "=== backup start ==="
+write_status in_progress 0
 set +e
-restic backup /home \
+# line-buffer so /var/log/restic-backup-home.log updates during the run
+# (a pipe to tee otherwise block-buffers hours of --verbose output)
+stdbuf -oL -eL restic backup /home \
   --exclude-file="$EXCLUDES" \
   --exclude-caches \
   --verbose 2>&1 | tee -a "$LOG"
@@ -68,14 +107,26 @@ if [[ "$rc" -eq 0 ]]; then
 elif [[ "$rc" -eq 3 ]]; then
   log "WARNING: backup completed but some files were unreadable (rc=3)"
 else
+  write_status failed "$rc"
+  STATUS_WRITTEN=1
   log "FATAL: backup failed (rc=$rc)"; exit "$rc"
 fi
 
 log "=== forget + prune (retention) ==="
+set +e
 restic forget --prune \
   --keep-last 3 \
   --keep-daily 7 \
   --keep-weekly 4 \
   --keep-monthly 12 2>&1 | tee -a "$LOG"
+forget_rc=${PIPESTATUS[0]}
+set -e
+if [[ "$forget_rc" -ne 0 ]]; then
+  log "WARNING: forget/prune failed (rc=$forget_rc); snapshot itself is kept"
+fi
 
-log "=== done ==="
+snap=""
+snap=$(restic snapshots --json --latest 1 2>/dev/null | jq -r '.[0].short_id // .[0].id // empty' 2>/dev/null || true)
+write_status ok 0 "${snap}"
+STATUS_WRITTEN=1
+log "=== done snapshot=${snap:-unknown} ==="

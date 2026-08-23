@@ -2,9 +2,14 @@
 
 ## Knowledge base ("the brain") — automatic
 The user keeps an Obsidian vault at **`~/Documents/Brain`** (Syncthing-synced
-across laptop `fedora` and desktop `brandon-fedora`, and backed up). It is wired
-to run itself — the user should never have to manage it consciously, and should
-never have to type a slash command to get value out of it:
+across laptop `fedora` and desktop `brandon-fedora`). Syncthing is replication,
+not backup — deletes propagate in seconds. `~/Brain` is a stale Linux Mint vault,
+not a backup of this one. Off-device backup is restic→B2 of `/home` (desktop
+bucket `brandon-desktop-home`); on `brandon-fedora` the first snapshot had never
+completed as of 2026-08-23 (timer had been disabled since a power-off mid-run
+on 2026-06-15). It is wired to run itself — the user should never have to
+manage it consciously, and should never have to type a slash command to get
+value out of it:
 
 - **Loaded for you automatically.** A SessionStart hook injects
   `Brain/Claude/INDEX.md`, recent session history, and the current vault health

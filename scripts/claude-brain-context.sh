@@ -68,6 +68,14 @@ if [ -f "$BRAIN/Inbox.md" ]; then
   [ "${inbox_stale:-0}" -gt 0 ] && inbox=$(printf '%s\n(%s capture(s) older than a week — ask whether to handle or drop them.)' "$inbox" "$inbox_stale")
 fi
 
+# Off-device backup status (restic → B2). Same visibility as the health score:
+# if a run failed or the last ok snapshot is older than 48h, it is in front of
+# every session. Script is read-only, no secrets.
+restic=""
+if [ -x "$HOME/dotfiles/scripts/restic-status.sh" ]; then
+  restic=$("$HOME/dotfiles/scripts/restic-status.sh" 2>/dev/null || true)
+fi
+
 # Vault health (written by brain-doctor.py; timer keeps it fresh).
 health=""
 if [ -f "$BRAIN/.health-score" ]; then
@@ -86,10 +94,14 @@ if [ -f "$BRAIN/.health-score" ]; then
 fi
 
 # Nothing to inject → stay silent (fresh machine before Syncthing).
-[ -z "$index$recent$inbox$health" ] && exit 0
+[ -z "$index$recent$inbox$health$restic" ] && exit 0
 
 ctx=$(printf '# Knowledge base (auto-loaded from ~/Documents/Brain/Claude)\n\nThe user'"'"'s persistent brain — treat as current context. Keep INDEX.md'"'"'s "Active threads" current as work changes; log meaningful decisions to today'"'"'s Sessions note.\n' )
-[ -n "$health" ] && ctx=$(printf '%s\n## Vault health\n%s\n' "$ctx" "$health")
+if [ -n "$health$restic" ]; then
+  vh="$health"
+  [ -n "$restic" ] && vh=$(printf '%s\n%s' "${vh}" "$restic")
+  ctx=$(printf '%s\n## Vault health\n%s\n' "$ctx" "$vh")
+fi
 ctx=$(printf '%s\n%s\n' "$ctx" "$index")
 [ -n "$inbox" ] && ctx=$(printf '%s\n\n## Open captures (Inbox / jot) — surface these if relevant\n%s\n' "$ctx" "$inbox")
 [ -n "$recent" ] && ctx=$(printf '%s\n\n---\n## Recent session history\n%s\n' "$ctx" "$recent")

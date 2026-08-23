@@ -9,7 +9,12 @@ Type=oneshot
 EnvironmentFile=/etc/restic/b2-home.env
 # Installed copy in a system path: systemd (init_t) cannot exec a user_home_t
 # file under enforcing SELinux. Source of truth is dotfiles/scripts/backup-home.sh.
-ExecStart=/usr/local/sbin/restic-backup-home.sh
+# Inhibit sleep/shutdown/power-key: the 2026-06-15 first run on brandon-fedora
+# was SIGTERM'd after 37min when the power key powered the machine off.
+# Daily incrementals are small; the 2h timeout still bounds a wedged run.
+# A multi-hour first/gap catch-up must still bypass this unit and run
+# `systemd-inhibit ... /usr/local/sbin/restic-backup-home.sh` by hand.
+ExecStart=/usr/bin/systemd-inhibit --what=idle:sleep:shutdown:handle-lid-switch:handle-power-key --who=restic --why="home backup to B2" /usr/local/sbin/restic-backup-home.sh
 # be gentle on an interactive laptop
 Nice=10
 IOSchedulingClass=idle
