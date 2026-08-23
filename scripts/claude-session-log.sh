@@ -11,29 +11,123 @@ SESS="$BRAIN/Sessions"
 mkdir -p "$SESS" "$BRAIN/Memory" 2>/dev/null || exit 0
 
 json=$(cat 2>/dev/null || true)
+mkdir -p "$HOME/.cache/brain-hooks" 2>/dev/null || true
+printf '%s' "$json" > "$HOME/.cache/brain-hooks/sessionend.stdin.json" 2>/dev/null || true
+printf '%s\n' "GROK_HOOK_EVENT=${GROK_HOOK_EVENT-}" "GROK_SESSION_ID=${GROK_SESSION_ID-}" > "$HOME/.cache/brain-hooks/sessionend.env" 2>/dev/null || true
 get(){ printf '%s' "$json" | jq -r "$1 // empty" 2>/dev/null; }
-tp=$(get '.transcript_path'); cwd=$(get '.cwd'); reason=$(get '.reason')
+# Claude: transcript_path. Grok: transcriptPath (camelCase).
+tp=$(get '.transcript_path // .transcriptPath')
+cwd=$(get '.cwd'); reason=$(get '.reason')
 [ -z "$cwd" ] && cwd="$PWD"
 
-# ── Mine the transcript (all deterministic) ──────────────────────────────────
+# ── Mine the transcript (Claude JSONL and Grok chat_history.jsonl) ──────────
 goal="(session)"; files=""; nfiles=0; ncmds=0; ncommits=0; nprompts=0
+# Grok Stop/SessionEnd point at updates.jsonl; the conversation is the sibling.
 if [ -n "$tp" ] && [ -f "$tp" ]; then
-  read -r -d '' extract <<'JQ' || true
-  ( [ .[] | select(.type=="user") | .message.content
-      | if type=="array" then (map(select(.type=="text").text)|join(" ")) else . end ]
-    | map(select(. != null and (test("^\\s*$")|not) and (startswith("<")|not) and (startswith("Caveat")|not))) ) as $prompts
-  | [ .[] | select(.type=="assistant") | .message.content[]? | select(.type=="tool_use") ] as $t
-  | ($t | map(select(.name|test("^(Edit|Write|MultiEdit|NotebookEdit)$")) | .input.file_path) | map(select(.!=null)) | unique) as $files
-  | ($t | map(select(.name=="Bash") | .input.command // empty)) as $cmds
-  | { goal: ($prompts[0] // "(session)"),
-      prompts: ($prompts|length),
-      files: ($files | map(sub("^/home/[^/]+/";"~/"))),
-      nfiles: ($files|length),
-      ncmds: ($cmds|length),
-      ncommits: ($cmds | map(select(test("git commit"))) | length) }
-JQ
-  data=$(jq -rs "$extract" "$tp" 2>/dev/null)
-  if [ -n "$data" ]; then
+  case "$tp" in
+    */updates.jsonl)
+      sibling="${tp%/*}/chat_history.jsonl"
+      [ -f "$sibling" ] && tp="$sibling"
+      ;;
+  esac
+fi
+if [ -n "$tp" ] && [ -f "$tp" ]; then
+  data=$(python3 - "$tp" <<'PY' 2>/dev/null
+import json, sys, re
+from pathlib import Path
+path = Path(sys.argv[1])
+prompts, files, cmds = [], [], []
+WRITE = {"Write", "Edit", "MultiEdit", "NotebookEdit", "write", "search_replace"}
+BASH = {"Bash", "run_terminal_command"}
+def load_args(raw):
+    if isinstance(raw, dict):
+        return raw
+    if isinstance(raw, str):
+        try:
+            v = json.loads(raw)
+            return v if isinstance(v, dict) else {}
+        except ValueError:
+            return {}
+    return {}
+def homeish(p):
+    return re.sub(r"^/home/[^/]+/", "~/", p)
+try:
+    lines = path.read_text(encoding="utf-8", errors="ignore").splitlines()
+except OSError:
+    print("{}"); raise SystemExit
+for line in lines:
+    try:
+        ev = json.loads(line)
+    except ValueError:
+        continue
+    msg = ev.get("message") or {}
+    if msg:
+        role = msg.get("role") or ev.get("type")
+        content = msg.get("content")
+        if role == "user":
+            text = ""
+            if isinstance(content, str):
+                text = content
+            elif isinstance(content, list):
+                text = " ".join(b.get("text") or "" for b in content if isinstance(b, dict) and b.get("type") == "text")
+            if text and not text.isspace() and not text.startswith("<") and not text.startswith("Caveat"):
+                prompts.append(text)
+        elif role == "assistant" and isinstance(content, list):
+            for b in content:
+                if not isinstance(b, dict) or b.get("type") != "tool_use":
+                    continue
+                name = b.get("name") or ""
+                inp = b.get("input") or {}
+                if name in WRITE and inp.get("file_path"):
+                    files.append(inp["file_path"])
+                if name in BASH and inp.get("command"):
+                    cmds.append(inp["command"])
+        continue
+    t = ev.get("type")
+    if t == "user":
+        if ev.get("synthetic_reason"):
+            continue
+        content = ev.get("content")
+        texts = []
+        if isinstance(content, str):
+            texts.append(content)
+        elif isinstance(content, list):
+            for b in content:
+                if isinstance(b, dict):
+                    texts.append(b.get("text") or "")
+                elif isinstance(b, str):
+                    texts.append(b)
+        text = " ".join(texts).strip()
+        if not text:
+            continue
+        if "prompt_index" in ev or (not text.startswith("<") and not text.startswith("Caveat")):
+            if not text.startswith("<"):
+                prompts.append(text)
+    elif t == "assistant":
+        for tc in ev.get("tool_calls") or []:
+            if not isinstance(tc, dict):
+                continue
+            name = tc.get("name") or ""
+            inp = load_args(tc.get("arguments"))
+            if name in WRITE and (inp.get("file_path") or inp.get("path")):
+                files.append(inp.get("file_path") or inp.get("path"))
+            if name in BASH and inp.get("command"):
+                cmds.append(inp["command"])
+uniq, seen = [], set()
+for f in files:
+    if f not in seen:
+        seen.add(f); uniq.append(homeish(f))
+print(json.dumps({
+    "goal": (prompts[0] if prompts else "(session)"),
+    "prompts": len(prompts),
+    "files": uniq,
+    "nfiles": len(uniq),
+    "ncmds": len(cmds),
+    "ncommits": sum(1 for c in cmds if "git commit" in c),
+}))
+PY
+)
+  if [ -n "$data" ] && [ "$data" != "{}" ]; then
     goal=$(printf '%s' "$data" | jq -r '.goal' 2>/dev/null | tr '\n' ' ' | sed 's/  */ /g' | cut -c1-200)
     nfiles=$(printf '%s' "$data" | jq -r '.nfiles' 2>/dev/null)
     ncmds=$(printf '%s' "$data" | jq -r '.ncmds' 2>/dev/null)
@@ -73,7 +167,9 @@ file="$SESS/$day.md"
 
 # ── Append a structured entry ────────────────────────────────────────────────
 {
-  printf -- '## %s · %s%s\n' "$ts" "$host" "$gitinfo"
+  harness=""
+  [ -n "${GROK_HOOK_EVENT-}" ] && harness=" · grok"
+  printf -- '## %s · %s%s%s\n' "$ts" "$host" "$gitinfo" "$harness"
   printf -- '- **Goal:** %s\n' "$goal"
   printf -- '- **Activity:** %s prompts · %s files · %s commands · %s commits\n' \
     "${nprompts:-0}" "${nfiles:-0}" "${ncmds:-0}" "${ncommits:-0}"

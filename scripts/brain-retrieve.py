@@ -170,12 +170,58 @@ def excerpt(text: str, hits: set[str], limit: int = 700) -> str:
     return "\n".join(out).rstrip()
 
 
+def _dump_stdin(payload: dict) -> None:
+    try:
+        dump = Path.home() / ".cache" / "brain-hooks"
+        dump.mkdir(parents=True, exist_ok=True)
+        (dump / "userpromptsubmit.stdin.json").write_text(
+            json.dumps(payload, indent=2)[:20000], encoding="utf-8"
+        )
+        (dump / "userpromptsubmit.env").write_text(
+            f"GROK_HOOK_EVENT={os.environ.get('GROK_HOOK_EVENT', '')}\n"
+            f"CLAUDE_PROJECT_DIR={os.environ.get('CLAUDE_PROJECT_DIR', '')}\n"
+            f"GROK_SESSION_ID={os.environ.get('GROK_SESSION_ID', '')}\n",
+            encoding="utf-8",
+        )
+    except OSError:
+        pass
+
+
+def _prompt_from_payload(payload: dict) -> str:
+    """Claude: {prompt: str}. Grok: camelCase, sometimes nested."""
+    for key in ("prompt", "promptText", "text", "userPrompt"):
+        v = payload.get(key)
+        if isinstance(v, str) and v.strip():
+            return v.strip()
+    # Grok UserPromptSubmit may nest the text under content/message.
+    for key in ("content", "message"):
+        v = payload.get(key)
+        if isinstance(v, str) and v.strip():
+            return v.strip()
+        if isinstance(v, dict):
+            inner = v.get("content") or v.get("text") or v.get("prompt")
+            if isinstance(inner, str) and inner.strip():
+                return inner.strip()
+            if isinstance(inner, list):
+                parts = []
+                for b in inner:
+                    if isinstance(b, dict) and b.get("type") in (None, "text"):
+                        parts.append(b.get("text") or "")
+                    elif isinstance(b, str):
+                        parts.append(b)
+                joined = " ".join(parts).strip()
+                if joined:
+                    return joined
+    return ""
+
+
 def main() -> int:
     try:
         payload = json.load(sys.stdin)
     except (json.JSONDecodeError, ValueError):
         return 0
-    prompt = (payload.get("prompt") or "").strip()
+    _dump_stdin(payload)
+    prompt = _prompt_from_payload(payload)
 
     if len(prompt) < 12 or MECHANICAL.search(prompt) or not VAULT.is_dir():
         return 0
@@ -280,12 +326,33 @@ def main() -> int:
         parts.append("")
 
     ctx = "\n".join(parts)[:MAX_CHARS]
-    print(json.dumps({
+    event_name = (
+        os.environ.get("GROK_HOOK_EVENT")
+        or payload.get("hookEventName")
+        or payload.get("hook_event_name")
+        or "UserPromptSubmit"
+    )
+    # Claude consumes hookSpecificOutput.additionalContext. Grok 1.0.5's
+    # documented UserPromptSubmit is observe-only (stdout ignored). Emit the
+    # Claude schema always so overlap still works; also write a side copy so
+    # we can prove whether Grok ingested it.
+    out = {
         "hookSpecificOutput": {
-            "hookEventName": "UserPromptSubmit",
+            "hookEventName": event_name if event_name != "user_prompt_submit" else "UserPromptSubmit",
             "additionalContext": ctx,
         }
-    }))
+    }
+    # Some Grok events (Stop) also honor top-level additionalContext. Harmless extra.
+    out["additionalContext"] = ctx
+    blob = json.dumps(out)
+    try:
+        dump = Path.home() / ".cache" / "brain-hooks"
+        dump.mkdir(parents=True, exist_ok=True)
+        (dump / "userpromptsubmit.stdout.json").write_text(blob, encoding="utf-8")
+        (dump / "userpromptsubmit.context.md").write_text(ctx, encoding="utf-8")
+    except OSError:
+        pass
+    print(blob)
     return 0
 
 
