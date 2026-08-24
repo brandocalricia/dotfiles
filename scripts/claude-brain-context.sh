@@ -86,6 +86,13 @@ if [ -f "$BRAIN/.health-score" ]; then
     [ "$age" -gt 10 ] && stale=" (audit ${age}d stale — run \`brain-doctor.py --all\`)"
   fi
   health="Vault health: **${hscore}/100** · ${hnotes} notes · checked ${hdate}${stale}. Detail: \`Claude/Health.md\`."
+  # Criterion 4: one line per audit day, so the two-week trend is a file not memory.
+  mkdir -p "$HOME/.cache/brain-hooks" 2>/dev/null || true
+  if [ -n "$hdate" ] && [ -n "$hscore" ]; then
+    if ! awk -v d="$hdate" '$1==d {f=1} END{exit !f}' "$HOME/.cache/brain-hooks/health-trend.tsv" 2>/dev/null; then
+      printf '%s\t%s\t%s\n' "$hdate" "$hscore" "${hnotes}" >> "$HOME/.cache/brain-hooks/health-trend.tsv" 2>/dev/null || true
+    fi
+  fi
   # Surface the top unwritten concepts so gaps are visible without being asked.
   if [ -f "$BRAIN/Health.md" ]; then
     queue=$(sed -n '/^## Write queue/,/^## /p' "$BRAIN/Health.md" | grep '^- \*\*' | head -n 5)

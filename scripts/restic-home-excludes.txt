@@ -50,3 +50,30 @@
 
 # Zoom local cache (recordings default to ~/Documents/Zoom, which IS backed up)
 /home/*/.zoom/data
+
+# Heroic / Epic / Proton-UMU game data (re-downloadable). Steam already excluded
+# above. KEEP ~/Games/BonkScanner — that is a custom hook-free build, not a store
+# install.
+/home/*/Games/Heroic
+/home/*/.local/share/umu
+/home/*/.var/app/com.heroicgameslauncher.hgl
+/home/*/.var/app/com.mojang.Minecraft
+
+# Flatpak runtimes (reinstall). Per-app config lives in .var/app and is kept,
+# minus caches already listed and the game launchers above.
+/home/*/.local/share/flatpak
+
+# Python virtualenvs (recreate from requirements.txt)
+/home/*/bwllm/train-venv
+/home/*/bwllm/venv
+**/.venv
+**/train-venv
+
+# Google Takeout dump inside bwllm (re-downloadable). chats.db IS kept.
+/home/*/bwllm/data/raw
+
+# OS images / large vendor ISOs (re-downloadable)
+*.iso
+
+# Rocket League workshop maps (re-downloadable)
+/home/*/workshopmapsrl

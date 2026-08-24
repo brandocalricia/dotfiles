@@ -208,4 +208,16 @@ done
 # the existing 20; new Grok facts land here too so Syncthing sees them.
 find "$HOME/.grok/memory" -maxdepth 1 -name '*.md' ! -name 'MEMORY.md' \
   -exec cp -f {} "$BRAIN/Memory/" \; 2>/dev/null || true
+
+# Criterion 2: count real Grok TUI working days (multi-turn, not grok -p probes).
+# SessionEnd on a TUI session has GROK_HOOK_EVENT and a real prompt count.
+# grok -p recall-bench is already bailed out above via BRAIN_RECALL_BENCH=1.
+if [ -n "${GROK_HOOK_EVENT-}" ]; then
+  mkdir -p "$HOME/.cache/brain-hooks" 2>/dev/null || true
+  # multi-turn: 2+ user prompts, or any file/cmd work. Skip empty probes.
+  if [ "${nprompts:-0}" -ge 2 ] || [ "${nfiles:-0}" -ge 1 ]; then
+    printf '%s\t%s\t%s\t%s\n' "$day" "${nprompts:-0}" "${nfiles:-0}" "${ncmds:-0}" \
+      >> "$HOME/.cache/brain-hooks/tui-days.tsv" 2>/dev/null || true
+  fi
+fi
 exit 0

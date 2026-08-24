@@ -126,7 +126,8 @@ if [[ "$forget_rc" -ne 0 ]]; then
 fi
 
 snap=""
-snap=$(restic snapshots --json --latest 1 2>/dev/null | jq -r '.[0].short_id // .[0].id // empty' 2>/dev/null || true)
+# --latest 1 is per host+path; without --path a vault-only snapshot can sort first.
+snap=$(restic snapshots --json --latest 1 --path /home 2>/dev/null | jq -r '.[0].short_id // .[0].id // empty' 2>/dev/null || true)
 write_status ok 0 "${snap}"
 STATUS_WRITTEN=1
 log "=== done snapshot=${snap:-unknown} ==="

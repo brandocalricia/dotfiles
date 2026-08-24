@@ -25,7 +25,21 @@ recallcmd="$DOTFILES/scripts/brain-recall-check.py"
 guardcmd="$DOTFILES/scripts/grok-cwd-guard.sh"
 mcpcmd="$DOTFILES/scripts/brain-mcp-server.py"
 telcmd="$DOTFILES/scripts/grok-telemetry-guard.sh"
-chmod +x "$startcmd" "$endcmd" "$promptcmd" "$stopcmd" "$recallcmd" "$guardcmd" "$mcpcmd" "$telcmd" 2>/dev/null || true
+chmod +x "$startcmd" "$endcmd" "$promptcmd" "$stopcmd" "$recallcmd" "$guardcmd" "$mcpcmd" "$telcmd" \
+          "$DOTFILES/scripts/restic-status.sh" "$DOTFILES/scripts/brain-status.sh" 2>/dev/null || true
+mkdir -p "$HOME/.local/bin"
+ln -sfn "$DOTFILES/scripts/restic-status.sh" "$HOME/.local/bin/restic-status"
+ln -sfn "$DOTFILES/scripts/brain-status.sh" "$HOME/.local/bin/brain-status"
+# Native copies so Grok still works if ~/.claude is gone.
+mkdir -p "$GROK_DIR/commands"
+if [ -d "$DOTFILES/claude/commands" ]; then
+  cp -f "$DOTFILES/claude/commands/"*.md "$GROK_DIR/commands/" 2>/dev/null || true
+fi
+if [ -f "$HOME/.claude/CLAUDE.md" ]; then
+  cp -f "$HOME/.claude/CLAUDE.md" "$GROK_DIR/rules/00-global-context.md"
+elif [ -f "$DOTFILES/claude/CLAUDE.md" ]; then
+  cp -f "$DOTFILES/claude/CLAUDE.md" "$GROK_DIR/rules/00-global-context.md"
+fi
 
 if [ "${1-}" = "--dry-run" ]; then
   cat <<PLAN
