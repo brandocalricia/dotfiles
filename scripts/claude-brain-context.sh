@@ -128,8 +128,9 @@ fi
 banner=$(printf '## Retrieval status\n%s\n_generated %s, may be one session behind unless `grok` was launched via the zsh wrapper._\n' "$status_line" "$generated")
 ctx=$(printf '%s\n%s\n' "$banner" "$ctx")
 
-# Hard cap total size (~6000 chars) as a final guard.
-ctx=$(printf '%s' "$ctx" | head -c 6000)
+# Hard cap. Raised 6000→7500 when the restic status line was added so INDEX
+# does not get clipped first on a normal session.
+ctx=$(printf '%s' "$ctx" | head -c 7500)
 
 # Grok 1.0.5 fires SessionStart but ignores stdout/additionalContext (verified
 # 2026-08-23: hook ran in 22ms, INDEX never reached the API). Side-channel:

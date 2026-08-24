@@ -3,8 +3,9 @@
 ## Knowledge base ("the brain") — automatic
 The user keeps an Obsidian vault at **`~/Documents/Brain`** (Syncthing-synced
 across laptop `fedora` and desktop `brandon-fedora`). Syncthing is replication,
-not backup — deletes propagate in seconds. `~/Brain` is a stale Linux Mint vault,
-not a backup of this one. Off-device backup is restic→B2 of `/home` (desktop
+not backup — deletes propagate in seconds. `~/Brain` was a stale Linux Mint git
+clone; renamed 2026-08-23 to `~/Brain.linux-mint-archive-2026-05` so that path
+cannot be mistaken for the live vault. Off-device backup is restic→B2 of `/home` (desktop
 bucket `brandon-desktop-home`). First verified restore on brandon-fedora:
 2026-08-23, vault snapshot `1ee5824a` (260 md, empty diff vs live), `/home`
 snapshot `637e3cfc` (6.190 GiB after excluding games/venvs/ISOs). Daily timer

@@ -3,7 +3,13 @@
 Do this on the laptop, not on brandon-fedora. Do **not** cancel Claude until
 this box has had a real TUI day.
 
-1. Pull + restow (so `grok()` lands in `.zshrc`):
+**Do not run `~/dotfiles/install.sh`.** That is the big first-setup bootstrap
+(dnf upgrade, many packages). Laptop Grok wiring is `git pull` +
+`install-grok-brain.sh` only.
+
+Full paste-into-CC prompt: `Claude/Handoff-laptop-grok.md`
+
+1. Pull + restow zsh only if needed (so `grok()` lands in `.zshrc`):
 
 ```bash
 cd ~/dotfiles && git pull --ff-only

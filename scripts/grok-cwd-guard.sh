@@ -4,7 +4,8 @@
 #
 # Dangerous:
 #   $HOME              — whole-home git-ish launches; 0.2.93 tarball blast radius
-#   ~/Brain            — git-tracked copy of the vault with GitHub remote
+#   ~/Brain            — old git-tracked clone (renamed 2026-08-23)
+#   ~/Brain.linux-mint-archive-2026-05 — that clone's archive; still a git repo
 #   any repo with .env — the tracked-files vs gitignored leak vector
 set -uo pipefail
 
@@ -15,8 +16,9 @@ event="${GROK_HOOK_EVENT:-}"
 
 HOME_DIR="${HOME}"
 BRAIN_GIT="${HOME}/Brain"
-# The Syncthing vault is the working copy; launching *there* is fine.
-# ~/Brain is the separate git-tracked clone.
+BRAIN_ARCHIVE="${HOME}/Brain.linux-mint-archive-2026-05"
+# The Syncthing vault is ~/Documents/Brain. Launching *there* is fine.
+# ~/Brain was a separate git-tracked clone; renamed 2026-08-23.
 
 is_home=0
 is_brain_git=0
@@ -27,10 +29,12 @@ env_path=""
 abs=$(readlink -f "$cwd" 2>/dev/null || printf '%s' "$cwd")
 home_abs=$(readlink -f "$HOME_DIR" 2>/dev/null || printf '%s' "$HOME_DIR")
 brain_abs=$(readlink -f "$BRAIN_GIT" 2>/dev/null || printf '%s' "$BRAIN_GIT")
+archive_abs=$(readlink -f "$BRAIN_ARCHIVE" 2>/dev/null || printf '%s' "$BRAIN_ARCHIVE")
 
 [ "$abs" = "$home_abs" ] && is_home=1
 case "$abs" in
   "$brain_abs"|"$brain_abs"/*) is_brain_git=1 ;;
+  "$archive_abs"|"$archive_abs"/*) is_brain_git=1 ;;
 esac
 
 # Walk up for a .env sitting in a git repo (tracked or gitignored — both leaked
@@ -68,7 +72,7 @@ if [ "$is_home" -eq 1 ]; then
 fi
 
 if [ "$is_brain_git" -eq 1 ]; then
-  deny "GROK CWD GUARD: refused. ~/Brain is the git-tracked GitHub copy of the vault. Work in ~/Documents/Brain (Syncthing vault) or a project repo — never the GitHub clone."
+  deny "GROK CWD GUARD: refused. That directory is the old git-tracked GitHub vault clone (or its 2026-08-23 archive). Work in ~/Documents/Brain (Syncthing live vault) or a project repo — never the GitHub clone."
 fi
 
 if [ "$has_env" -eq 1 ]; then

@@ -73,6 +73,7 @@ Would upsert marked block in $GROK_DIR/config.toml
   [memory] enabled=true  [memory.session] save_on_end=true
   [mcp_servers.brain] $mcpcmd
   [permission] deny Read/Edit on .env, secrets.env, credentials, ssh, gnupg
+  (preserves any existing allow = [...] so a re-run does not wipe Bash allows)
 
 Would mkdir -p:
   $GROK_DIR/{hooks,rules,memory}
@@ -148,6 +149,12 @@ cfg_path = Path(sys.argv[1])
 home = sys.argv[2]
 text = cfg_path.read_text(encoding="utf-8") if cfg_path.exists() else ""
 begin, end = "# >>> grok-brain managed", "# <<< grok-brain managed"
+# Keep any native allow = [...] when rewriting the managed [permission]
+# table. Re-running this installer used to wipe the 136 Bash allows ported
+# from Claude. deny list below is still the source of truth for denials.
+import re
+allow_m = re.search(r"(?ms)^allow\s*=\s*\[.*?\]\s*\n", text)
+allow_block = allow_m.group(0) if allow_m else ""
 block = f"""{begin}
 # Written by install-grok-brain.sh. Edit the script, not this block, then re-run.
 [features]
@@ -185,7 +192,7 @@ enabled = true
 startup_timeout_sec = 15
 
 [permission]
-deny = [
+{allow_block}deny = [
   "Read(**/.env)",
   "Read(**/.env.*)",
   "Read(**/secrets.env)",
