@@ -185,10 +185,16 @@ EOF
 
 # ── hyprlock ──────────────────────────────────────────────────────
 if [[ "$(uname)" == "Linux" ]]; then
+# Fingerprint reader exists only on laptop hostname `fedora` (Framework 13).
+# Desktop `brandon-fedora` has no sensor — never enable it there or sudo/hyprlock
+# wait on fprintd with nothing to scan.
+host_short=$(hostname -s 2>/dev/null || hostname)
+fp_enabled=false
+[[ "$host_short" == "fedora" ]] && fp_enabled=true
 cat > "$HOME/.config/hypr/hyprlock.conf" << EOF
 auth {
     fingerprint {
-        enabled = true
+        enabled = ${fp_enabled}
     }
 }
 background {

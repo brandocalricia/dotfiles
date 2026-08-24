@@ -656,7 +656,11 @@ gitignored generated files, so the **tracked configs are identical to the laptop
   `root`, `home`) — different from the laptop (`nvme0n1p6`, separate ext4 `/boot`). Any
   snapper recovery doc for this box must use THESE facts, not the laptop's.
 - **No battery** (a Logitech wireless-mouse `hidpp_battery_0` shows in `power_supply` — see
-  waybar note). **No fingerprint reader.**
+  waybar note). **No fingerprint reader.** Do not enable authselect `with-fingerprint`
+  or hyprlock `fingerprint { enabled = true }` on this host — sudo/polkit will wait
+  on a scan that cannot happen. Laptop `fedora` is the only machine with a reader.
+  Desktop PAM: `authselect disable-feature with-fingerprint`. `switch-theme.sh`
+  sets hyprlock fingerprint from `hostname -s` (`true` only on `fedora`).
 
 ## Login: SDDM, NOT greetd
 Fedora 44 **KDE edition** → display manager is **`plasmalogin.service` (SDDM)**. The greetd
