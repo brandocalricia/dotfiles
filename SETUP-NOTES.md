@@ -534,8 +534,27 @@ end-to-end (single file pulled back from B2, byte-identical sha256).
 - `systemd/restic-backup-home.{service,timer}` → `/etc/systemd/system/`
 - Timer: `OnCalendar=daily`, `RandomizedDelaySec=30min`, **`Persistent=true`** (a missed run —
   laptop asleep/off — fires shortly after next boot). System (not user) service: needs root to
-  read `/etc/restic` + all of `/home`. Reinstall after editing: see the three `install -m` lines
-  in the script header, then `restorecon` + `systemctl daemon-reload`.
+  read `/etc/restic` + all of `/home`. Reinstall after editing (do **not** run `install.sh`):
+  ```
+  sudo install -m 0755 ~/dotfiles/scripts/backup-home.sh /usr/local/sbin/restic-backup-home.sh
+  sudo install -m 0644 ~/dotfiles/scripts/restic-home-excludes.txt /etc/restic/restic-home-excludes.txt
+  sudo install -m 0644 ~/dotfiles/systemd/restic-backup-home.service /etc/systemd/system/restic-backup-home.service
+  sudo install -m 0644 ~/dotfiles/systemd/restic-backup-home.timer   /etc/systemd/system/restic-backup-home.timer
+  sudo restorecon -v /usr/local/sbin/restic-backup-home.sh /etc/restic/restic-home-excludes.txt \
+    /etc/systemd/system/restic-backup-home.{service,timer}
+  sudo systemctl daemon-reload
+  ```
+  Live copies can (and did, 2026-06-13 → 2026-08-24) drift from dotfiles. The service runs the
+  root-owned copies, not `~/dotfiles`.
+
+**Proof is a snapshot + restore, not a green timer.** July 2026: nightly units looked fine
+while Backblaze rejected every upload (free-tier 10 GB ceiling; even the lock file).
+`systemctl status` / `list-timers` can be green during that. Check:
+`sudo bash -c 'set -a; source /etc/restic/b2-home.env; set +a; restic snapshots'`
+and restore one small file. Absence of `~/.cache/restic` means nothing — the system service
+caches at `/var/cache/restic`. `scripts/restic-status.sh` reads
+`~/.cache/brain-hooks/restic-status.json` (written by the backup script); if that file is
+missing it reports "NEVER completed" even when B2 is full of snapshots.
 
 **Laptop quirks that bit us (don't re-discover these):**
 - **SELinux**: a system service (`init_t`) **cannot exec/read a `user_home_t` file** → the script
@@ -546,12 +565,21 @@ end-to-end (single file pulled back from B2, byte-identical sha256).
 - **Stale locks**: an interrupted run (laptop sleeps mid-backup) leaves a repo lock. Script runs
   `restic unlock` at startup — safe because its `flock` guarantees it's the only writer, so any
   lingering lock is from a dead process.
+- **10 GB free-tier ceiling**: accounts with no payment method reject ALL uploads once the
+  repo exceeds 10 GB. Preflight `restic snapshots` fails on the lock and aborts *before*
+  `forget --prune`. Fix is a Backblaze payment method (do not set a hard cap).
+- **Timeout + lid-close**: unit has `TimeoutStartSec=2h`. A large first/gap catch-up must NOT
+  run via `systemctl start` (laptop suspends). Run foreground with inhibit instead:
+  `sudo systemd-inhibit --what=idle:sleep:handle-lid-switch --why=restic /usr/local/sbin/restic-backup-home.sh`
+  Daily incrementals are small; the live unit now wraps `systemd-inhibit` for lid/sleep/power.
 
 **Exclude philosophy** (`/etc/restic/restic-home-excludes.txt`): back up the irreplaceable, skip
 the regenerable. Excluded: `.cache`, **Steam (6.5G, re-downloadable)**, `.rustup/toolchains`,
-browser caches, `node_modules`/lang caches, Trash, container image stores. **`.git` is KEPT** —
-unpushed commits/branches/stashes are exactly the local-only data at risk. Anything not excluded
-is backed up (incl. `~/.ssh`, `~/.gnupg` the moment they exist — neither is present yet).
+browser caches, `node_modules`/lang caches, Trash, container image stores, Heroic/umu/Minecraft
+game data, Flatpak runtimes, Python venvs, Google Takeout dumps, `*.iso`, RL workshop maps.
+**Keep `~/Games/BonkScanner`** (custom build). **`.git` is KEPT** — unpushed commits/branches/stashes
+are exactly the local-only data at risk. Anything not excluded is backed up (incl. `~/.ssh`,
+`~/.gnupg` the moment they exist).
 
 **Retention** (`forget --prune` each run): `--keep-last 3 --keep-daily 7 --keep-weekly 4
 --keep-monthly 12`. (Note: restic only prunes when a snapshot is actually forgotten.)
