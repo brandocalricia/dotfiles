@@ -18,6 +18,23 @@ STATUS_SYS=/var/lib/restic-backup-home/status.json
 
 log() { printf '%s  %s\n' "$(date -Is)" "$*" | tee -a "$LOG"; }
 
+# Hold a logind inhibit so sleep/power-key cannot SIGTERM a run (2026-06-15
+# brandon-fedora: power key killed the first snapshot at 37 min). If logind
+# is still finishing a suspend, systemd-inhibit returns EALREADY ("already
+# running") and must NOT abort the backup — 2026-08-24 Persistent timer
+# fired mid-resume and the unit-level wrap failed in 4ms with no snapshot.
+if [[ -z "${RESTIC_INHIBITED:-}" ]]; then
+  export RESTIC_INHIBITED=1
+  if /usr/bin/systemd-inhibit \
+      --what=idle:sleep:shutdown:handle-lid-switch:handle-power-key \
+      --who=restic --why="home backup to B2" /bin/true; then
+    exec /usr/bin/systemd-inhibit \
+      --what=idle:sleep:shutdown:handle-lid-switch:handle-power-key \
+      --who=restic --why="home backup to B2" "$0" "$@"
+  fi
+  log "WARNING: systemd-inhibit failed (likely resume-from-sleep); continuing uninhibited"
+fi
+
 # User-readable status for SessionStart / brain-status. No secrets.
 # systemd has no $HOME, so also copy next to the live vault owner's cache.
 status_user_path() {
