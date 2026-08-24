@@ -160,6 +160,7 @@ if [[ $- == *i* ]]; then
   }
 fi
 
+
 # >>> grok installer >>>
 export PATH="$HOME/.grok/bin:$PATH"
 fpath=(~/.grok/completions/zsh $fpath)
