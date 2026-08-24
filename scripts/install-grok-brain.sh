@@ -81,6 +81,7 @@ Would mkdir -p:
 
 Would seed $GROK_DIR/rules/brain-session-context.md via SessionStart script
 Would copy/write $GROK_DIR/rules/brain-search-obligation.md
+Would copy/write $GROK_DIR/rules/this-machine.md
 
 Would install user systemd units (if present in repo):
   grok-telemetry-guard.path + .service → enable --now
@@ -252,6 +253,13 @@ if [ -x "$startcmd" ]; then
     && echo "[+] ~/.grok/rules/brain-session-context.md seeded" \
     || echo "[=] SessionStart seed skipped (vault not present yet?)"
 fi
+
+# Host identity rule (static; SessionStart does not overwrite this file)
+cp -f "$DOTFILES/claude/this-machine.md" "$GROK_DIR/rules/this-machine.md" 2>/dev/null \
+  || cat > "$GROK_DIR/rules/this-machine.md" <<'EOF'
+# This machine — never guess
+`fedora` = laptop (Framework 13). `brandon-fedora` = desktop. Trust the SessionStart **This machine** block or run `hostname -s`. Never infer the host from shared INDEX restic/Grok paragraphs.
+EOF
 
 # Obligation rule (static; SessionStart does not overwrite this file)
 cp -f "$DOTFILES/claude/brain-search-obligation.md" "$GROK_DIR/rules/brain-search-obligation.md" 2>/dev/null \

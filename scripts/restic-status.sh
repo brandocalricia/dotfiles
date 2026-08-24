@@ -25,6 +25,7 @@ load_status() {
   [[ -n "$state" ]]
 }
 
+host=$(hostname -s 2>/dev/null || hostname)
 timer_state=$(systemctl is-enabled restic-backup-home.timer 2>/dev/null || echo unknown)
 in_progress=0
 if pgrep -f 'restic backup /home' >/dev/null 2>&1; then
@@ -49,34 +50,34 @@ snap_bit=""
 [[ -n "${snapshot:-}" ]] && snap_bit=" \`${snapshot}\`"
 
 if [[ "$in_progress" -eq 1 ]]; then
-  printf 'Restic /home→B2: **IN PROGRESS** (first/current snapshot still running). Timer: %s.\n' "$timer_state"
+  printf 'Restic /home→B2 (host %s): **IN PROGRESS** (first/current snapshot still running). Timer: %s.\n' "$host" "$timer_state"
   exit 1
 fi
 
 if [[ "$timer_state" != "enabled" ]]; then
   extra=""
   [[ -n "$state" ]] && extra=" last state=${state}${snap_bit}"
-  printf 'Restic /home→B2: **TIMER DISABLED** — scheduled backups will not run.%s\n' "$extra"
+  printf 'Restic /home→B2 (host %s): **TIMER DISABLED** — scheduled backups will not run.%s\n' "$host" "$extra"
   exit 1
 fi
 
 if [[ -z "$state" ]]; then
-  printf 'Restic /home→B2: **NEVER completed** a snapshot on this machine. Timer: %s.\n' "$timer_state"
+  printf 'Restic /home→B2 (host %s): **NEVER completed** a snapshot on this machine. Timer: %s.\n' "$host" "$timer_state"
   exit 1
 fi
 
 if [[ "$state" != "ok" ]]; then
-  printf 'Restic /home→B2: **FAILED** (state=%s rc=%s at %s). Timer: %s.\n' \
-    "$state" "${rc:-?}" "${finished:-unknown}" "$timer_state"
+  printf 'Restic /home→B2 (host %s): **FAILED** (state=%s rc=%s at %s). Timer: %s.\n' \
+    "$host" "$state" "${rc:-?}" "${finished:-unknown}" "$timer_state"
   exit 1
 fi
 
 if [[ -n "${age_s:-}" && "$age_s" -gt "$MAX_AGE" ]]; then
-  printf 'Restic /home→B2: **STALE** last ok snapshot%s %sh ago (threshold 48h) at %s.\n' \
-    "$snap_bit" "${age_h:-?}" "$finished"
+  printf 'Restic /home→B2 (host %s): **STALE** last ok snapshot%s %sh ago (threshold 48h) at %s.\n' \
+    "$host" "$snap_bit" "${age_h:-?}" "$finished"
   exit 1
 fi
 
-printf 'Restic /home→B2: last snapshot%s %sh ago (%s). Timer: %s.\n' \
-  "$snap_bit" "${age_h:-0}" "$finished" "$timer_state"
+printf 'Restic /home→B2 (host %s): last snapshot%s %sh ago (%s). Timer: %s.\n' \
+  "$host" "$snap_bit" "${age_h:-0}" "$finished" "$timer_state"
 exit 0

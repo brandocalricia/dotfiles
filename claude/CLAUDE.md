@@ -2,7 +2,11 @@
 
 ## Knowledge base ("the brain") — automatic
 The user keeps an Obsidian vault at **`~/Documents/Brain`** (Syncthing-synced
-across laptop `fedora` and desktop `brandon-fedora`). Syncthing is replication,
+across laptop `fedora` and desktop `brandon-fedora`). **Always identify this
+host** with `hostname -s` (or the SessionStart **This machine** block):
+`fedora` = laptop (Framework 13), `brandon-fedora` = desktop. INDEX is shared
+and was mostly written on the desktop — never infer which machine you are on
+from restic snapshots or Grok-migration paragraphs. Syncthing is replication,
 not backup — deletes propagate in seconds. `~/Brain` was a stale Linux Mint git
 clone; renamed 2026-08-23 to `~/Brain.linux-mint-archive-2026-05` so that path
 cannot be mistaken for the live vault. Off-device backup is restic→B2 of `/home` (desktop

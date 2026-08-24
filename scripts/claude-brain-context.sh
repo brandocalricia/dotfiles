@@ -113,6 +113,22 @@ ctx=$(printf '%s\n%s\n' "$ctx" "$index")
 [ -n "$inbox" ] && ctx=$(printf '%s\n\n## Open captures (Inbox / jot) — surface these if relevant\n%s\n' "$ctx" "$inbox")
 [ -n "$recent" ] && ctx=$(printf '%s\n\n---\n## Recent session history\n%s\n' "$ctx" "$recent")
 
+# Which machine this session is on. INDEX is shared and was mostly written on
+# the desktop — without this block the model assumes brandon-fedora.
+host=$(hostname -s 2>/dev/null || hostname)
+case "$host" in
+  fedora)
+    machine_line="You are on **laptop \`fedora\`** (Framework 13, Ryzen AI 7 350). This is NOT desktop \`brandon-fedora\`."
+    ;;
+  brandon-fedora)
+    machine_line="You are on **desktop \`brandon-fedora\`** (battery-less, DP-1 + HDMI-A-1). This is NOT laptop \`fedora\`."
+    ;;
+  *)
+    machine_line="You are on host \`$host\`. Known machines: laptop \`fedora\`, desktop \`brandon-fedora\`. Do not assume."
+    ;;
+esac
+machine_block=$(printf '## This machine\n%s\nNever infer the host from INDEX restic/Grok paragraphs — those describe whichever machine last wrote them. If this block is missing, run `hostname -s`.\n' "$machine_line")
+
 # Retrieval-status banner. Grok 1.0.5 cannot inject UserPromptSubmit stdout
 # (probed exhaustively 2026-08-23). Must be visible every session, not once.
 generated=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
@@ -125,12 +141,12 @@ if [ -f "$HOME/.cache/brain-hooks/retrieval-status.json" ] && command -v jq >/de
   hmatch=$(jq -r '.matched // empty' "$HOME/.cache/brain-hooks/retrieval-status.json" 2>/dev/null || true)
   [ -n "$hts" ] && status_line=$(printf '%s Last hook heartbeat: %s (matched=%s).' "$status_line" "$hts" "$hmatch")
 fi
-banner=$(printf '## Retrieval status\n%s\n_generated %s, may be one session behind unless `grok` was launched via the zsh wrapper._\n' "$status_line" "$generated")
+banner=$(printf '%s\n## Retrieval status\n%s\n_generated %s, may be one session behind unless `grok` was launched via the zsh wrapper._\n' "$machine_block" "$status_line" "$generated")
 ctx=$(printf '%s\n%s\n' "$banner" "$ctx")
 
-# Hard cap. Raised 6000→7500 when the restic status line was added so INDEX
+# Hard cap. Raised 7500→8000 when the This machine block was added so INDEX
 # does not get clipped first on a normal session.
-ctx=$(printf '%s' "$ctx" | head -c 7500)
+ctx=$(printf '%s' "$ctx" | head -c 8000)
 
 # Grok 1.0.5 fires SessionStart but ignores stdout/additionalContext (verified
 # 2026-08-23: hook ran in 22ms, INDEX never reached the API). Side-channel:
