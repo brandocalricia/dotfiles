@@ -82,6 +82,11 @@ alias work-status='$HOME/dotfiles/scripts/work-status.sh'
 # ~/.grok/rules/brain-session-context.md is this launch, not last session.
 # SessionStart cannot inject into the same session (probed); this wrapper is
 # the same-session-freshness path. `command grok` skips the function.
+#
+# Never give the agent $HOME (or the old ~/Brain clone) as cwd — Grok 0.2.93
+# tarball blast radius. A fresh terminal starts in ~; type `grok` anyway.
+# Your shell stays put; only the agent process is launched from ~/grok-sandbox.
+# If you already `cd`'d into a project, that project stays the cwd.
 grok() {
   if [ -x "$HOME/dotfiles/scripts/claude-brain-context.sh" ]; then
     printf '%s' '{"source":"startup","hookEventName":"session_start"}' \
@@ -98,7 +103,18 @@ grok() {
       set -- "$@" --local
     fi
   fi
-  command grok "$@"
+  local launch_cwd="$PWD"
+  local home_abs="${HOME:A}"
+  local here="${PWD:A}"
+  local sandbox="$HOME/grok-sandbox"
+  case "$here" in
+    "$home_abs"|"$home_abs/Brain"|"$home_abs/Brain.linux-mint-archive-2026-05"|"$home_abs/Brain.linux-mint-archive-2026-05"/*)
+      mkdir -p "$sandbox"
+      launch_cwd="$sandbox"
+      echo "grok wrapper: launching in ~/grok-sandbox (agent cwd; your shell stays in ${PWD/#$HOME/~})" >&2
+      ;;
+  esac
+  (cd "$launch_cwd" && command grok "$@")
 }
 
 # ── QoL tooling (2026-07-17) ─────────────────────────────────────────────────
