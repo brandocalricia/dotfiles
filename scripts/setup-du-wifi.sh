@@ -80,7 +80,7 @@ unset password
 log "Saved. On campus: click the waybar wifi module → Activate '$CON_NAME',"
 log "or it should auto-connect when the SSID is in range."
 log "If it associates but never gets an IP, the TLS-1.3 fallback is:"
-log "  nmcli connection modify $CON_NAME 802-1x.phase1-auth-flags 32"
+log "  nmcli connection modify $CON_NAME 802-1x.phase1-auth-flags tls-1-3-disable"
 log "  nmcli connection up $CON_NAME"
 log "Guest/event WiFi is a different network (DU Guest) — that's the login-page"
 log "popup, handled automatically. Right-click the waybar wifi module to force it."

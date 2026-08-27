@@ -121,8 +121,9 @@ first activate, so a stored profile is required. One-shot:
 `bash ~/dotfiles/scripts/setup-du-wifi.sh` (creates/updates the `eduroam` NM
 connection, password stored in the profile, MAC = permanent, autoconnect). Does
 **not** need the SSID in range — run at home, it associates on campus. If it
-associates but never gets an IP: `nmcli connection modify eduroam 802-1x.phase1-auth-flags 32`
-then `nmcli connection up eduroam` (Fedora TLS-1.3 vs old RADIUS). DU is not on
+associates but never gets an IP: `nmcli connection modify eduroam 802-1x.phase1-auth-flags tls-1-3-disable`
+then `nmcli connection up eduroam` (Fedora TLS-1.3 vs old RADIUS). On NM 1.56,
+`32` is `tls-1-0-enable` — do not use the old Fedora 39 gist value. DU is not on
 cat.eduroam.org. Waybar wifi click still opens `nmtui` to pick a network.
 
 ### Power daemon — desktop keeps `tuned-ppd` (2026-07-18)
