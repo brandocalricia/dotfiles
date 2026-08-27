@@ -95,21 +95,35 @@ per-host bit is putting `"custom/caffeine"` in each host's `modules-right`
 `scripts/switch-theme.sh <theme>` once (regenerates `style.css` from `.base`).
 
 ### Captive-portal WiFi login popup — DONE 2026-07-18 (shared)
-Airport/hotel/campus WiFi (DU) gates the internet behind a login page. Hyprland has
+Hotels / airports / **DU Guest** gate the internet behind a login page. Hyprland has
 **no DE agent** to pop that page (macOS/GNOME/KDE do), so NM detected the portal but
-nothing showed it → "connected", no internet, no popup. Fix is **shared** (both hosts):
+nothing showed it → "connected", no internet, no popup. That was the Framework
+airport failure. Fix is **shared** (both hosts):
 `hypr/.config/hypr/captive-portal-watch.sh` (stow-linked to `~/.config/hypr/`), launched
 from the shared `hyprland.conf` `exec-once`. It follows `nmcli monitor` and on a rising
 edge into `portal` runs `notify-send` + `xdg-open http://neverssl.com` (plain-HTTP →
 gateway hijacks it to the real login page). Rising-edge debounce (fires once, re-arms
-after login); self-restarts if `nmcli monitor` dies. **No sudo/config needed** — NM's
-connectivity check is already on (`NetworkManager-config-connectivity-fedora`,
+after login); self-restarts if `nmcli monitor` dies. **Manual fallback:** right-click
+the waybar wifi module (`wifi-login.sh`) if NM doesn't flag `portal`. **No sudo/config
+needed** — NM's connectivity check is already on (`NetworkManager-config-connectivity-fedora`,
 `nmcli networking connectivity`). Testing hooks: `CAPTIVE_PORTAL_DRYRUN=1` +
 `CAPTIVE_PORTAL_LOG=<path>` log the action instead of opening a browser. Proven test
 (no airport needed): override the connectivity-check `response=` to a non-matching
 string → NM reports `portal` exactly like a real gateway; self-revert after. Verified
 end-to-end against real NM state. Live-start without a Hypr restart:
 `hyprctl dispatch exec "~/.config/hypr/captive-portal-watch.sh"`.
+
+### DU campus WiFi (eduroam) — 2026-08-27 (shared script, run once on the laptop)
+Student/staff network is **eduroam**, not a login page (DU Guest is the portal one).
+WPA-Enterprise PEAP/MSCHAPv2; username = full DU email. Hyprland has no NM secret
+agent (no nm-applet / gnome-keyring), and nmtui does not prompt for EAP fields on
+first activate, so a stored profile is required. One-shot:
+`bash ~/dotfiles/scripts/setup-du-wifi.sh` (creates/updates the `eduroam` NM
+connection, password stored in the profile, MAC = permanent, autoconnect). Does
+**not** need the SSID in range — run at home, it associates on campus. If it
+associates but never gets an IP: `nmcli connection modify eduroam 802-1x.phase1-auth-flags 32`
+then `nmcli connection up eduroam` (Fedora TLS-1.3 vs old RADIUS). DU is not on
+cat.eduroam.org. Waybar wifi click still opens `nmtui` to pick a network.
 
 ### Power daemon — desktop keeps `tuned-ppd` (2026-07-18)
 On `brandon-fedora`, `install-qol.sh`'s `power-profiles-daemon` install silently fails:
