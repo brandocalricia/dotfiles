@@ -48,7 +48,18 @@ title="Grok"
 msg="Finished responding"
 
 if [ "$(uname -s)" = Darwin ]; then
-  osascript -e "display notification \"${msg}\" with title \"${title}\" sound name \"Glass\"" >/dev/null 2>&1 || true
+  # Terminal.app is not a notification provider, so osascript banners are
+  # dropped and there is no Terminal row in System Settings. A tiny helper
+  # app (bundle id com.brandonniehaus.grok-notify) shows up as "Grok".
+  app="${HOME}/Applications/Grok.app"
+  bin="$app/Contents/MacOS/GrokNotify"
+  if [ ! -x "$bin" ]; then
+    "$(dirname "$0")/build-grok-notify-app.sh" >/dev/null 2>&1 || true
+  fi
+  if [ -x "$bin" ]; then
+    # Background: first run may wait on the Allow dialog.
+    "$bin" "$title" "$msg" >/dev/null 2>&1 &
+  fi
 elif command -v notify-send >/dev/null 2>&1; then
   notify-send -u normal -t 6000 "$title" "$msg" >/dev/null 2>&1 || true
 fi
