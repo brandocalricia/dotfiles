@@ -129,7 +129,9 @@ grok() {
       echo "grok wrapper: launching in ~/grok-sandbox (agent cwd; your shell stays in ${PWD/#$HOME/~})" >&2
       ;;
   esac
-  (cd "$launch_cwd" && command grok "$@")
+  # So the done-notify hook can tell *this* Terminal tab from another Grok.
+  local launch_tty="${TTY:-}"
+  (cd "$launch_cwd" && GROK_TTY="$launch_tty" command grok "$@")
 }
 
 # ── QoL tooling (2026-07-17) ─────────────────────────────────────────────────
