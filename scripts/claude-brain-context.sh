@@ -51,12 +51,16 @@ fi
 # "new" forever and never gets handled.
 inbox=""
 if [ -f "$BRAIN/Inbox.md" ]; then
-  inbox=$(awk -v today="$(date +%s)" '
+  inbox=$(awk -v today="$(date +%s)" -v _os="$(uname -s)" '
     /^## [0-9]{4}-[0-9]{2}-[0-9]{2}/ { day = $2; next }
     /^- \[ \]/ {
       age = -1
       if (day != "") {
-        cmd = "date -d " day " +%s 2>/dev/null"
+        if (_os == "Darwin") {
+          cmd = "date -j -f %Y-%m-%d " day " +%s 2>/dev/null"
+        } else {
+          cmd = "date -d " day " +%s 2>/dev/null"
+        }
         cmd | getline t; close(cmd)
         if (t > 0) age = int((today - t) / 86400)
       }
@@ -82,7 +86,11 @@ if [ -f "$BRAIN/.health-score" ]; then
   read -r hscore hnotes hdate < "$BRAIN/.health-score"
   stale=""
   if [ -n "${hdate:-}" ]; then
-    age=$(( ( $(date +%s) - $(date -d "$hdate" +%s 2>/dev/null || date +%s) ) / 86400 ))
+    if [ "$(uname -s)" = "Darwin" ]; then
+      age=$(( ( $(date +%s) - $(date -j -f "%Y-%m-%d" "$hdate" +%s 2>/dev/null || date +%s) ) / 86400 ))
+    else
+      age=$(( ( $(date +%s) - $(date -d "$hdate" +%s 2>/dev/null || date +%s) ) / 86400 ))
+    fi
     [ "$age" -gt 10 ] && stale=" (audit ${age}d stale — run \`brain-doctor.py --all\`)"
   fi
   health="Vault health: **${hscore}/100** · ${hnotes} notes · checked ${hdate}${stale}. Detail: \`Claude/Health.md\`."
@@ -123,8 +131,11 @@ case "$host" in
   brandon-fedora)
     machine_line="You are on **desktop \`brandon-fedora\`** (battery-less, DP-1 + HDMI-A-1). This is NOT laptop \`fedora\`."
     ;;
+  Brandons-MacBook-Air-2)
+    machine_line="You are on **Mac school laptop \`Brandons-MacBook-Air-2\`** (MacBook Air, macOS, Apple Silicon). This is NOT \`fedora\` (Framework laptop) or \`brandon-fedora\` (desktop)."
+    ;;
   *)
-    machine_line="You are on host \`$host\`. Known machines: laptop \`fedora\`, desktop \`brandon-fedora\`. Do not assume."
+    machine_line="You are on host \`$host\`. Known machines: laptop \`fedora\`, desktop \`brandon-fedora\`, Mac school laptop \`Brandons-MacBook-Air-2\`. Do not assume."
     ;;
 esac
 machine_block=$(printf '## This machine\n%s\nNever infer the host from INDEX restic/Grok paragraphs — those describe whichever machine last wrote them. If this block is missing, run `hostname -s`.\n' "$machine_line")
