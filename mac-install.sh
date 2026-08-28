@@ -56,7 +56,6 @@ brew install \
   gh \
   zsh \
   btop \
-  fastfetch \
   ripgrep \
   fd \
   fzf \
@@ -64,6 +63,7 @@ brew install \
   eza \
   bat
 installed "Homebrew CLI tools"
+# fastfetch is a Fedora/Hyprland greeting (du logo). macOS Terminal.app starts blank.
 
 # ══════════════════════════════════════════════════════════════════
 # 3. GUI apps (Cask)
@@ -71,12 +71,12 @@ installed "Homebrew CLI tools"
 section "GUI apps"
 info "Installing GUI apps via Homebrew Cask..."
 brew install --cask \
-  ghostty \
   aerospace \
   brave-browser \
   obsidian \
   spotify
 installed "Homebrew Cask apps"
+# Terminal.app is the Mac terminal (2026-08-28). Do not install Ghostty.
 
 # ══════════════════════════════════════════════════════════════════
 # 4. JetBrainsMono Nerd Font
@@ -168,8 +168,14 @@ fi
 section "Stow dotfiles"
 info "Stowing dotfiles..."
 cd "$DOTFILES"
-stow ghostty aerospace hypr waybar foot btop brave gh zsh fastfetch mako fuzzel
+# Linux-only — never stow on Darwin: hypr waybar foot mako fuzzel ghostty fastfetch
+stow aerospace btop brave gh zsh
 installed "dotfiles (stow)"
+
+# Blank Terminal.app: no "Last login", no Resume scrollback.
+: > "$HOME/.hushlogin"
+defaults write com.apple.Terminal NSQuitAlwaysKeepsWindows -bool false
+defaults write com.apple.Terminal ApplePersistenceIgnoreState -bool true
 
 # ══════════════════════════════════════════════════════════════════
 # Post-install summary

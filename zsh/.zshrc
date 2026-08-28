@@ -3,11 +3,16 @@ typeset -g POWERLEVEL9K_INSTANT_PROMPT=quiet
 # the info column starts wrapping into a mess; below that — a tiling WM giving
 # foot half the screen — stack the logo ON TOP so the info gets the full width
 # and never wraps. The 29-col "du" logo + padding + longest info line is the 82.
+# macOS Terminal.app should start blank — do not auto-run the fetch on Darwin
+# even if fastfetch is installed. Fedora/Hyprland keep the logo.
 ff() {
+  command -v fastfetch >/dev/null 2>&1 || return 0
   if [[ ${COLUMNS:-80} -lt 82 ]]; then fastfetch --logo-position top
   else fastfetch; fi
 }
-[[ $- == *i* ]] && ff
+if [[ $- == *i* ]] && [[ "$(uname -s)" != Darwin ]]; then
+  ff
+fi
 # Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
 # Initialization code that may require console input (password prompts, [y/n]
 # confirmations, etc.) must go above this block; everything else may go below.
@@ -144,7 +149,8 @@ export YDOTOOL_SOCKET="$XDG_RUNTIME_DIR/.ydotool_socket"
 # that; the only real fix is to redraw. While the terminal is still FRESH (no
 # command run yet), reprint the fetch at the new width on every resize; once a
 # command has run, resizing behaves normally so scrollback is never disturbed.
-if [[ $- == *i* ]]; then
+# Skip on Darwin — Terminal.app starts blank (no fetch).
+if [[ $- == *i* ]] && [[ "$(uname -s)" != Darwin ]]; then
   _ff_fresh=1
   autoload -Uz add-zsh-hook
   _ff_mark_used() { _ff_fresh=0 }
