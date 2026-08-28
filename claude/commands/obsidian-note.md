@@ -1,5 +1,5 @@
 ---
-description: "Alias for /obsidian-note. Always call the vault Obsidian, not the brain."
+description: Write a new Obsidian vault note from the user's own understanding, wired into the graph
 argument-hint: <topic>
 allowed-tools: Bash, Read, Grep, Glob, Write, Edit
 ---

@@ -25,11 +25,13 @@ recallcmd="$DOTFILES/scripts/brain-recall-check.py"
 guardcmd="$DOTFILES/scripts/grok-cwd-guard.sh"
 mcpcmd="$DOTFILES/scripts/brain-mcp-server.py"
 telcmd="$DOTFILES/scripts/grok-telemetry-guard.sh"
+notifycmd="$DOTFILES/scripts/grok-done-notify.sh"
 chmod +x "$startcmd" "$endcmd" "$promptcmd" "$stopcmd" "$recallcmd" "$guardcmd" "$mcpcmd" "$telcmd" \
-          "$DOTFILES/scripts/restic-status.sh" "$DOTFILES/scripts/brain-status.sh" 2>/dev/null || true
+          "$notifycmd" "$DOTFILES/scripts/restic-status.sh" "$DOTFILES/scripts/brain-status.sh" 2>/dev/null || true
 mkdir -p "$HOME/.local/bin"
 ln -sfn "$DOTFILES/scripts/restic-status.sh" "$HOME/.local/bin/restic-status"
 ln -sfn "$DOTFILES/scripts/brain-status.sh" "$HOME/.local/bin/brain-status"
+ln -sfn "$DOTFILES/scripts/brain-status.sh" "$HOME/.local/bin/obsidian-status"
 # Native copies so Grok still works if ~/.claude is gone.
 mkdir -p "$GROK_DIR/commands"
 if [ -d "$DOTFILES/claude/commands" ]; then
@@ -140,6 +142,26 @@ cat > "$GROK_DIR/hooks/brain.json" <<EOF
 }
 EOF
 echo "[+] $GROK_DIR/hooks/brain.json written"
+
+# Top-right banner when a turn finishes (macOS Notification Center / notify-send).
+cat > "$GROK_DIR/hooks/done-notify.json" <<EOF
+{
+  "hooks": {
+    "Notification": [{
+      "matcher": "task_complete",
+      "hooks": [
+        {"type": "command", "command": "$notifycmd", "timeout": 5}
+      ]
+    }],
+    "Stop": [{
+      "hooks": [
+        {"type": "command", "command": "$notifycmd", "timeout": 5}
+      ]
+    }]
+  }
+}
+EOF
+echo "[+] $GROK_DIR/hooks/done-notify.json written"
 
 # 2. Merge a marked block into ~/.grok/config.toml. Never rewrite the rest of
 #    the file (Grok itself writes installer/marketplace/ui keys).
@@ -262,6 +284,7 @@ cp -f "$DOTFILES/claude/this-machine.md" "$GROK_DIR/rules/this-machine.md" 2>/de
 EOF
 
 # Obligation rule (static; SessionStart does not overwrite this file)
+cp -f "$DOTFILES/claude/obsidian-name.md" "$GROK_DIR/rules/obsidian-name.md" 2>/dev/null || true
 cp -f "$DOTFILES/claude/brain-search-obligation.md" "$GROK_DIR/rules/brain-search-obligation.md" 2>/dev/null \
   || cat > "$GROK_DIR/rules/brain-search-obligation.md" <<'EOF'
 # Vault retrieval — standing obligation (Grok Build)

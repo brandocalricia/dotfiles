@@ -1,5 +1,5 @@
 ---
-description: "Alias for /obsidian. Always call the vault Obsidian, not the brain."
+description: "ALWAYS invoke this skill (do not wait for /obsidian) before answering questions about the user's projects, machines, Fedora/Hyprland setup, config, games (Megabonk, BonkScanner, BakkesMod, Balatro, Geometry Dash, Rusty's Retirement), peek, bwllm, dotfiles, Obsidian vault, past decisions, or anything they might have written down. Search their Obsidian vault first. Required, not optional."
 argument-hint: <question>
 allowed-tools: Bash, Read, Grep, Glob
 ---
@@ -8,7 +8,7 @@ Answer this question **from the user's own vault**, not from general knowledge:
 
 **$ARGUMENTS**
 
-Vault root: `~/Documents/Brain`. Notes live mainly in `02-Notes/`, `03-Resources/`,
+Vault root: `~/Documents/Brain` (on-disk folder name; always *call* it Obsidian). Notes live mainly in `02-Notes/`, `03-Resources/`,
 `01-Projects/`; `Claude/` is machine-maintained (skip it as a source unless asked).
 
 Procedure:

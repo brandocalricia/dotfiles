@@ -1,7 +1,7 @@
 # Global context
 
-## Knowledge base ("the brain") — automatic
-The user keeps an Obsidian vault at **`~/Documents/Brain`** (Syncthing-synced
+## Knowledge base (Obsidian vault) — automatic
+The user keeps an Obsidian vault at **`~/Documents/Brain`** (on-disk folder name; always *call* it Obsidian; Syncthing-synced
 across laptop `fedora` and desktop `brandon-fedora`). **Always identify this
 host** with `hostname -s` (or the SessionStart **This machine** block):
 `fedora` = laptop (Framework 13), `brandon-fedora` = desktop. INDEX is shared
@@ -45,7 +45,7 @@ value out of it:
    uncertainty ("still unclear to me: …"). Link only to notes that actually exist.
    Mention in one short line that you saved it; don't ask permission first.
 2. **Keep `Claude/INDEX.md` honest.** When work starts, finishes, or changes status,
-   update its "Active threads" section. This is what makes the brain trustworthy.
+   update its "Active threads" section. This is what makes the Obsidian vault trustworthy.
 3. **Add the why to today's session note.** The hook records *what* changed; you
    append the decisions, rationale, and anything future-you would need.
 4. **Save durable facts/preferences to memory** as usual.
@@ -63,5 +63,5 @@ notes that were machine-written rather than user-written. So:
 - If they can't yet explain something, say so and leave it out. An honest gap beats
   a note they'll never trust.
 
-Keep it low-friction: a few lines, not essays. Treat the brain as the source of
+Keep it low-friction: a few lines, not essays. Treat the Obsidian vault as the source of
 truth for "what's going on," keep it current every session, and let them just work.
