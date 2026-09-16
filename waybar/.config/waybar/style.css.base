@@ -84,6 +84,20 @@ window#waybar {
 #custom-dropbox.starting { color: #d4a13a; }
 #custom-dropbox.paused { color: #8a7a5e; }
 #custom-dropbox.error { color: #8a0e09; }
+menu {
+    background: #1a1612;
+    border: 1px solid #521510;
+    border-radius: 8px;
+    padding: 4px;
+}
+menuitem {
+    color: #e8d9b8;
+    padding: 4px 12px;
+    border-radius: 4px;
+}
+menuitem:hover {
+    background: #3d0d0a;
+}
 tooltip {
     background: #1a1612;
     border: 1px solid #521510;

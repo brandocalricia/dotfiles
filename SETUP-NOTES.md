@@ -256,12 +256,11 @@ Bar height is 40px so the app glyphs and caffeine chip fit.
 Workspace icons (title+class beats class-only):
 -  foot terminal
 - 󰚩 Grok Build (foot/ghostty whose title contains grok)
-- Brave lion / NordVPN mountain: color logos from WaybarAppIcons
-  (`~/.config/waybar/fonts/waybar-app-icons.ttf`, U+E900 / U+E901). Same
-  600-unit metrics as the Nerd Font icons so size/baseline match.
+- 󰖟 Brave (nf-md-web globe — inherits bar cream; do not use the color logo font)
+- 󰦝 NordVPN (shield+lock so it reads as VPN at bar size; same cream)
 - 󰌌 Monkeytype (Brave site window or title)
-Rebuild logos: `python3 ~/.config/waybar/fonts/build-app-icons-font.py`
-then restart waybar via `fonts/ensure-and-run-waybar.sh`.
+Color sbix logos in `waybar/fonts/` are unused: CSS `color` cannot tint them,
+so they never matched workspaces across themes.
 
 Caffeine is `custom/caffeine`: cup + `ON`/`off` label, coral chip when
 active. Styling is in switch-theme.sh (and live style.css). Icon-only
