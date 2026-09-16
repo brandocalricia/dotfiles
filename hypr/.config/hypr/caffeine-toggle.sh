@@ -31,14 +31,18 @@ STATE_FILE="${XDG_RUNTIME_DIR:-/tmp}/caffeine.on"
 is_on() { [[ -f "$STATE_FILE" ]]; }
 hypridle_running() { pidof hypridle >/dev/null 2>&1; }
 
+HYPRIDLE_LAUNCH="${XDG_CONFIG_HOME:-$HOME/.config}/hypr/run-hypridle.sh"
+
 start_hypridle() {
     hypridle_running && return 0
     # Prefer hyprctl so hypridle spawns in Hyprland's session env with a clean
     # Wayland connection; fall back to a detached launch if hyprctl is unavailable.
+    # Always go through run-hypridle.sh so the laptop keeps Mac-matched AC/battery
+    # timers (plain `hypridle` would load the desktop 5/15 min profile).
     if command -v hyprctl >/dev/null 2>&1; then
-        hyprctl dispatch exec hypridle >/dev/null 2>&1
+        hyprctl dispatch exec "$HYPRIDLE_LAUNCH" >/dev/null 2>&1
     else
-        setsid -f hypridle >/dev/null 2>&1
+        setsid -f "$HYPRIDLE_LAUNCH" >/dev/null 2>&1
     fi
 }
 

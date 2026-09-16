@@ -91,7 +91,11 @@ exist → no blank/lock/suspend; OFF = relaunch via `hyprctl dispatch exec` for 
 Wayland connection). It signals waybar with `SIGRTMIN+9` after flipping state. The only
 per-host bit is putting `"custom/caffeine"` in each host's `modules-right`
 (`local.<host>.jsonc`) — both hosts now have it. `hypridle` is installed + autostarted
-(`hyprland.conf` exec-once) on both. For the amber styling to render, run
+(`hyprland.conf` exec-once → `run-hypridle.sh`) on both. Laptop `fedora` uses
+MacBook Air idle: 2 min display-off on battery, 10 min on AC (touch wakes with
+no password); lock only on suspend 1 min later or lid close. `idle-power-watch.sh`
+swaps profiles on plug/unplug. Desktop keeps
+5 min blank/lock, 15 min suspend. For the amber styling to render, run
 `scripts/switch-theme.sh <theme>` once (regenerates `style.css` from `.base`).
 
 ### Captive-portal WiFi login popup — DONE 2026-07-18 (shared)
