@@ -121,6 +121,30 @@
         "tooltip": true
     },
 
+    "custom/dropbox": {
+        // Mac-style Dropbox menubar analog. Icon-only; hover for status, click for menu.
+        "return-type": "json",
+        "exec": "$HOME/.config/waybar/dropbox-status.sh",
+        "interval": 5,
+        "signal": 10,
+        "tooltip": true,
+        "menu": "on-click",
+        "menu-file": "$HOME/.config/waybar/dropbox-menu.xml",
+        "menu-actions": {
+            "open-folder": "$HOME/.config/waybar/dropbox-action.sh open-folder",
+            "recent": "$HOME/.config/waybar/dropbox-action.sh recent",
+            "sharelink": "$HOME/.config/waybar/dropbox-action.sh sharelink",
+            "pause": "$HOME/.config/waybar/dropbox-action.sh pause",
+            "resume": "$HOME/.config/waybar/dropbox-action.sh resume",
+            "restart": "$HOME/.config/waybar/dropbox-action.sh restart",
+            "open-web": "$HOME/.config/waybar/dropbox-action.sh open-web",
+            "account": "$HOME/.config/waybar/dropbox-action.sh account",
+            "link": "$HOME/.config/waybar/dropbox-action.sh link",
+            "help": "$HOME/.config/waybar/dropbox-action.sh help"
+        },
+        "on-click-right": "$HOME/.config/waybar/dropbox-action.sh open-folder"
+    },
+
     "tray": {
         "icon-size": 14,
         "spacing": 8

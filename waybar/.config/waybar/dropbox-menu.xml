@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <object class="GtkMenu" id="menu">
+    <child>
+      <object class="GtkMenuItem" id="open-folder">
+        <property name="label">Open Dropbox Folder</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkMenuItem" id="recent">
+        <property name="label">Recently Changed Files…</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkMenuItem" id="sharelink">
+        <property name="label">Copy Shared Link…</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkSeparatorMenuItem" id="sep1"/>
+    </child>
+    <child>
+      <object class="GtkMenuItem" id="pause">
+        <property name="label">Pause Syncing</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkMenuItem" id="resume">
+        <property name="label">Resume Syncing</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkMenuItem" id="restart">
+        <property name="label">Restart Dropbox</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkSeparatorMenuItem" id="sep2"/>
+    </child>
+    <child>
+      <object class="GtkMenuItem" id="open-web">
+        <property name="label">Open Dropbox.com</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkMenuItem" id="account">
+        <property name="label">Account Settings…</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkMenuItem" id="link">
+        <property name="label">Link This Computer…</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkMenuItem" id="help">
+        <property name="label">Help</property>
+      </object>
+    </child>
+  </object>
+</interface>
