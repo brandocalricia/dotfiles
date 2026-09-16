@@ -27,9 +27,12 @@ UPM = 1000
 ADVANCE = 600
 ASCENT = 1020
 DESCENT = -300
-# Same optical box as the Nerd Font workspace icons.
-DEST = (70, -50, 930, 790)  # xMin, yMin, xMax, yMax
-STRIKES = (32, 64)
+# Color sbix on this Pango/FreeType: larger originOffsetY shifts the bitmap *up*.
+# Measured at 15px*2: oy=0 → 2px high vs terminal; oy=2 → 3px high; oy=6 → 8px high.
+# Height already matches the terminal (23px) at ICON_FRAC 0.90. Nudge down with oy=-2.
+ICON_FRAC = 0.90
+CENTER_UPM = 360
+STRIKES = (20, 24, 30, 32, 40, 48, 64)
 
 
 def _empty_glyph():
@@ -39,21 +42,21 @@ def _empty_glyph():
 
 
 def _origin_y_px(ppem: int) -> int:
-    """Pixels from the image bottom to the baseline (DEST yMin is below it)."""
-    return max(0, round((-DEST[1]) / UPM * ppem))
+    """Pixels from the image bottom to the baseline. Negative moves it down here."""
+    return round(-2 * ppem / 32)
 
 
 def _fit_color(src: Path, canvas: int) -> bytes:
-    """Place the logo in DEST on a transparent canvas of `canvas` px."""
+    """Trim the logo, scale to ICON_FRAC of the em, center on the Nerd Font midline."""
     if not src.is_file():
         sys.exit(f"missing {src}")
-    dx0, dy0, dx1, dy1 = DEST
-    logo_w = max(1, round((dx1 - dx0) / UPM * canvas))
-    logo_h = max(1, round((dy1 - dy0) / UPM * canvas))
-    left = round(dx0 / UPM * canvas)
-    origin_y_upm = -dy0
-    image_top_font = UPM - origin_y_upm
-    top = round((image_top_font - dy1) / UPM * canvas)
+    target = max(1, round(ICON_FRAC * canvas))
+    oy = _origin_y_px(canvas)
+    center_from_bottom = oy + round(CENTER_UPM / UPM * canvas)
+    top = canvas - center_from_bottom - target // 2
+    left = (canvas - target) // 2
+    top = max(0, min(canvas - target, top))
+    left = max(0, min(canvas - target, left))
     dest = Path(tempfile.mkstemp(suffix=".png")[1])
     try:
         subprocess.check_call(
@@ -64,8 +67,10 @@ def _fit_color(src: Path, canvas: int) -> bytes:
                 "xc:none",
                 "(",
                 str(src),
+                "-trim",
+                "+repage",
                 "-resize",
-                f"{logo_w}x{logo_h}",
+                f"{target}x{target}",
                 ")",
                 "-geometry",
                 f"+{left}+{top}",
