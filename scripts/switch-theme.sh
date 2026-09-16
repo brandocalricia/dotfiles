@@ -35,7 +35,7 @@ fi
 if [[ "$(uname)" == "Linux" ]]; then
 cat > "$HOME/.config/waybar/style.css" << EOF
 * {
-    font-family: "JetBrainsMono Nerd Font", "JetBrainsMono NF", "Font Awesome 6 Free", monospace;
+    font-family: "JetBrainsMono Nerd Font", "JetBrainsMono NF", "Font Awesome 6 Free", "WaybarAppIcons", monospace;
     font-size: 13px;
     font-weight: 500;
     min-height: 0;

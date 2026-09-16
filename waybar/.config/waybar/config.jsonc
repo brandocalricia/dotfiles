@@ -23,7 +23,7 @@
         // and Monkeytype-in-Brave stay distinct from a plain terminal / browser tab.
         // Glyphs verified in JetBrainsMono Nerd Font (missing glyphs hide the window).
         "window-rewrite": {
-            "class<brave-monkeytype.*>": "󰌌",
+            "class<brave-monkeytype.*> title<.*>": "󰌌",
             "class<brave-browser> title<.*[Mm]onkeytype.*>": "󰌌",
             "title<.*[Mm]onkeytype.*>": "󰌌",
             "class<foot> title<.*[Gg]rok.*>": "󰚩",
@@ -31,8 +31,9 @@
             "class<foot>": "",
             "class<dropdown-term>": "󰞷",
             "class<dropdown-btop>": "󰊚",
-            "class<brave-browser>": "󰖟",
-            "class<brave-.*>": "󰖟",
+            "class<brave-browser>": "",
+            "class<brave-.*>": "",
+            "class<nordvpn-gui|nordvpn>": "",
             "class<steam>": "󰓓",
             "class<code|Code>": "󰨞",
             "class<com.spotify.Client|spotify>": "󰓇",
