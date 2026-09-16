@@ -185,6 +185,16 @@ path falls through cleanly (tested), but this interaction is not contractual.
   in fuzzel.ini (commit ef5f792).
 - `XDG_SESSION_TYPE=tty` on the Hyprland process itself (inherited from
   greetd); clients correctly get `wayland` + `XDG_CURRENT_DESKTOP=Hyprland`.
+- **Two fading error bars at every login** (fixed 2026-09-15): Hyprland's own
+  notifications, not config parse errors. (1) `tuigreet --cmd Hyprland` skips
+  `start-hyprland` → watchdog warning. (2) ashbuk doesn't ship
+  `hyprland-guiutils` (old name `hyprland-qtutils`) → missing-dialogs warning.
+  Previous attempt (`ecosystem { no_update_news / no_donation_nag }`) was the
+  wrong knob. Real hide is `misc { disable_watchdog_warning = true;
+  disable_hyprland_guiutils_check = true }`. Do **not** widen the solopasha
+  fence just to install qtutils — that's a desktop-only fence for hyprutils ABI.
+  Switching greetd to `--cmd start-hyprland` would remove cause (1) at the
+  source but is login-critical; left alone.
 
 ## Workflow pack (2026-06-12)
 

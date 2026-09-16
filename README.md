@@ -223,7 +223,7 @@ hyprctl reload
 
 ## Known Issues
 
-- **`hyprland-qtutils` missing from COPR** — some rare Qt dialogs won't render. Suppressed via `ecosystem {}` block in `hyprland.conf`.
+- **Two fading Hyprland error bars at login** — greetd launches `Hyprland` (not `start-hyprland`), and ashbuk doesn't ship `hyprland-guiutils` (was `hyprland-qtutils`). `ecosystem {}` does **not** hide these. Hidden via `misc { disable_watchdog_warning = true; disable_hyprland_guiutils_check = true }` in `hyprland.conf`. Some dialogs (ANR, permission prompts) still won't render without the package.
 - **`hypridle`** — crashes without a config. `~/.config/hypr/hypridle.conf` is not included; create one manually to enable auto-lock.
 - **Brave keyring prompts** — Brave must launch with `--password-store=basic`. Already handled via `brave-flags.conf` and the `SUPER+B` keybind. Without it, KDE Wallet prompts on every login.
 - **OBS screen capture** — use **Screen Capture (PipeWire)**, not the X11 source. `xdg-desktop-portal-hyprland` handles the portal.
