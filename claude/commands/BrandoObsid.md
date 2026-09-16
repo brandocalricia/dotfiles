@@ -1,5 +1,5 @@
 ---
-description: "Search the user's Obsidian vault. Use only when they ask you to look at their notes."
+description: "Search the user's BrandoObsid vault. Use only when they ask to look at their notes."
 argument-hint: <question>
 allowed-tools: Bash, Read, Grep, Glob
 ---
@@ -8,11 +8,11 @@ Answer this question **from the user's own vault**, not from general knowledge:
 
 **$ARGUMENTS**
 
-Vault root: `~/Documents/Brain`. Call it Obsidian.
+Vault root: `~/Documents/BrandoObsid`. Call it BrandoObsid.
 
 Procedure:
 
-0. If the `brain_search` tool exists, call it first with the user's prompt verbatim
+0. If the `BrandoObsid_search` tool exists, call it first with the user's prompt verbatim
    and treat its "From your vault" block as the primary source. Then continue.
 1. Search widely — `grep -ril` across the vault for the key terms.
 2. Read the notes that actually matter. Prefer depth over breadth.

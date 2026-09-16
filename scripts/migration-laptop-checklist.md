@@ -1,11 +1,11 @@
-# Laptop `fedora` — Grok brain installer (paste in order)
+# Laptop `fedora` — Grok BrandoObsid installer (paste in order)
 
 Do this on the laptop, not on brandon-fedora. Do **not** cancel Claude until
 this box has had a real TUI day.
 
 **Do not run `~/dotfiles/install.sh`.** That is the big first-setup bootstrap
 (dnf upgrade, many packages). Laptop Grok wiring is `git pull` +
-`install-grok-brain.sh` only.
+`install-grok-BrandoObsid.sh` only.
 
 Full paste-into-CC prompt: `Claude/Handoff-laptop-grok.md`
 
@@ -22,10 +22,10 @@ exec zsh
 2. Installer (no sudo). Then inspect:
 
 ```bash
-bash ~/dotfiles/scripts/install-grok-brain.sh
+bash ~/dotfiles/scripts/install-grok-BrandoObsid.sh
 grok inspect
-grok mcp doctor brain
-echo "$(hostname -s) $(date -Is)" > ~/.cache/brain-hooks/laptop-installer-done
+grok mcp doctor BrandoObsid
+echo "$(hostname -s) $(date -Is)" > ~/.cache/BrandoObsid-hooks/laptop-installer-done
 ```
 
 3. **Browser:** `grok login` on this machine. (needs a browser)
@@ -34,6 +34,6 @@ echo "$(hostname -s) $(date -Is)" > ~/.cache/brain-hooks/laptop-installer-done
 
 5. **TUI:** `/privacy` — coding-data opt-out + confirm `trace_upload` still false after login.
 
-6. One real TUI session (not `grok -p`). Confirm `~/Documents/Brain/Claude/Sessions/<today>.md` has a real goal, not `(session) · 0`.
+6. One real TUI session (not `grok -p`). Confirm `~/Documents/BrandoObsid/Claude/Sessions/<today>.md` has a real goal, not `(session) · 0`.
 
 7. Do **not** cancel Claude from the laptop until brandon-fedora cancel criteria 2–6 are also true.

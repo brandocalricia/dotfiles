@@ -1,0 +1,9 @@
+[Unit]
+Description=BrandoObsid vault health audit + safe auto-repair
+
+[Service]
+Type=oneshot
+# --fix and --archive are mechanical and reversible (aliases, frontmatter,
+# empty dirs, clutter moved to ~/Documents/BrandoObsid-archive). --unlink rewrites
+# note bodies, so it stays manual: run `BrandoObsid-doctor.py --unlink` or /BrandoObsid-fix.
+ExecStart=%h/dotfiles/scripts/BrandoObsid-doctor.py --fix --archive --dedupe

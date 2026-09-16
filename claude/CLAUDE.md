@@ -10,15 +10,15 @@ Always identify this host with `hostname -s`. Never guess from shared notes.
 
 Laptop restic bucket is `brandon-fedora-home` (host `fedora`). Desktop bucket is `brandon-desktop-home` (host `brandon-fedora`). Mac: no restic, no B2.
 
-## Obsidian is a manual notebook
+## BrandoObsid is a manual notebook
 
-`~/Documents/Brain` is the user's Obsidian vault (Syncthing folder id `brain`). Call it Obsidian, not "the brain". They take notes there themselves.
+`~/Documents/BrandoObsid` is the user's BrandoObsid vault (Dropbox folder `BrandoObsid`). Call it BrandoObsid, not "the brain" and not "Obsidian" (Obsidian is the app). They take notes there themselves.
 
 - Do **not** write, create, edit, index, log, roll up, capture, or "keep INDEX current" in the vault unless they explicitly ask (example: "format the notes I just took").
-- Do **not** search the vault, call `brain_search`, or read notes unless they ask you to look at their notes / vault / Obsidian.
-- If they do ask, read `~/Documents/Brain`, cite paths, and stop. Do not add follow-up notes they did not request.
+- Do **not** search the vault, call `BrandoObsid_search`, or read notes unless they ask you to look at their notes / vault / BrandoObsid.
+- If they do ask, read `~/Documents/BrandoObsid`, cite paths, and stop. Do not add follow-up notes they did not request.
 
-Grok/Claude session logs belong in the tool's own storage, not in Obsidian.
+Grok/Claude session logs belong in the tool's own storage, not in BrandoObsid.
 
 ## Hard nos (Fedora)
 

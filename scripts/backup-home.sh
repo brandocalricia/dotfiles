@@ -35,13 +35,13 @@ if [[ -z "${RESTIC_INHIBITED:-}" ]]; then
   log "WARNING: systemd-inhibit failed (likely resume-from-sleep); continuing uninhibited"
 fi
 
-# User-readable status for SessionStart / brain-status. No secrets.
+# User-readable status for SessionStart / BrandoObsid-status. No secrets.
 # systemd has no $HOME, so also copy next to the live vault owner's cache.
 status_user_path() {
   local d
   for d in /home/*; do
-    if [[ -d "$d/Documents/Brain" ]]; then
-      printf '%s/.cache/brain-hooks/restic-status.json' "$d"
+    if [[ -d "$d/Documents/BrandoObsid" ]]; then
+      printf '%s/.cache/BrandoObsid-hooks/restic-status.json' "$d"
       return 0
     fi
   done

@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# install-grok-brain.sh — Grok extras that are safe to re-run on any machine.
+# install-grok-BrandoObsid.sh — Grok extras that are safe to re-run on any machine.
 # User scope (no sudo). Idempotent.
 #
-# Obsidian (~/Documents/Brain) is a manual notebook. This installer must NOT
+# BrandoObsid (~/Documents/BrandoObsid) is a manual notebook. This installer must NOT
 # inject, search, log, or write the vault. It only touches:
 #   ~/.grok/config.toml   (a marked managed block; rest of the file is left alone)
-#   ~/.grok/hooks/brain.json          (cwd guard only)
+#   ~/.grok/hooks/BrandoObsid.json          (cwd guard only)
 #   ~/.grok/hooks/done-notify.json    (turn-finished banner)
 #   ~/.grok/rules + ~/.grok/commands  (opt-in vault read)
 #
@@ -17,18 +17,19 @@ GROK_DIR="${GROK_HOME:-$HOME/.grok}"
 mkdir -p "$GROK_DIR/hooks" "$GROK_DIR/rules" "$GROK_DIR/memory"
 
 guardcmd="$DOTFILES/scripts/grok-cwd-guard.sh"
-mcpcmd="$DOTFILES/scripts/brain-mcp-server.py"
+mcpcmd="$DOTFILES/scripts/BrandoObsid-mcp-server.py"
 telcmd="$DOTFILES/scripts/grok-telemetry-guard.sh"
 notifycmd="$DOTFILES/scripts/grok-done-notify.sh"
 chmod +x "$guardcmd" "$mcpcmd" "$telcmd" "$notifycmd" \
-          "$DOTFILES/scripts/restic-status.sh" "$DOTFILES/scripts/brain-status.sh" 2>/dev/null || true
+          "$DOTFILES/scripts/restic-status.sh" "$DOTFILES/scripts/BrandoObsid-status.sh" 2>/dev/null || true
 mkdir -p "$HOME/.local/bin"
 ln -sfn "$DOTFILES/scripts/restic-status.sh" "$HOME/.local/bin/restic-status"
-ln -sfn "$DOTFILES/scripts/brain-status.sh" "$HOME/.local/bin/brain-status"
-ln -sfn "$DOTFILES/scripts/brain-status.sh" "$HOME/.local/bin/obsidian-status"
+ln -sfn "$DOTFILES/scripts/BrandoObsid-status.sh" "$HOME/.local/bin/BrandoObsid-status"
+rm -f "$HOME/.local/bin/brain-status" "$HOME/.local/bin/obsidian-status"
 # Native copies so Grok still works if ~/.claude is gone.
 mkdir -p "$GROK_DIR/commands"
 if [ -d "$DOTFILES/claude/commands" ]; then
+  rm -f "$GROK_DIR/commands/"{brain,brain-note,brain-audit,brain-fix,obsidian,obsidian-note,obsidian-audit,obsidian-fix}.md
   cp -f "$DOTFILES/claude/commands/"*.md "$GROK_DIR/commands/" 2>/dev/null || true
 fi
 if [ -f "$DOTFILES/claude/CLAUDE.md" ]; then
@@ -37,7 +38,7 @@ fi
 
 if [ "${1-}" = "--dry-run" ]; then
   cat <<PLAN
-install-grok-brain.sh --dry-run (no writes)
+install-grok-BrandoObsid.sh --dry-run (no writes)
 host=$(hostname -s 2>/dev/null || hostname)
 GROK_DIR=$GROK_DIR
 DOTFILES=$DOTFILES
@@ -48,7 +49,7 @@ Would chmod +x:
   $telcmd
   $notifycmd
 
-Would write $GROK_DIR/hooks/brain.json
+Would write $GROK_DIR/hooks/BrandoObsid.json
   SessionStart: grok-cwd-guard.sh
   PreToolUse: grok-cwd-guard.sh
   (no vault inject / retrieve / session-log / capture)
@@ -61,16 +62,16 @@ Would upsert marked block in $GROK_DIR/config.toml
   [telemetry] trace_upload=false (and mixpanel/otel off)
   [compat.claude] skills/rules/agents/mcps/hooks/sessions = true
   [memory] enabled=true  [memory.session] save_on_end=true
-  [mcp_servers.brain] $mcpcmd
+  [mcp_servers.BrandoObsid] $mcpcmd
   [permission] deny Read/Edit on .env, secrets.env, credentials, ssh, gnupg
   (preserves any existing allow = [...] so a re-run does not wipe Bash allows)
 
 Would mkdir -p:
   $GROK_DIR/{hooks,rules,memory}
 
-Would copy $GROK_DIR/rules/{00-global-context,this-machine,brain-search-obligation,obsidian-name}.md
-Would write a short $GROK_DIR/rules/brain-session-context.md (no vault dump)
-Would NOT create or write ~/Documents/Brain/**
+Would copy $GROK_DIR/rules/{00-global-context,this-machine,BrandoObsid-search-obligation,BrandoObsid-name}.md
+Would write a short $GROK_DIR/rules/BrandoObsid-session-context.md (no vault dump)
+Would NOT create or write ~/Documents/BrandoObsid/**
 
 Would install user systemd units (if present in repo):
   grok-telemetry-guard.path + .service → enable --now
@@ -78,7 +79,7 @@ Would install user systemd units (if present in repo):
 
 Would NOT touch:
   ~/.claude/  settings.json  settings.local.json
-  ~/Documents/Brain (no reads, no writes, no mkdir)
+  ~/Documents/BrandoObsid (no reads, no writes, no mkdir)
   display manager, sudo, NetworkManager
 
 zsh grok() wrapper: lives in ~/dotfiles/zsh/.zshrc (stowed). This script
@@ -94,7 +95,7 @@ PLAN
 fi
 
 # 1. Native hooks file (always-trusted global). No vault inject/log/capture.
-cat > "$GROK_DIR/hooks/brain.json" <<EOF
+cat > "$GROK_DIR/hooks/BrandoObsid.json" <<EOF
 {
   "hooks": {
     "SessionStart": [{
@@ -110,7 +111,7 @@ cat > "$GROK_DIR/hooks/brain.json" <<EOF
   }
 }
 EOF
-echo "[+] $GROK_DIR/hooks/brain.json written (cwd-guard only)"
+echo "[+] $GROK_DIR/hooks/BrandoObsid.json written (cwd-guard only)"
 # Claude-compat also loads this file; it used to re-inject INDEX + session logs.
 cat > "$GROK_DIR/hooks/imported-from-claude.json" <<EOF
 {
@@ -147,7 +148,15 @@ from pathlib import Path
 cfg_path = Path(sys.argv[1])
 home = sys.argv[2]
 text = cfg_path.read_text(encoding="utf-8") if cfg_path.exists() else ""
-begin, end = "# >>> grok-brain managed", "# <<< grok-brain managed"
+# Drop the pre-rename managed block so we do not leave mcp_servers.brain behind.
+for old_begin, old_end in (
+    ("# >>> grok-brain managed", "# <<< grok-brain managed"),
+):
+    if old_begin in text and old_end in text:
+        pre = text.split(old_begin, 1)[0]
+        post = text.split(old_end, 1)[1]
+        text = pre.rstrip() + "\n" + post.lstrip()
+begin, end = "# >>> grok-BrandoObsid managed", "# <<< grok-BrandoObsid managed"
 # Keep any native allow = [...] when rewriting the managed [permission]
 # table. Re-running this installer used to wipe the 136 Bash allows ported
 # from Claude. deny list below is still the source of truth for denials.
@@ -155,7 +164,7 @@ import re
 allow_m = re.search(r"(?ms)^allow\s*=\s*\[.*?\]\s*\n", text)
 allow_block = allow_m.group(0) if allow_m else ""
 block = f"""{begin}
-# Written by install-grok-brain.sh. Edit the script, not this block, then re-run.
+# Written by install-grok-BrandoObsid.sh. Edit the script, not this block, then re-run.
 [features]
 telemetry = false
 feedback = false
@@ -185,8 +194,8 @@ save_on_end = true
 enabled = true
 min_score = 0.7
 
-[mcp_servers.brain]
-command = "{home}/dotfiles/scripts/brain-mcp-server.py"
+[mcp_servers.BrandoObsid]
+command = "{home}/dotfiles/scripts/BrandoObsid-mcp-server.py"
 enabled = true
 startup_timeout_sec = 15
 
@@ -245,17 +254,28 @@ PY
 
 # 3. Static rules. No vault dump, no INDEX, no "must search before every answer".
 cp -f "$DOTFILES/claude/this-machine.md" "$GROK_DIR/rules/this-machine.md"
-cp -f "$DOTFILES/claude/obsidian-name.md" "$GROK_DIR/rules/obsidian-name.md"
-cp -f "$DOTFILES/claude/brain-search-obligation.md" "$GROK_DIR/rules/brain-search-obligation.md"
-cat > "$GROK_DIR/rules/brain-session-context.md" <<'EOF'
+cp -f "$DOTFILES/claude/BrandoObsid-name.md" "$GROK_DIR/rules/BrandoObsid-name.md"
+cp -f "$DOTFILES/claude/BrandoObsid-search-obligation.md" "$GROK_DIR/rules/BrandoObsid-search-obligation.md"
+rm -f "$GROK_DIR/rules/obsidian-name.md" \
+      "$GROK_DIR/rules/brain-search-obligation.md" \
+      "$GROK_DIR/rules/brain-session-context.md" \
+      "$GROK_DIR/hooks/brain.json"
+cat > "$GROK_DIR/rules/BrandoObsid-session-context.md" <<'EOF'
 <!-- static; do not auto-generate from the vault -->
-Obsidian (`~/Documents/Brain`) is a manual notebook. Do not search or write it unless the user asks.
+BrandoObsid (`~/Documents/BrandoObsid`) is a manual notebook. Do not search or write it unless the user asks.
 Identify this host with `hostname -s`.
 EOF
 
-# Old auto-Obsidian timers must not come back.
+# Old auto-write timers must not come back (new names and leftover brain-* names).
+systemctl --user disable --now BrandoObsid-rollup.timer 2>/dev/null || true
+systemctl --user disable --now BrandoObsid-doctor.timer 2>/dev/null || true
 systemctl --user disable --now brain-rollup.timer 2>/dev/null || true
 systemctl --user disable --now brain-doctor.timer 2>/dev/null || true
+rm -f "$HOME/.config/systemd/user/brain-rollup.service" \
+      "$HOME/.config/systemd/user/brain-rollup.timer" \
+      "$HOME/.config/systemd/user/brain-doctor.service" \
+      "$HOME/.config/systemd/user/brain-doctor.timer"
+systemctl --user daemon-reload 2>/dev/null || true
 
 # Telemetry path unit — re-checks kill switches when the binary is replaced.
 if [ -f "$DOTFILES/systemd/grok-telemetry-guard.path" ]; then
@@ -276,4 +296,4 @@ else
 fi
 
 echo "[+] Grok extras wired (cwd-guard, notify, on-demand vault MCP). Restart Grok to pick up hooks."
-echo "    Obsidian is manual. Claude settings were not touched — run install-claude-brain.sh to strip its vault hooks too."
+echo "    BrandoObsid is manual. Claude settings were not touched — run install-claude-BrandoObsid.sh to strip its vault hooks too."

@@ -1,25 +1,25 @@
 #!/usr/bin/env python3
-"""brain-recall-bench — measure Grok 1.0.5 vault-search recall.
+"""BrandoObsid-recall-bench — measure Grok 1.0.5 vault-search recall.
 
 Grok has no per-prompt injection (probed). Retrieval is the model choosing to
-call brain_search or auto-invoke /brain. This script is the number that decides
+call BrandoObsid_search or auto-invoke /BrandoObsid. This script is the number that decides
 whether vault work can leave Claude Code.
 
 Each case is a FRESH grok -p session. Follow-ups are a setup turn then --resume.
 Nothing here tells the model to search; the prompt is the prompt.
 
 Metrics
-  searched     brain_search (MCP use_tool) or /brain skill file was read
+  searched     BrandoObsid_search (MCP use_tool) or /BrandoObsid skill file was read
   right_note   an expected note path appeared in a tool result or a read
   used         the final answer cites an expected note or a vault-specific fact
   hard recall  searched AND right_note on the hard subset
   false-pos    searched on a negative control (searching would be wrong)
 
 Usage
-  brain-recall-bench.py --local              # retrieve() coverage only
-  brain-recall-bench.py --smoke              # 3 live sessions (easy/hard/neg)
-  brain-recall-bench.py --run [--jobs N]
-  brain-recall-bench.py --report [DIR]
+  BrandoObsid-recall-bench.py --local              # retrieve() coverage only
+  BrandoObsid-recall-bench.py --smoke              # 3 live sessions (easy/hard/neg)
+  BrandoObsid-recall-bench.py --run [--jobs N]
+  BrandoObsid-recall-bench.py --report [DIR]
 """
 from __future__ import annotations
 
@@ -38,11 +38,11 @@ from pathlib import Path
 
 HOME = Path.home()
 DOTFILES = HOME / "dotfiles"
-RETRIEVE_PY = DOTFILES / "scripts" / "brain-retrieve.py"
+RETRIEVE_PY = DOTFILES / "scripts" / "BrandoObsid-retrieve.py"
 GROK_BIN = Path(os.environ.get("GROK_BIN", HOME / ".grok" / "bin" / "grok"))
-CONTEXT_SH = DOTFILES / "scripts" / "claude-brain-context.sh"
-VAULT = HOME / "Documents" / "Brain"
-OUT_ROOT = HOME / ".cache" / "brain-hooks" / "recall-bench"
+CONTEXT_SH = DOTFILES / "scripts" / "claude-BrandoObsid-context.sh"
+VAULT = HOME / "Documents" / "BrandoObsid"
+OUT_ROOT = HOME / ".cache" / "BrandoObsid-hooks" / "recall-bench"
 CWD = Path("/tmp/grok-recall-bench")
 SESSIONS = HOME / ".grok" / "sessions"
 
@@ -57,8 +57,8 @@ DISALLOWED = ",".join((
 ))
 
 SKILL_PATHS = (
-    str(HOME / ".claude" / "commands" / "brain.md"),
-    str(HOME / ".grok" / "skills" / "brain" / "SKILL.md"),
+    str(HOME / ".claude" / "commands" / "BrandoObsid.md"),
+    str(HOME / ".grok" / "skills" / "BrandoObsid" / "SKILL.md"),
 )
 
 
@@ -226,11 +226,11 @@ CASES: list[dict] = [
     C("grok-migration", "grok migration status",
       tags=("easy",),
       notes=("Grok-Migration-Plan.md",),
-      facts=("degraded", "do not cancel", "1.0.5", "brain_search")),
+      facts=("degraded", "do not cancel", "1.0.5", "BrandoObsid_search")),
     C("vault-doctor", "vault doctor what does it do",
       tags=("easy",),
       notes=("vault_health_doctor.md", "Vault-Health-Tooling.md"),
-      facts=("brain-doctor", "10,769", "unlink", "sunday")),
+      facts=("BrandoObsid-doctor", "10,769", "unlink", "sunday")),
     C("geode-launchopt", "geometry dash geode launch option",
       tags=("easy",),
       notes=("geometry_dash_geode.md",),
@@ -293,7 +293,7 @@ CASES: list[dict] = [
 # ── retrieve() ─────────────────────────────────────────────────────────────
 
 def load_retrieve():
-    spec = importlib.util.spec_from_file_location("brain_retrieve", RETRIEVE_PY)
+    spec = importlib.util.spec_from_file_location("BrandoObsid_retrieve", RETRIEVE_PY)
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     return mod
@@ -386,7 +386,7 @@ def parse_history(path: Path, scored_prompt: str) -> dict:
 
     def consider_blob(blob: str):
         nonlocal note_hits
-        for m in re.finditer(r"(?:Documents/Brain/|Brain/)([^\s`\"']+\.md)", blob):
+        for m in re.finditer(r"(?:Documents/BrandoObsid/|Brain/)([^\s`\"']+\.md)", blob):
             note_hits.append(m.group(0))
         for m in re.finditer(r"`([^`]+\.md)`", blob):
             note_hits.append(m.group(1))
@@ -402,23 +402,23 @@ def parse_history(path: Path, scored_prompt: str) -> dict:
                 args = _args(tc.get("arguments"))
                 tools.append(name)
                 joined = json.dumps(args, default=str).lower()
-                if name == "use_tool" and "brain_search" in (
+                if name == "use_tool" and "BrandoObsid_search" in (
                     str(args.get("tool_name") or "") + joined
                 ):
                     mcp = True
-                if name == "search_tool" and "brain" in joined:
-                    # schema lookup, not yet a search — still the brain path
+                if name == "search_tool" and "BrandoObsid" in joined:
+                    # schema lookup, not yet a search — still the vault path
                     pass
                 if name == "memory_search":
                     mem = True
                 fp = str(args.get("target_file") or args.get("path") or "")
                 if any(fp.endswith(s) or s in fp for s in SKILL_PATHS) or (
-                    fp.endswith("brain.md") and "commands" in fp
+                    fp.endswith("BrandoObsid.md") and "commands" in fp
                 ):
                     skill = True
                 if name == "run_terminal_command":
                     cmd = str(args.get("command") or "")
-                    if "Documents/Brain" in cmd or "~/Documents/Brain" in cmd:
+                    if "Documents/BrandoObsid" in cmd or "~/Documents/BrandoObsid" in cmd:
                         grep = True
                 consider_blob(joined)
                 if fp.endswith(".md"):

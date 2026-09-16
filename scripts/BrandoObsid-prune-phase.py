@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
-"""brain-prune-phase — remove the bulk-generated notes from the vault.
+"""BrandoObsid-prune-phase — remove the bulk-generated notes from the vault.
 
 Criterion, from inspection of the 2026 generation runs: every machine-written
 note carries a `phase:` frontmatter key or a `#phaseNN` tag. Notes Brandon wrote
 himself carry neither. That single marker separates 427 generated notes from
 311 real ones.
 
-Nothing is deleted. Notes move to ~/.local/share/brain-pruned/ with their vault
+Nothing is deleted. Notes move to ~/.local/share/BrandoObsid-pruned/ with their vault
 paths preserved, so any of them can be restored with one `mv`. A full tarball
 snapshot is written first regardless.
 
-    brain-prune-phase.py            # dry run — counts and a sample
-    brain-prune-phase.py --apply    # snapshot, then move
+    BrandoObsid-prune-phase.py            # dry run — counts and a sample
+    BrandoObsid-prune-phase.py --apply    # snapshot, then move
 """
 import os
 import re
@@ -20,9 +20,9 @@ import sys
 import tarfile
 
 HOME = os.path.expanduser("~")
-VAULT = os.environ.get("BRAIN_VAULT", os.path.join(HOME, "Documents", "Brain"))
-PRUNED = os.path.join(HOME, ".local", "share", "brain-pruned")
-SNAP_DIR = os.path.join(HOME, ".local", "share", "brain-snapshots")
+VAULT = os.environ.get("BRANDOOBSID_VAULT", os.path.join(HOME, "Documents", "BrandoObsid"))
+PRUNED = os.path.join(HOME, ".local", "share", "BrandoObsid-pruned")
+SNAP_DIR = os.path.join(HOME, ".local", "share", "BrandoObsid-snapshots")
 SKIP = set([".git", ".obsidian", ".stfolder", ".trash"])
 PHASE = re.compile(r"^phase:|phase\d+", re.M)
 
@@ -39,7 +39,7 @@ def walk_md():
 
 def snapshot(tag):
     os.makedirs(SNAP_DIR, exist_ok=True)
-    path = os.path.join(SNAP_DIR, "brain-%s.tar.gz" % tag)
+    path = os.path.join(SNAP_DIR, "BrandoObsid-%s.tar.gz" % tag)
     with tarfile.open(path, "w:gz") as t:
         for dp, dn, fn in os.walk(VAULT):
             dn[:] = [d for d in dn if d not in SKIP]

@@ -257,12 +257,8 @@ EOF
       && info "Syncthing folder 'code' added" \
       || warn "Couldn't add Syncthing folder — add ~/code via http://127.0.0.1:8384"
   fi
-  # Obsidian brain vault — also mirrored via Syncthing (folder id "brain").
-  if [ -d ~/Documents/Brain ] && ! syncthing cli config folders list 2>/dev/null | grep -qx brain; then
-    syncthing cli config folders add --id brain --label Brain --path ~/Documents/Brain \
-      && info "Syncthing folder 'brain' added" \
-      || warn "Couldn't add Brain folder — add ~/Documents/Brain via http://127.0.0.1:8384"
-  fi
+  # BrandoObsid vault lives in Dropbox (~/Dropbox/BrandoObsid). Do not share it
+  # with Syncthing — never two sync tools on the same folder.
   cp "$DOTFILES/systemd/work-heartbeat.service" \
      "$DOTFILES/systemd/work-heartbeat.timer" ~/.config/systemd/user/
   systemctl --user daemon-reload
@@ -299,10 +295,10 @@ EOF
   bash "$DOTFILES/scripts/install-atuin-latest.sh" || warn "atuin latest fetch failed"
   installed "atuin latest in ~/.local/bin"
 
-  section "Linux: Obsidian brain ⇄ Claude"
-  info "Wiring the Claude session-log hook + brain pointer..."
-  bash "$DOTFILES/scripts/install-claude-brain.sh"
-  installed "Claude brain (global CLAUDE.md + SessionEnd auto-log hook)"
+  section "Linux: BrandoObsid ⇄ Claude"
+  info "Installing the manual-notebook Claude policy (no vault auto-write)..."
+  bash "$DOTFILES/scripts/install-claude-BrandoObsid.sh"
+  installed "Claude BrandoObsid policy (global CLAUDE.md, vault hooks stripped)"
 
   section "Linux: Flatpaks"
   info "Installing Flatpaks..."

@@ -1,13 +1,13 @@
 ---
-description: "Alias for /obsidian-audit. Use only when the user asks for a vault audit."
+description: "Report BrandoObsid vault health. Use only when the user asks for a vault audit."
 allowed-tools: Bash, Read
 ---
 
 Run the vault audit and interpret it. Do not change any files.
 
-!`~/dotfiles/scripts/brain-doctor.py --audit`
+!`~/dotfiles/scripts/BrandoObsid-doctor.py --audit`
 
-Then read `~/Documents/Brain/Claude/Health.md` for the detail.
+Then read `~/Documents/BrandoObsid/Claude/Health.md` for the detail.
 
 Report back, briefly:
 
@@ -17,7 +17,7 @@ Report back, briefly:
 - The top of the **write queue**: concepts the user linked to repeatedly but never
   wrote. These are the highest-leverage notes to author, because the links already
   point there. Name the top three and say what each would need to cover.
-- Whether anything needs `/obsidian-fix` (which rewrites note bodies) versus the weekly
+- Whether anything needs `/BrandoObsid-fix` (which rewrites note bodies) versus the weekly
   timer handling it on its own.
 
 Keep it under ~15 lines. This runs often; it should read like a status line, not a report.

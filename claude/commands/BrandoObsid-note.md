@@ -1,12 +1,12 @@
 ---
-description: "Write or format an Obsidian note. Use only when the user explicitly asks you to write or format notes they took."
+description: "Write or format a BrandoObsid note. Use only when the user explicitly asks you to write or format notes they took."
 argument-hint: <topic>
 allowed-tools: Bash, Read, Grep, Glob, Write, Edit
 ---
 
 The user asked you to write or format notes on: **$ARGUMENTS**
 
-Obsidian is their manual notebook. Only do what they asked.
+BrandoObsid is their manual notebook. Only do what they asked.
 
 1. If they pasted or pointed at notes they already took, format those — keep their wording.
 2. If they want a new note, use *their* phrasing. Do not invent content they did not give you.

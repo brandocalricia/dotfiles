@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""brain-prune-shells — second prune pass, after brain-prune-phase.
+"""BrandoObsid-prune-shells — second prune pass, after BrandoObsid-prune-phase.
 
 Pruning the phase notes left behind their index pages: MOCs and hubs whose
 entire body is a list of links into the set that was just removed. They are not
@@ -8,10 +8,10 @@ made of.
 
 A note is a shell when most of its outbound links point at files that no longer
 exist. Nothing is deleted — same destination as the first pass,
-~/.local/share/brain-pruned/, so restoring is one mv.
+~/.local/share/BrandoObsid-pruned/, so restoring is one mv.
 
-    brain-prune-shells.py             # dry run: list them with their dead ratio
-    brain-prune-shells.py --apply
+    BrandoObsid-prune-shells.py             # dry run: list them with their dead ratio
+    BrandoObsid-prune-shells.py --apply
 """
 import os
 import re
@@ -19,8 +19,8 @@ import shutil
 import sys
 
 HOME = os.path.expanduser("~")
-VAULT = os.environ.get("BRAIN_VAULT", os.path.join(HOME, "Documents", "Brain"))
-PRUNED = os.path.join(HOME, ".local", "share", "brain-pruned")
+VAULT = os.environ.get("BRANDOOBSID_VAULT", os.path.join(HOME, "Documents", "BrandoObsid"))
+PRUNED = os.path.join(HOME, ".local", "share", "BrandoObsid-pruned")
 SKIP = set([".git", ".obsidian", ".stfolder", ".trash"])
 LINK = re.compile(r"\[\[([^\]|#]+)")
 

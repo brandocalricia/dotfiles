@@ -6,8 +6,8 @@ set -uo pipefail
 BIN="${GROK_BIN:-$HOME/.grok/downloads/grok-linux-x86_64}"
 CFG="${GROK_HOME:-$HOME/.grok}/config.toml"
 ALERT="${GROK_HOME:-$HOME/.grok}/rules/telemetry-alert.md"
-STATUS="$HOME/.cache/brain-hooks/telemetry-guard.txt"
-mkdir -p "$(dirname "$ALERT")" "$HOME/.cache/brain-hooks"
+STATUS="$HOME/.cache/BrandoObsid-hooks/telemetry-guard.txt"
+mkdir -p "$(dirname "$ALERT")" "$HOME/.cache/BrandoObsid-hooks"
 
 fail() {
   msg=$1

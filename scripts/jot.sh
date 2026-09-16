@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
-# jot — capture a thought into the Obsidian brain from any terminal, instantly.
+# jot — capture a thought into BrandoObsid from any terminal, instantly.
 #   jot buy a new usb-c cable
 #   jot "idea: cache the geolocation result for 10 min"
-# Appends a timestamped bullet under today's date in Brain/Claude/Inbox.md.
-# Claude surfaces unchecked Inbox items at session start (see brain-context hook).
+# Appends a timestamped bullet under today's date in BrandoObsid/Claude/Inbox.md.
+# Claude surfaces unchecked Inbox items at session start (see BrandoObsid-context hook).
 set -uo pipefail
 
-BRAIN="$HOME/Documents/Brain/Claude"
+BRAIN="$HOME/Documents/BrandoObsid/Claude"
 inbox="$BRAIN/Inbox.md"
-mkdir -p "$BRAIN" 2>/dev/null || { echo "jot: brain vault not found" >&2; exit 1; }
+mkdir -p "$BRAIN" 2>/dev/null || { echo "jot: BrandoObsid vault not found" >&2; exit 1; }
 
 text="$*"
 if [ -z "$text" ]; then

@@ -16,8 +16,8 @@ event="${GROK_HOOK_EVENT:-}"
 
 HOME_DIR="${HOME}"
 BRAIN_GIT="${HOME}/Brain"
-BRAIN_ARCHIVE="${HOME}/Brain.linux-mint-archive-2026-05"
-# The Syncthing vault is ~/Documents/Brain. Launching *there* is fine.
+BRAIN_GIT_ARCHIVE="${HOME}/Brain.linux-mint-archive-2026-05"
+# The live vault is ~/Documents/BrandoObsid (Dropbox). Launching *there* is fine.
 # ~/Brain was a separate git-tracked clone; renamed 2026-08-23.
 
 is_home=0
@@ -29,7 +29,7 @@ env_path=""
 abs=$(readlink -f "$cwd" 2>/dev/null || printf '%s' "$cwd")
 home_abs=$(readlink -f "$HOME_DIR" 2>/dev/null || printf '%s' "$HOME_DIR")
 brain_abs=$(readlink -f "$BRAIN_GIT" 2>/dev/null || printf '%s' "$BRAIN_GIT")
-archive_abs=$(readlink -f "$BRAIN_ARCHIVE" 2>/dev/null || printf '%s' "$BRAIN_ARCHIVE")
+archive_abs=$(readlink -f "$BRAIN_GIT_ARCHIVE" 2>/dev/null || printf '%s' "$BRAIN_GIT_ARCHIVE")
 
 [ "$abs" = "$home_abs" ] && is_home=1
 case "$abs" in
@@ -72,7 +72,7 @@ if [ "$is_home" -eq 1 ]; then
 fi
 
 if [ "$is_brain_git" -eq 1 ]; then
-  deny "GROK CWD GUARD: refused. That directory is the old git-tracked GitHub vault clone (or its 2026-08-23 archive). Work in ~/Documents/Brain (Syncthing live vault) or a project repo — never the GitHub clone."
+  deny "GROK CWD GUARD: refused. That directory is the old git-tracked GitHub vault clone (or its 2026-08-23 archive). Work in ~/Documents/BrandoObsid (Dropbox live vault) or a project repo — never the GitHub clone."
 fi
 
 if [ "$has_env" -eq 1 ]; then

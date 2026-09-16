@@ -1,9 +1,9 @@
 ---
 tags: [claude, moc]
 ---
-# 🧠 Claude ⇄ Brain
+# Claude ⇄ BrandoObsid
 
-This folder is the bridge between your Obsidian vault and Claude Code. It exists
+This folder is the bridge between your BrandoObsid vault and Claude Code. It exists
 so Claude always knows your context and every session leaves a durable record.
 
 ## How it works
@@ -15,13 +15,13 @@ so Claude always knows your context and every session leaves a durable record.
   transcript path). Claude also writes richer summaries here for substantive work.
 - **`Memory/`** — a mirror of Claude's structured memory
   (`~/.claude/.../memory/`), copied in on each session end so it's graphed in
-  Obsidian and Syncthing-replicated across machines. Off-device restic→B2 of
+  BrandoObsid and Dropbox-replicated across machines. Off-device restic→B2 of
   `/home` is the backup, once a snapshot has actually completed on that machine.
   **Read-only mirror** — edit the real memory via Claude, not these copies.
 
 ## Sync & safety
-The whole `Brain` vault is a Syncthing folder (`id: brain`) shared laptop ⇄ PC,
-so this knowledge lives on both machines. Syncthing is replication, not backup
+The whole `BrandoObsid` vault is a Dropbox folder shared fedora ⇄ Mac,
+so this knowledge lives on both machines. Dropbox is replication, not backup
 (deletes propagate). Off-device copy is restic→B2 of `/home`.
 
 ## Query it (Dataview)

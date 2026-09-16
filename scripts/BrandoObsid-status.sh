@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # Print the six Claude→Grok cancel/wiring criteria with current status.
-# No sudo, no secrets. On PATH as `brain-status`.
+# No sudo, no secrets. On PATH as `BrandoObsid-status`.
 set -uo pipefail
 
-CACHE="${HOME}/.cache/brain-hooks"
-BRAIN="${HOME}/Documents/Brain/Claude"
+CACHE="${HOME}/.cache/BrandoObsid-hooks"
+BRAIN="${HOME}/Documents/BrandoObsid/Claude"
 mkdir -p "$CACHE" 2>/dev/null || true
 
 # Keep the health trend file honest every time this is run.
@@ -72,11 +72,11 @@ c2d="stamped ${tui_n}/5 TUI days (need a genuine multi-turn session, not grok -p
 if [[ "$tui_n" -ge 5 ]]; then c2="PASS"; else c2="NOT YET"; fi
 
 # --- 3. laptop ---
-c3="NOT YET"; c3d="laptop hostname fedora has not run install-grok-brain.sh (no stamp)."
+c3="NOT YET"; c3d="laptop hostname fedora has not run install-grok-BrandoObsid.sh (no stamp)."
 if [[ -f "$CACHE/laptop-installer-done" ]]; then
   c3="PASS"; c3d="stamp $CACHE/laptop-installer-done ($(cat "$CACHE/laptop-installer-done"))"
 elif [[ "$(hostname -s 2>/dev/null || hostname)" == "fedora" ]]; then
-  if command -v grok >/dev/null && [[ -f "$HOME/.grok/hooks/brain.json" ]]; then
+  if command -v grok >/dev/null && [[ -f "$HOME/.grok/hooks/BrandoObsid.json" ]]; then
     c3="PASS"; c3d="this host is fedora and hooks/MCP are present"
   else
     c3="NOT YET"; c3d="this host is fedora but installer has not been run"
@@ -139,7 +139,7 @@ Cancel (your call) once this is wired AND you've used it. Earliest responsible c
  #  criterion                              status     detail
  1  hard-subset recall ≥90%                $(printf '%-9s' "$c1") $c1d
  2  5 real Grok TUI working days           $(printf '%-9s' "$c2") $c2d
- 3  laptop fedora install-grok-brain.sh    $(printf '%-9s' "$c3") $c3d
+ 3  laptop fedora install-grok-BrandoObsid.sh    $(printf '%-9s' "$c3") $c3d
  4  vault health flat/rising 14 days       $(printf '%-9s' "$c4") $c4d
  5  Claude archive + claude.ai web export  $(printf '%-9s' "$c5") $c5d
  6  restic running + verified restore      $(printf '%-9s' "$c6") $c6d

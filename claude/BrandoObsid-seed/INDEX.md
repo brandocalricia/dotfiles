@@ -14,10 +14,10 @@ the real one syncs in from the other machine via Syncthing.)
   desktop `brandon-fedora`. Source of truth = `~/dotfiles` (stow, auto-synced).
 
 ## Cross-machine plumbing
-- Config: dotfiles auto-sync. Work: Syncthing `~/code`. Brain: Syncthing `~/Documents/Brain`.
+- Config: dotfiles auto-sync. Work: Syncthing `~/code`. Vault: Dropbox `~/Documents/BrandoObsid`.
 - Shell history: `atuin`. Backups: restic→B2 of `/home` + snapper (system).
-  Syncthing is replication, not backup. Live vault is `~/Documents/Brain`;
-  `~/Brain` is a stale duplicate if it still exists.
+  Dropbox is replication, not backup. Live vault is `~/Documents/BrandoObsid`;
+  `~/Brain` is a stale GitHub clone if it still exists.
 
 ## Active threads (edit me as things change)
 - (add current projects / goals here)

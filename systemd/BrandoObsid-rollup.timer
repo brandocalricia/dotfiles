@@ -1,5 +1,5 @@
 [Unit]
-Description=Weekly brain rollup
+Description=Weekly BrandoObsid rollup
 
 [Timer]
 OnCalendar=Sun 20:00

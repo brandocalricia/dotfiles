@@ -828,7 +828,7 @@ runs one detection pass immediately.
 decision; `systemctl start auto-timezone.service` forces a re-check;
 `curl -s https://ipapi.co/timezone/` shows what geolocation currently thinks.
 
-## Quality-of-life pass + Obsidian brain — 2026-07-17
+## Quality-of-life pass + BrandoObsid — 2026-07-17
 
 Big optimization pass. All reproducible via `install.sh`; privileged bits in one
 idempotent script. Nothing here touches the display manager; every dnf carries
@@ -862,14 +862,14 @@ and no `framework_tool` in repos → OS-level capping unavailable. Set the limit
 **Framework BIOS** (reboot → F2/setup → Power → charge limit) to **85%** (higher than
 the 80% ideal but still a big longevity win; battery was ~100% health when set).
 
-### Obsidian brain (`~/Documents/Brain`) ⇄ Claude
-- **Synced** via Syncthing (folder id `brain`) laptop⇄desktop → now cross-machine +
-  in the restic backup. `.stignore` excludes per-machine `.obsidian/workspace*`.
-- **`Claude/INDEX.md`** — curated context Claude reads first. **`Claude/Sessions/`** —
-  dated auto-log. **`Claude/Memory/`** — mirror of `~/.claude/.../memory/`.
-- **Read path:** global `~/.claude/CLAUDE.md` points every session at the vault.
-- **Auto-capture:** `scripts/claude-session-log.sh` runs as a **SessionEnd hook**
-  (`~/.claude/settings.json`) — appends a record per session + refreshes the memory
-  mirror. Wired by `scripts/install-claude-brain.sh` (idempotent jq merge).
+### BrandoObsid (`~/Documents/BrandoObsid`) ⇄ Claude / Grok
+- **Vault name and folder:** `BrandoObsid`. Live path `~/Documents/BrandoObsid` →
+  `~/Dropbox/BrandoObsid`. Dropbox is the only sync (fedora + Mac). Do not use Syncthing
+  on this folder. The in-vault `.obsidian` dir stays `.obsidian` (app config).
+- **Manual notebook.** Agents read/write only when asked. No INDEX auto-update, no
+  SessionEnd vault logging. Wired by `scripts/install-claude-BrandoObsid.sh` and
+  `scripts/install-grok-BrandoObsid.sh`.
+- Opt-in slash commands: `/BrandoObsid`, `/BrandoObsid-note`, `/BrandoObsid-audit`,
+  `/BrandoObsid-fix`. MCP tool: `BrandoObsid_search`.
 - Human side: enable Obsidian **Dataview** (+ optionally Smart Connections) in the GUI
-  to query `Claude/Sessions`. (Community plugins are a one-time GUI trust step.)
+  to query notes. (Community plugins are a one-time GUI trust step.)

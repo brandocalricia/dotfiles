@@ -1,0 +1,6 @@
+[Unit]
+Description=Weekly BrandoObsid rollup (self-curation digest)
+
+[Service]
+Type=oneshot
+ExecStart=%h/dotfiles/scripts/BrandoObsid-rollup.sh

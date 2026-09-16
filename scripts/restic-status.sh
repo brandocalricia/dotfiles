@@ -3,7 +3,7 @@
 # Exit 0 = healthy (snapshot ≤48h). Exit 1 = failed / stale / never / in progress.
 set -uo pipefail
 
-STATUS_USER="${HOME}/.cache/brain-hooks/restic-status.json"
+STATUS_USER="${HOME}/.cache/BrandoObsid-hooks/restic-status.json"
 STATUS_SYS=/var/lib/restic-backup-home/status.json
 MAX_AGE=$((48 * 3600))
 

@@ -1,24 +1,19 @@
 #!/usr/bin/env python3
-"""brain MCP server — one tool, brain_search(query), ranking from brain-retrieve.py.
+"""BrandoObsid MCP server — one tool, BrandoObsid_search(query).
 
 Speaks MCP stdio. Accepts Content-Length (LSP) framing or NDJSON, and replies
-in whichever framing the client used.
+in whichever framing the client used. Opt-in only: the agent must not call this
+unless the user asked to look at their notes.
 """
 from __future__ import annotations
 
-import importlib.util
 import json
+import re
 import sys
 from pathlib import Path
 
-HERE = Path(__file__).resolve().parent
-_spec = importlib.util.spec_from_file_location(
-    "brain_retrieve", HERE / "brain-retrieve.py"
-)
-_mod = importlib.util.module_from_spec(_spec)
-assert _spec.loader is not None
-_spec.loader.exec_module(_mod)
-retrieve = _mod.retrieve
+VAULT = Path.home() / "Documents" / "BrandoObsid"
+SKIP = {".obsidian", ".trash", ".stfolder", ".git"}
 
 # Unbuffered
 try:
@@ -28,13 +23,12 @@ except Exception:
     pass
 
 TOOL = {
-    "name": "brain_search",
+    "name": "BrandoObsid_search",
     "description": (
-        "Search the user's Obsidian vault at ~/Documents/Brain and return the "
-        "notes that actually bear on the query. Call this BEFORE answering any "
-        "question about the user's projects, setup, decisions, tools, machines, "
-        "games, or history. Returns a 'From your vault' block, or a silent-empty "
-        "marker if nothing matched."
+        "Search the user's BrandoObsid vault at ~/Documents/BrandoObsid and "
+        "return the notes that actually bear on the query. Call only when the "
+        "user asks to look at their notes / vault / BrandoObsid. Returns a "
+        "'From your vault' block, or a silent-empty marker if nothing matched."
     ),
     "inputSchema": {
         "type": "object",
@@ -52,9 +46,47 @@ TOOL = {
 _USE_HEADERS = True
 
 
+def retrieve(query: str) -> str:
+    q = (query or "").strip()
+    if not q or not VAULT.is_dir():
+        return ""
+    terms = [t.lower() for t in re.split(r"\s+", q) if len(t) > 2]
+    if not terms:
+        terms = [q.lower()]
+    hits: list[tuple[int, str, str]] = []
+    for p in VAULT.rglob("*.md"):
+        if any(part in SKIP for part in p.parts):
+            continue
+        try:
+            text = p.read_text(encoding="utf-8", errors="ignore")
+        except OSError:
+            continue
+        low = text.lower()
+        score = sum(low.count(t) for t in terms)
+        if score <= 0:
+            continue
+        rel = p.relative_to(VAULT).as_posix()
+        snippet = ""
+        for line in text.splitlines():
+            ll = line.lower()
+            if any(t in ll for t in terms):
+                snippet = line.strip()[:180]
+                break
+        hits.append((score, rel, snippet))
+    hits.sort(key=lambda h: h[0], reverse=True)
+    if not hits:
+        return ""
+    lines = ["From your vault (BrandoObsid):"]
+    for _score, rel, snippet in hits[:8]:
+        lines.append(f"- `{rel}`")
+        if snippet:
+            lines.append(f"  {snippet}")
+    return "\n".join(lines)
+
+
 def _log(raw: bytes) -> None:
     try:
-        p = Path.home() / ".cache" / "brain-hooks" / "mcp-wire.log"
+        p = Path.home() / ".cache" / "BrandoObsid-hooks" / "mcp-wire.log"
         p.parent.mkdir(parents=True, exist_ok=True)
         with p.open("ab") as f:
             f.write(raw)
@@ -120,7 +152,7 @@ def handle(msg: dict) -> None:
         _result(id_, {
             "protocolVersion": params.get("protocolVersion") or "2024-11-05",
             "capabilities": {"tools": {"listChanged": False}},
-            "serverInfo": {"name": "brain", "version": "1.0"},
+            "serverInfo": {"name": "BrandoObsid", "version": "1.0"},
         })
         return
     if method == "tools/list":
@@ -132,7 +164,7 @@ def handle(msg: dict) -> None:
     if method == "tools/call":
         name = params.get("name")
         args = params.get("arguments") or {}
-        if name != "brain_search":
+        if name != "BrandoObsid_search":
             _error(id_, -32601, f"unknown tool {name}")
             return
         query = args.get("query") or ""
@@ -140,7 +172,7 @@ def handle(msg: dict) -> None:
             ctx = retrieve(query)
         except Exception as e:
             _result(id_, {
-                "content": [{"type": "text", "text": f"(brain_search failed: {e})"}],
+                "content": [{"type": "text", "text": f"(BrandoObsid_search failed: {e})"}],
                 "isError": True,
             })
             return
