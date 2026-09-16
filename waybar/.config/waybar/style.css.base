@@ -8,7 +8,7 @@
 }
 window#waybar {
     background: transparent;
-    color: #8a7a5e;
+    color: #e8d9b8;
 }
 .modules-left, .modules-center, .modules-right {
     background: #1a1612;
@@ -46,16 +46,17 @@ window#waybar {
     background: #3d0d0a;
     color: #e8d9b8;
 }
+/* Idle text/icons use the occupied-workspace cream. Semantic states keep accents. */
 #clock {
     padding: 0 14px;
-    color: #c89412;
+    color: #e8d9b8;
     font-weight: 600;
 }
 #cpu, #memory, #disk, #network, #pulseaudio, #battery, #custom-dropbox, #custom-caffeine, #tray {
     padding: 0 10px;
     margin: 4px 3px;
     background: #2a1f1a;
-    color: #8a7a5e;
+    color: #e8d9b8;
     border-radius: 6px;
     transition: all 0.2s ease;
 }
@@ -70,21 +71,19 @@ window#waybar {
     font-weight: 700;
     letter-spacing: 0.04em;
 }
-#custom-caffeine.inactive { color: #8a7a5e; }
+#custom-caffeine.inactive { color: #e8d9b8; }
 #custom-caffeine.active {
     color: #1a1612;
     background: #c89412;
 }
-#cpu { color: #d4a13a; }
-#memory { color: #b87333; }
-#disk { color: #6b2a4a; }
-#network { color: #4a7a2a; }
-#pulseaudio { color: #1e5a5a; }
 #pulseaudio.muted { color: #8a0e09; }
-#battery { color: #c89412; }
 #battery.warning { color: #d4a13a; }
 #battery.critical { color: #8a0e09; }
 #tray { padding: 0 8px; }
+#custom-dropbox.syncing { color: #d4a13a; }
+#custom-dropbox.starting { color: #d4a13a; }
+#custom-dropbox.paused { color: #8a7a5e; }
+#custom-dropbox.error { color: #8a0e09; }
 tooltip {
     background: #1a1612;
     border: 1px solid #521510;

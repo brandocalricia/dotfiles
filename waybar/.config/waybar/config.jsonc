@@ -31,9 +31,11 @@
             "class<foot>": "",
             "class<dropdown-term>": "󰞷",
             "class<dropdown-btop>": "󰊚",
-            "class<brave-browser>": "",
-            "class<brave-.*>": "",
-            "class<nordvpn-gui|nordvpn>": "",
+            // Nerd Font glyphs (not the color logo font): they inherit the bar's
+            // cream so they match workspaces on every theme/wallpaper.
+            "class<brave-browser>": "󰖟",
+            "class<brave-.*>": "󰖟",
+            "class<nordvpn-gui|nordvpn>": "󰦝",
             "class<steam>": "󰓓",
             "class<code|Code>": "󰨞",
             "class<com.spotify.Client|spotify>": "󰓇",

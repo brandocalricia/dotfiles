@@ -44,7 +44,7 @@ cat > "$HOME/.config/waybar/style.css" << EOF
 }
 window#waybar {
     background: transparent;
-    color: #${FG_DIM};
+    color: #${FG_BRIGHT};
 }
 .modules-left, .modules-center, .modules-right {
     background: #${BAR_BG};
@@ -82,16 +82,19 @@ window#waybar {
     background: #${BG_LIGHT};
     color: #${FG_BRIGHT};
 }
+/* Idle text/icons use FG_BRIGHT — same cream as occupied workspaces, so the
+   bar stays readable on every theme and wallpaper. Semantic states (muted,
+   warning, caffeine ON, dropbox sync/error) keep accent colors. */
 #clock {
     padding: 0 14px;
-    color: #${ACCENT_PRIMARY};
+    color: #${FG_BRIGHT};
     font-weight: 600;
 }
 #cpu, #memory, #disk, #network, #pulseaudio, #battery, #custom-dropbox, #custom-caffeine, #tray {
     padding: 0 10px;
     margin: 4px 3px;
     background: #${BG_MID};
-    color: #${FG_DIM};
+    color: #${FG_BRIGHT};
     border-radius: 6px;
     transition: all 0.2s ease;
 }
@@ -106,22 +109,15 @@ window#waybar {
     font-weight: 700;
     letter-spacing: 0.04em;
 }
-#custom-caffeine.inactive { color: #${FG_DIM}; }
+#custom-caffeine.inactive { color: #${FG_BRIGHT}; }
 #custom-caffeine.active {
     color: #${BG_DARK};
     background: #${ACCENT_PRIMARY};
 }
-#cpu { color: #${YELLOW}; }
-#memory { color: #${ORANGE}; }
-#disk { color: #${PURPLE}; }
-#network { color: #${GREEN}; }
-#pulseaudio { color: #${TEAL}; }
 #pulseaudio.muted { color: #${RED}; }
-#battery { color: #${ACCENT_PRIMARY}; }
 #battery.warning { color: #${YELLOW}; }
 #battery.critical { color: #${RED}; }
 #tray { padding: 0 8px; }
-#custom-dropbox { color: #8bb4ff; }
 #custom-dropbox.syncing { color: #${YELLOW}; }
 #custom-dropbox.starting { color: #${YELLOW}; }
 #custom-dropbox.paused { color: #${FG_DIM}; }
