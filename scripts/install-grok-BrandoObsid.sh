@@ -236,17 +236,39 @@ startup_timeout_sec = 15
 ]
 {end}
 """
+def strip_managed_tables(s: str) -> str:
+    # Grok may rewrite these tables outside the managed markers. Drop them
+    # so a re-run cannot leave duplicate keys (TOML parse error).
+    tables = [
+        "mcp_servers.BrandoObsid",
+        "memory.initial_injection",
+        "memory.session",
+        "compat.claude",
+        "permission",
+        "telemetry",
+        "features",
+        "memory",
+    ]
+    for t in tables:
+        s = re.sub(
+            rf"(?ms)^\[{re.escape(t)}\][^\n]*\n(?:(?!^\[).*\n)*",
+            "",
+            s,
+        )
+    return s
+
 if begin in text and end in text:
     pre = text.split(begin, 1)[0]
     post = text.split(end, 1)[1]
-    # drop a leading leftover newline in post
     if post.startswith("\n"):
         post = post[1:]
+    pre, post = strip_managed_tables(pre), strip_managed_tables(post)
     new = pre.rstrip() + "\n\n" + block
     if post.strip():
         new = new + "\n" + post.lstrip()
 else:
-    new = (text.rstrip() + "\n\n" if text.strip() else "") + block
+    new = strip_managed_tables(text).rstrip()
+    new = (new + "\n\n" if new else "") + block
 cfg_path.parent.mkdir(parents=True, exist_ok=True)
 cfg_path.write_text(new if new.endswith("\n") else new + "\n", encoding="utf-8")
 print(f"[+] {cfg_path} managed block upserted")
