@@ -1,5 +1,5 @@
 ---
-description: Repair the Obsidian vault (aliases, frontmatter, dead links, clutter)
+description: "Repair the Obsidian vault. Use only when the user explicitly asks you to fix vault clutter."
 allowed-tools: Bash, Read, Edit
 ---
 

@@ -1,67 +1,27 @@
 # Global context
 
-## Knowledge base (Obsidian vault) — automatic
-The user keeps an Obsidian vault at **`~/Documents/Brain`** (on-disk folder name; always *call* it Obsidian; Syncthing-synced
-across laptop `fedora` and desktop `brandon-fedora`). **Always identify this
-host** with `hostname -s` (or the SessionStart **This machine** block):
-`fedora` = laptop (Framework 13), `brandon-fedora` = desktop. INDEX is shared
-and was mostly written on the desktop — never infer which machine you are on
-from restic snapshots or Grok-migration paragraphs. Syncthing is replication,
-not backup — deletes propagate in seconds. `~/Brain` was a stale Linux Mint git
-clone; renamed 2026-08-23 to `~/Brain.linux-mint-archive-2026-05` so that path
-cannot be mistaken for the live vault. Off-device backup is restic→B2 of `/home` (desktop
-bucket `brandon-desktop-home`). First verified restore on brandon-fedora:
-2026-08-23, vault snapshot `1ee5824a` (260 md, empty diff vs live), `/home`
-snapshot `637e3cfc` (6.190 GiB after excluding games/venvs/ISOs). Daily timer
-is enabled. It is wired to run itself — the user should never have to
-manage it consciously, and should never have to type a slash command to get
-value out of it:
+## Machines
 
-- **Loaded for you automatically.** A SessionStart hook injects
-  `Brain/Claude/INDEX.md`, recent session history, and the current vault health
-  score. You already have the user's current context — use it.
-- **Searched for you automatically.** A UserPromptSubmit hook (`brain-retrieve.py`)
-  searches the vault on every prompt and injects matching notes under the heading
-  *"From your vault"*. When that block appears, those are **the user's own notes** —
-  prefer them over general knowledge, cite them by path, and say so plainly if they
-  contradict you or are out of date. The hook stays silent when nothing matches,
-  so no block simply means the vault has nothing on this; don't announce that.
-  **Grok Build 1.0.5: that injection is DEGRADED** (stdout/stderr/exit codes do
-  not reach the model — probed). On Grok, before answering ANY question about the
-  user's projects, setup, decisions, tools, machines, games, or history, call the
-  `brain_search` tool with their prompt first. Not optional. Claude Code still
-  gets the auto-injected block and should keep using it.
-- **Logged for you automatically.** A SessionEnd hook writes a factual record of
-  every session to `Brain/Claude/Sessions/<date>.md`. You do NOT need to log what
-  happened.
-- **Audited for you automatically.** `brain-doctor.timer` repairs the vault weekly.
-  Health detail lives in `Brain/Claude/Health.md`; see [[Vault-Health-Tooling]].
+Always identify this host with `hostname -s`. Never guess from shared notes.
 
-### Your jobs — do these proactively, without being asked
-1. **Capture what the user works out.** When they explain something in their own
-   words, reach a conclusion, or hit a non-obvious gotcha, write it into the vault
-   as it happens — a new note in the right existing folder, or a few lines appended
-   to the note that already covers it. Use *their* phrasing and keep their
-   uncertainty ("still unclear to me: …"). Link only to notes that actually exist.
-   Mention in one short line that you saved it; don't ask permission first.
-2. **Keep `Claude/INDEX.md` honest.** When work starts, finishes, or changes status,
-   update its "Active threads" section. This is what makes the Obsidian vault trustworthy.
-3. **Add the why to today's session note.** The hook records *what* changed; you
-   append the decisions, rationale, and anything future-you would need.
-4. **Save durable facts/preferences to memory** as usual.
+- `fedora` — Framework 13 laptop (Fedora 44 + Hyprland). School daily driver.
+- `brandon-fedora` — desktop (Fedora 44 + Hyprland). Stays home.
+- `Brandons-MacBook-Air-2` — Mac school laptop. Sibling machine, not a third Fedora host.
 
-### What NOT to write
-The vault was badly damaged once by bulk AI generation — 10,769 broken links from
-notes that were machine-written rather than user-written. So:
+Laptop restic bucket is `brandon-fedora-home` (host `fedora`). Desktop bucket is `brandon-desktop-home` (host `brandon-fedora`). Mac: no restic, no B2.
 
-- **Never generate notes on topics the user hasn't actually engaged with.** A note
-  is a record of *their* thinking. If they didn't say it, worked it out, or decide
-  it, it doesn't go in the vault.
-- **Never invent `[[links]]` to notes that don't exist.** Check first.
-- Prefer extending an existing note over creating a near-duplicate; colliding
-  titles silently misroute every link to them.
-- If they can't yet explain something, say so and leave it out. An honest gap beats
-  a note they'll never trust.
+## Obsidian is a manual notebook
 
-Keep it low-friction: a few lines, not essays. Treat the Obsidian vault as the source of
-truth for "what's going on," keep it current every session, and let them just work.
+`~/Documents/Brain` is the user's Obsidian vault (Syncthing folder id `brain`). Call it Obsidian, not "the brain". They take notes there themselves.
+
+- Do **not** write, create, edit, index, log, roll up, capture, or "keep INDEX current" in the vault unless they explicitly ask (example: "format the notes I just took").
+- Do **not** search the vault, call `brain_search`, or read notes unless they ask you to look at their notes / vault / Obsidian.
+- If they do ask, read `~/Documents/Brain`, cite paths, and stop. Do not add follow-up notes they did not request.
+
+Grok/Claude session logs belong in the tool's own storage, not in Obsidian.
+
+## Hard nos (Fedora)
+
+- Never run `~/dotfiles/install.sh`.
+- Never `sudo dnf upgrade`; if dnf is required, `--exclude=gdm`. Never touch the display manager / greetd / PAM / GDM.
+- Never invent a different WiFi stack. Never print restic secrets or the DU wifi password.

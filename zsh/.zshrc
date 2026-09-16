@@ -93,21 +93,14 @@ alias rl-map-download='$HOME/.local/bin/rl-map-download.sh'
 # Cross-machine work awareness (Syncthing-shared ~/code heartbeats)
 alias work-status='$HOME/dotfiles/scripts/work-status.sh'
 
-# Grok Build: regenerate vault SessionStart context BEFORE the TUI loads, so
-# ~/.grok/rules/brain-session-context.md is this launch, not last session.
-# SessionStart cannot inject into the same session (probed); this wrapper is
-# the same-session-freshness path. `command grok` skips the function.
+# Grok Build wrapper. `command grok` skips the function.
 #
 # Never give the agent $HOME (or the old ~/Brain clone) as cwd — Grok 0.2.93
 # tarball blast radius. A fresh terminal starts in ~; type `grok` anyway.
 # Your shell stays put; only the agent process is launched from ~/grok-sandbox.
 # If you already `cd`'d into a project, that project stays the cwd.
+# Obsidian is a manual notebook — do not regenerate vault context here.
 grok() {
-  if [ -x "$HOME/dotfiles/scripts/claude-brain-context.sh" ]; then
-    printf '%s' '{"source":"startup","hookEventName":"session_start"}' \
-      | GROK_HOOK_EVENT=session_start "$HOME/dotfiles/scripts/claude-brain-context.sh" \
-      >/dev/null 2>&1 || true
-  fi
   if [ "${1-}" = "trace" ]; then
     local has_local=0 a
     for a in "$@"; do
@@ -146,7 +139,7 @@ command -v direnv >/dev/null 2>&1 && eval "$(direnv hook zsh)"
 # Sourced LAST so it wins the Ctrl-R binding over fzf/oh-my-zsh.
 command -v atuin >/dev/null 2>&1 && eval "$(atuin init zsh)"
 
-# jot — capture a thought into the Obsidian brain from anywhere: jot buy cables
+# jot — capture a thought into Obsidian from anywhere: jot buy cables
 jot() { "$HOME/dotfiles/scripts/jot.sh" "$@"; }
 export YDOTOOL_SOCKET="$XDG_RUNTIME_DIR/.ydotool_socket"
 

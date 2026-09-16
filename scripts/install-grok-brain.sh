@@ -1,33 +1,27 @@
 #!/usr/bin/env bash
-# install-grok-brain.sh — wire the Obsidian "brain" into Grok Build.
-# User scope (no sudo). Idempotent. Safe to re-run on any machine.
+# install-grok-brain.sh — Grok extras that are safe to re-run on any machine.
+# User scope (no sudo). Idempotent.
 #
-# Does NOT clobber the Claude setup. Run install-claude-brain.sh as well
-# during the overlap month. This script only touches:
+# Obsidian (~/Documents/Brain) is a manual notebook. This installer must NOT
+# inject, search, log, or write the vault. It only touches:
 #   ~/.grok/config.toml   (a marked managed block; rest of the file is left alone)
-#   ~/.grok/hooks/brain.json
-#   chmod on the hook scripts in this repo
+#   ~/.grok/hooks/brain.json          (cwd guard only)
+#   ~/.grok/hooks/done-notify.json    (turn-finished banner)
+#   ~/.grok/rules + ~/.grok/commands  (opt-in vault read)
 #
-# It will not rewrite ~/.claude/settings.json, CLAUDE.md, or the vault path.
+# It will not rewrite ~/.claude/settings.json or the vault path.
 set -uo pipefail
 
 DOTFILES="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 GROK_DIR="${GROK_HOME:-$HOME/.grok}"
-BRAIN="$HOME/Documents/Brain/Claude"
-mkdir -p "$GROK_DIR/hooks" "$GROK_DIR/rules" "$GROK_DIR/memory" \
-         "$BRAIN/Sessions" "$BRAIN/Memory" "$BRAIN/Rollups"
+mkdir -p "$GROK_DIR/hooks" "$GROK_DIR/rules" "$GROK_DIR/memory"
 
-startcmd="$DOTFILES/scripts/claude-brain-context.sh"
-endcmd="$DOTFILES/scripts/claude-session-log.sh"
-promptcmd="$DOTFILES/scripts/brain-retrieve.py"
-stopcmd="$DOTFILES/scripts/brain-capture-check.py"
-recallcmd="$DOTFILES/scripts/brain-recall-check.py"
 guardcmd="$DOTFILES/scripts/grok-cwd-guard.sh"
 mcpcmd="$DOTFILES/scripts/brain-mcp-server.py"
 telcmd="$DOTFILES/scripts/grok-telemetry-guard.sh"
 notifycmd="$DOTFILES/scripts/grok-done-notify.sh"
-chmod +x "$startcmd" "$endcmd" "$promptcmd" "$stopcmd" "$recallcmd" "$guardcmd" "$mcpcmd" "$telcmd" \
-          "$notifycmd" "$DOTFILES/scripts/restic-status.sh" "$DOTFILES/scripts/brain-status.sh" 2>/dev/null || true
+chmod +x "$guardcmd" "$mcpcmd" "$telcmd" "$notifycmd" \
+          "$DOTFILES/scripts/restic-status.sh" "$DOTFILES/scripts/brain-status.sh" 2>/dev/null || true
 mkdir -p "$HOME/.local/bin"
 ln -sfn "$DOTFILES/scripts/restic-status.sh" "$HOME/.local/bin/restic-status"
 ln -sfn "$DOTFILES/scripts/brain-status.sh" "$HOME/.local/bin/brain-status"
@@ -37,9 +31,7 @@ mkdir -p "$GROK_DIR/commands"
 if [ -d "$DOTFILES/claude/commands" ]; then
   cp -f "$DOTFILES/claude/commands/"*.md "$GROK_DIR/commands/" 2>/dev/null || true
 fi
-if [ -f "$HOME/.claude/CLAUDE.md" ]; then
-  cp -f "$HOME/.claude/CLAUDE.md" "$GROK_DIR/rules/00-global-context.md"
-elif [ -f "$DOTFILES/claude/CLAUDE.md" ]; then
+if [ -f "$DOTFILES/claude/CLAUDE.md" ]; then
   cp -f "$DOTFILES/claude/CLAUDE.md" "$GROK_DIR/rules/00-global-context.md"
 fi
 
@@ -49,24 +41,20 @@ install-grok-brain.sh --dry-run (no writes)
 host=$(hostname -s 2>/dev/null || hostname)
 GROK_DIR=$GROK_DIR
 DOTFILES=$DOTFILES
-BRAIN=$BRAIN
 
 Would chmod +x:
-  $startcmd
-  $endcmd
-  $promptcmd
-  $stopcmd
-  $recallcmd
   $guardcmd
   $mcpcmd
   $telcmd
+  $notifycmd
 
 Would write $GROK_DIR/hooks/brain.json
-  SessionStart: claude-brain-context.sh + grok-cwd-guard.sh
-  UserPromptSubmit: brain-retrieve.py
-  Stop: brain-recall-check.py THEN brain-capture-check.py
-  SessionEnd: claude-session-log.sh
+  SessionStart: grok-cwd-guard.sh
   PreToolUse: grok-cwd-guard.sh
+  (no vault inject / retrieve / session-log / capture)
+
+Would write $GROK_DIR/hooks/done-notify.json
+  Notification task_complete + Stop: grok-done-notify.sh
 
 Would upsert marked block in $GROK_DIR/config.toml
   [features] telemetry=false feedback=false
@@ -79,19 +67,18 @@ Would upsert marked block in $GROK_DIR/config.toml
 
 Would mkdir -p:
   $GROK_DIR/{hooks,rules,memory}
-  $BRAIN/{Sessions,Memory,Rollups}
 
-Would seed $GROK_DIR/rules/brain-session-context.md via SessionStart script
-Would copy/write $GROK_DIR/rules/brain-search-obligation.md
-Would copy/write $GROK_DIR/rules/this-machine.md
+Would copy $GROK_DIR/rules/{00-global-context,this-machine,brain-search-obligation,obsidian-name}.md
+Would write a short $GROK_DIR/rules/brain-session-context.md (no vault dump)
+Would NOT create or write ~/Documents/Brain/**
 
 Would install user systemd units (if present in repo):
   grok-telemetry-guard.path + .service → enable --now
   then run $telcmd
 
 Would NOT touch:
-  ~/.claude/  CLAUDE.md  settings.json  settings.local.json
-  ~/Documents/Brain note bodies (except creating empty Sessions/Memory/Rollups dirs)
+  ~/.claude/  settings.json  settings.local.json
+  ~/Documents/Brain (no reads, no writes, no mkdir)
   display manager, sudo, NetworkManager
 
 zsh grok() wrapper: lives in ~/dotfiles/zsh/.zshrc (stowed). This script
@@ -106,31 +93,13 @@ PLAN
   exit 0
 fi
 
-# 1. Native hooks file (always-trusted global). Identical command paths are
-#    deduplicated against ~/.claude/settings.json if Claude-compat is on.
+# 1. Native hooks file (always-trusted global). No vault inject/log/capture.
 cat > "$GROK_DIR/hooks/brain.json" <<EOF
 {
   "hooks": {
     "SessionStart": [{
       "hooks": [
-        {"type": "command", "command": "$startcmd", "timeout": 15},
         {"type": "command", "command": "$guardcmd", "timeout": 5}
-      ]
-    }],
-    "UserPromptSubmit": [{
-      "hooks": [
-        {"type": "command", "command": "$promptcmd", "timeout": 10}
-      ]
-    }],
-    "Stop": [{
-      "hooks": [
-        {"type": "command", "command": "$recallcmd", "timeout": 10},
-        {"type": "command", "command": "$stopcmd", "timeout": 10}
-      ]
-    }],
-    "SessionEnd": [{
-      "hooks": [
-        {"type": "command", "command": "$endcmd", "timeout": 20}
       ]
     }],
     "PreToolUse": [{
@@ -141,7 +110,14 @@ cat > "$GROK_DIR/hooks/brain.json" <<EOF
   }
 }
 EOF
-echo "[+] $GROK_DIR/hooks/brain.json written"
+echo "[+] $GROK_DIR/hooks/brain.json written (cwd-guard only)"
+# Claude-compat also loads this file; it used to re-inject INDEX + session logs.
+cat > "$GROK_DIR/hooks/imported-from-claude.json" <<EOF
+{
+  "hooks": {}
+}
+EOF
+echo "[+] $GROK_DIR/hooks/imported-from-claude.json cleared"
 
 # Top-right banner when a turn finishes (macOS Notification Center / notify-send).
 cat > "$GROK_DIR/hooks/done-notify.json" <<EOF
@@ -267,33 +243,19 @@ cfg_path.write_text(new if new.endswith("\n") else new + "\n", encoding="utf-8")
 print(f"[+] {cfg_path} managed block upserted")
 PY
 
-# 3. Seed the Grok rules side-channel so the *next* session has INDEX even
-#    before the first SessionStart rewrite. Harmless if the vault isn't synced yet.
-if [ -x "$startcmd" ]; then
-  printf '%s' '{"source":"new","hookEventName":"session_start"}' \
-    | GROK_HOOK_EVENT=session_start "$startcmd" >/dev/null 2>&1 \
-    && echo "[+] ~/.grok/rules/brain-session-context.md seeded" \
-    || echo "[=] SessionStart seed skipped (vault not present yet?)"
-fi
-
-# Host identity rule (static; SessionStart does not overwrite this file)
-cp -f "$DOTFILES/claude/this-machine.md" "$GROK_DIR/rules/this-machine.md" 2>/dev/null \
-  || cat > "$GROK_DIR/rules/this-machine.md" <<'EOF'
-# This machine — never guess
-`fedora` = laptop (Framework 13). `brandon-fedora` = desktop. Trust the SessionStart **This machine** block or run `hostname -s`. Never infer the host from shared INDEX restic/Grok paragraphs.
+# 3. Static rules. No vault dump, no INDEX, no "must search before every answer".
+cp -f "$DOTFILES/claude/this-machine.md" "$GROK_DIR/rules/this-machine.md"
+cp -f "$DOTFILES/claude/obsidian-name.md" "$GROK_DIR/rules/obsidian-name.md"
+cp -f "$DOTFILES/claude/brain-search-obligation.md" "$GROK_DIR/rules/brain-search-obligation.md"
+cat > "$GROK_DIR/rules/brain-session-context.md" <<'EOF'
+<!-- static; do not auto-generate from the vault -->
+Obsidian (`~/Documents/Brain`) is a manual notebook. Do not search or write it unless the user asks.
+Identify this host with `hostname -s`.
 EOF
 
-# Obligation rule (static; SessionStart does not overwrite this file)
-cp -f "$DOTFILES/claude/obsidian-name.md" "$GROK_DIR/rules/obsidian-name.md" 2>/dev/null || true
-cp -f "$DOTFILES/claude/brain-search-obligation.md" "$GROK_DIR/rules/brain-search-obligation.md" 2>/dev/null \
-  || cat > "$GROK_DIR/rules/brain-search-obligation.md" <<'EOF'
-# Vault retrieval — standing obligation (Grok Build)
-
-Automatic vault injection via UserPromptSubmit is **DEGRADED** on Grok Build 1.0.5.
-**Before answering ANY question about the user's projects, setup, decisions, tools,
-machines, games, config, or history, you MUST call the `brain_search` tool with
-their prompt (verbatim) first.** Not optional.
-EOF
+# Old auto-Obsidian timers must not come back.
+systemctl --user disable --now brain-rollup.timer 2>/dev/null || true
+systemctl --user disable --now brain-doctor.timer 2>/dev/null || true
 
 # Telemetry path unit — re-checks kill switches when the binary is replaced.
 if [ -f "$DOTFILES/systemd/grok-telemetry-guard.path" ]; then
@@ -310,8 +272,8 @@ if grep -q 'grok() {' "$HOME/.zshrc" 2>/dev/null; then
   echo "[+] zsh grok() wrapper present in ~/.zshrc (stowed from dotfiles/zsh/.zshrc)"
 else
   echo "[!] zsh grok() wrapper MISSING from ~/.zshrc"
-  echo "    Pull ~/dotfiles and restow zsh so grok() regenerates context before launch."
+  echo "    Pull ~/dotfiles and restow zsh."
 fi
 
-echo "[+] Grok brain wired. Restart Grok / run \`grok inspect\` to confirm hooks + MCP."
-echo "    Claude setup was not touched. Keep using install-claude-brain.sh too."
+echo "[+] Grok extras wired (cwd-guard, notify, on-demand vault MCP). Restart Grok to pick up hooks."
+echo "    Obsidian is manual. Claude settings were not touched — run install-claude-brain.sh to strip its vault hooks too."

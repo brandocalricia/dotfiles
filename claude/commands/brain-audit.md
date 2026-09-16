@@ -1,5 +1,5 @@
 ---
-description: Report Obsidian vault health and what to do about it
+description: "Alias for /obsidian-audit. Use only when the user asks for a vault audit."
 allowed-tools: Bash, Read
 ---
 
