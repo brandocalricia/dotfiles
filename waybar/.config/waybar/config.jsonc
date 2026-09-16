@@ -1,7 +1,7 @@
 {
     "layer": "top",
     "position": "top",
-    "height": 36,
+    "height": 40,
     "spacing": 4,
 
     // modules-right is per-machine (battery only exists on the laptop) — it lives in
@@ -19,11 +19,20 @@
         "format": "{id} {windows}",
         "format-window-separator": " ",
         "window-rewrite-default": "󰘔",
+        // Title+class rules beat class-only (waybar priority 3 > 1), so Grok-in-foot
+        // and Monkeytype-in-Brave stay distinct from a plain terminal / browser tab.
+        // Glyphs verified in JetBrainsMono Nerd Font (missing glyphs hide the window).
         "window-rewrite": {
-            "class<brave-browser>": "󰖟",
-            "class<foot>": "󰆍",
+            "class<brave-monkeytype.*>": "󰌌",
+            "class<brave-browser> title<.*[Mm]onkeytype.*>": "󰌌",
+            "title<.*[Mm]onkeytype.*>": "󰌌",
+            "class<foot> title<.*[Gg]rok.*>": "󰚩",
+            "class<com.mitchellh.ghostty|ghostty> title<.*[Gg]rok.*>": "󰚩",
+            "class<foot>": "",
             "class<dropdown-term>": "󰞷",
             "class<dropdown-btop>": "󰊚",
+            "class<brave-browser>": "󰖟",
+            "class<brave-.*>": "󰖟",
             "class<steam>": "󰓓",
             "class<code|Code>": "󰨞",
             "class<com.spotify.Client|spotify>": "󰓇",

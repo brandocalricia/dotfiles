@@ -62,10 +62,12 @@ sync_state() {
 }
 
 print_status() {
+    # Same cup both states; ON/off label + CSS chip carry the meaning. Icon-only
+    # glyphs (and the coffee-off variant) were unreadable at bar size.
     if is_on; then
-        printf '{"text":"󰅶","tooltip":"Caffeine ON","class":"active","alt":"on"}\n'
+        printf '{"text":"󰛊  ON","tooltip":"Caffeine ON — idle timers paused (no blank/lock/suspend)","class":"active","alt":"on"}\n'
     else
-        printf '{"text":"󰾯","tooltip":"Caffeine OFF","class":"inactive","alt":"off"}\n'
+        printf '{"text":"󰛊  off","tooltip":"Caffeine OFF — idle timers running","class":"inactive","alt":"off"}\n'
     fi
 }
 

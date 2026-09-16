@@ -20,8 +20,9 @@ window#waybar {
 #workspaces { padding: 0 4px; }
 /* base = occupied: bright chip so windows-elsewhere are visible at a glance */
 #workspaces button {
-    padding: 0 8px;
-    margin: 4px 2px;
+    padding: 0 10px;
+    margin: 4px 3px;
+    font-size: 15px;
     color: #e8d9b8;
     background: #2a1f1a;
     border-radius: 6px;
@@ -50,7 +51,7 @@ window#waybar {
     color: #c89412;
     font-weight: 600;
 }
-#cpu, #memory, #disk, #network, #pulseaudio, #battery, #custom-caffeine, #tray {
+#cpu, #memory, #disk, #network, #pulseaudio, #battery, #custom-dropbox, #custom-caffeine, #tray {
     padding: 0 10px;
     margin: 4px 3px;
     background: #2a1f1a;
@@ -58,10 +59,17 @@ window#waybar {
     border-radius: 6px;
     transition: all 0.2s ease;
 }
-#cpu:hover, #memory:hover, #disk:hover, #network:hover, #pulseaudio:hover, #battery:hover, #custom-caffeine:hover {
+#cpu:hover, #memory:hover, #disk:hover, #network:hover, #pulseaudio:hover, #battery:hover, #custom-dropbox:hover, #custom-caffeine:hover {
     background: #3d0d0a;
 }
-/* caffeine keep-awake toggle: dim when off, filled amber chip when on */
+/* caffeine keep-awake toggle: roomy chip, cup + ON/off so the state is obvious */
+#custom-caffeine {
+    min-width: 4.8em;
+    padding: 0 14px;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+}
 #custom-caffeine.inactive { color: #8a7a5e; }
 #custom-caffeine.active {
     color: #1a1612;

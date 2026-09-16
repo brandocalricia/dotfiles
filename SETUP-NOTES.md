@@ -251,7 +251,17 @@ verify with `fc-match "JetBrainsMono Nerd Font" --format='%{charset}'`
 before adding; an empty/missing glyph value makes waybar HIDE that
 window's representation entirely. Workspace button CSS (occupied /
 empty / active) lives in the switch-theme.sh waybar template.
-Note: glyphs raise waybar's min module height to 40px (config says 36).
+Bar height is 40px so the app glyphs and caffeine chip fit.
+
+Workspace icons (title+class beats class-only):
+-  foot terminal
+- 󰚩 Grok Build (foot/ghostty whose title contains grok)
+- 󰖟 Brave
+- 󰌌 Monkeytype (Brave site window or title)
+
+Caffeine is `custom/caffeine`: cup + `ON`/`off` label, coral chip when
+active. Styling is in switch-theme.sh (and live style.css). Icon-only
+glyphs were unreadable at bar size.
 
 ## Keybind reference (ALL custom binds)
 

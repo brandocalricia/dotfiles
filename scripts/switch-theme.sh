@@ -56,8 +56,9 @@ window#waybar {
 #workspaces { padding: 0 4px; }
 /* base = occupied: bright chip so windows-elsewhere are visible at a glance */
 #workspaces button {
-    padding: 0 8px;
-    margin: 4px 2px;
+    padding: 0 10px;
+    margin: 4px 3px;
+    font-size: 15px;
     color: #${FG_BRIGHT};
     background: #${BG_MID};
     border-radius: 6px;
@@ -86,7 +87,7 @@ window#waybar {
     color: #${ACCENT_PRIMARY};
     font-weight: 600;
 }
-#cpu, #memory, #disk, #network, #pulseaudio, #battery, #tray {
+#cpu, #memory, #disk, #network, #pulseaudio, #battery, #custom-dropbox, #custom-caffeine, #tray {
     padding: 0 10px;
     margin: 4px 3px;
     background: #${BG_MID};
@@ -94,8 +95,21 @@ window#waybar {
     border-radius: 6px;
     transition: all 0.2s ease;
 }
-#cpu:hover, #memory:hover, #disk:hover, #network:hover, #pulseaudio:hover, #battery:hover {
+#cpu:hover, #memory:hover, #disk:hover, #network:hover, #pulseaudio:hover, #battery:hover, #custom-dropbox:hover, #custom-caffeine:hover {
     background: #${BG_LIGHT};
+}
+/* caffeine keep-awake toggle: roomy chip, cup + ON/off so the state is obvious */
+#custom-caffeine {
+    min-width: 4.8em;
+    padding: 0 14px;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+}
+#custom-caffeine.inactive { color: #${FG_DIM}; }
+#custom-caffeine.active {
+    color: #${BG_DARK};
+    background: #${ACCENT_PRIMARY};
 }
 #cpu { color: #${YELLOW}; }
 #memory { color: #${ORANGE}; }
@@ -107,6 +121,25 @@ window#waybar {
 #battery.warning { color: #${YELLOW}; }
 #battery.critical { color: #${RED}; }
 #tray { padding: 0 8px; }
+#custom-dropbox { color: #8bb4ff; }
+#custom-dropbox.syncing { color: #${YELLOW}; }
+#custom-dropbox.starting { color: #${YELLOW}; }
+#custom-dropbox.paused { color: #${FG_DIM}; }
+#custom-dropbox.error { color: #${RED}; }
+menu {
+    background: #${BG_DARK};
+    border: 1px solid #${BG_LIGHTER};
+    border-radius: 8px;
+    padding: 4px;
+}
+menuitem {
+    color: #${FG_BRIGHT};
+    padding: 4px 12px;
+    border-radius: 4px;
+}
+menuitem:hover {
+    background: #${BG_LIGHT};
+}
 tooltip {
     background: #${BG_DARK};
     border: 1px solid #${BG_LIGHTER};
