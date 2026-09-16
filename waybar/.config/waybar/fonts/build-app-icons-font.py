@@ -46,7 +46,40 @@ def _origin_y_px(ppem: int) -> int:
     return round(-2 * ppem / 32)
 
 
-def _fit_color(src: Path, canvas: int) -> bytes:
+NORD_BLUE = (0x3E, 0x5F, 0xFF)
+
+
+def _fix_nord_fringe(png: bytes) -> bytes:
+    """Drop the opaque-white corner halo magick leaves around the rounded badge."""
+    from io import BytesIO
+
+    from PIL import Image
+
+    im = Image.open(BytesIO(png)).convert("RGBA")
+    bb = im.getbbox()
+    if not bb:
+        return png
+    x0, y0, x1, y1 = bb
+    px = im.load()
+    w, h = im.size
+    for y in range(h):
+        for x in range(w):
+            r, g, b, a = px[x, y]
+            if a == 0:
+                continue
+            luma = (r + g + b) / 3
+            dist_edge = min(x - x0, y - y0, x1 - 1 - x, y1 - 1 - y)
+            # Outer 2px of the badge: light anti-alias was flattened to white.
+            if dist_edge <= 2 and luma > 130:
+                px[x, y] = (*NORD_BLUE, 0)
+            elif luma < 200:
+                px[x, y] = (*NORD_BLUE, a)
+    out = BytesIO()
+    im.save(out, format="PNG")
+    return out.getvalue()
+
+
+def _fit_color(src: Path, canvas: int, *, nord_fringe: bool = False) -> bytes:
     """Trim the logo, scale to ICON_FRAC of the em, center on the Nerd Font midline."""
     if not src.is_file():
         sys.exit(f"missing {src}")
@@ -78,9 +111,12 @@ def _fit_color(src: Path, canvas: int) -> bytes:
                 str(dest),
             ]
         )
-        return dest.read_bytes()
+        data = dest.read_bytes()
     finally:
         dest.unlink(missing_ok=True)
+    if nord_fringe:
+        data = _fix_nord_fringe(data)
+    return data
 
 
 def _nord_src() -> Path:
@@ -146,7 +182,7 @@ def build(out: Path = OUT) -> Path:
         strike.glyphs["nordvpn"] = SbixGlyph(
             glyphName="nordvpn",
             graphicType="png ",
-            imageData=_fit_color(nord_src, ppem),
+            imageData=_fit_color(nord_src, ppem, nord_fringe=True),
             originOffsetX=0,
             originOffsetY=oy,
         )
