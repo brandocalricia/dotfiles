@@ -9,8 +9,19 @@
     // merges includes for keys not defined here, so modules-right must live ONLY there.
     "include": ["~/.config/waybar/local.jsonc"],
 
-    "modules-left": ["hyprland/workspaces"],
+    "modules-left": ["hyprland/workspaces", "image#agent-orb"],
     "modules-center": ["clock"],
+
+    // 20px thinking-orbs indicator. Only the exec script's png path is shown;
+    // when no terminal agent is mid-turn the script prints nothing and the
+    // module takes no space. Lives in the left group, after workspace 10.
+    "image#agent-orb": {
+        "exec": "/home/brandonrobertniehaus/code/agent-orb/waybar.sh",
+        "size": 22,
+        "interval": 0.15,
+        "tooltip": true,
+        "on-click": "/home/brandonrobertniehaus/code/agent-orb/focus.sh"
+    },
 
     "hyprland/workspaces": {
         // false -> each monitor's bar shows only that monitor's workspaces

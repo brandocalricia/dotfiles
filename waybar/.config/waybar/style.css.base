@@ -47,6 +47,12 @@ window#waybar {
     color: #e8d9b8;
 }
 /* Idle text/icons use the occupied-workspace cream. Semantic states keep accents. */
+/* thinking-orbs: 20px inline orb after workspace 10, inside the left group. */
+#image.agent-orb {
+    background: transparent;
+    padding: 0 8px 0 2px;
+    margin: 4px 0;
+}
 #clock {
     padding: 0 14px;
     color: #e8d9b8;

@@ -85,6 +85,13 @@ window#waybar {
 /* Idle text/icons use FG_BRIGHT — same cream as occupied workspaces, so the
    bar stays readable on every theme and wallpaper. Semantic states (muted,
    warning, caffeine ON, dropbox sync/error) keep accent colors. */
+/* thinking-orbs: 20px inline orb after workspace 10, inside the left group.
+   No chip — the module hides when idle. */
+#image.agent-orb {
+    background: transparent;
+    padding: 0 8px 0 2px;
+    margin: 4px 0;
+}
 #clock {
     padding: 0 14px;
     color: #${FG_BRIGHT};
