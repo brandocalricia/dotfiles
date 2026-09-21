@@ -46,43 +46,36 @@ window#waybar {
     background: transparent;
     color: #${FG_BRIGHT};
 }
-/* Group pills. Outlines are the bar cream so every cluster reads against
-   the wallpaper without introducing a new color. */
-.modules-center, .modules-right {
-    background: #${BAR_BG};
-    border: 2px solid #${FG_BRIGHT};
-    border-radius: 10px;
-    margin: 4px 2px;
-    padding: 2px 3px;
-}
-/* Left side is two pills: workspaces, then the agent orb chip. */
-.modules-left {
+/* Sections are only layout. Each module draws its own single outline. */
+.modules-left,
+.modules-center,
+.modules-right {
     background: transparent;
     border: none;
-    margin: 4px 2px;
+    margin: 0;
     padding: 0;
 }
 #workspaces {
-    background: #${BAR_BG};
-    border: 2px solid #${FG_BRIGHT};
-    border-radius: 10px;
-    padding: 2px 2px;
+    background: transparent;
+    border: none;
+    margin: 0 0 0 4px;
+    padding: 0;
 }
-/* base = occupied: bright chip so windows-elsewhere are visible at a glance */
+/* One outline per workspace. Padding keeps the number and icon off the stroke. */
 #workspaces button {
-    padding: 0 5px;
-    margin: 2px 6px;
+    padding: 5px 12px;
+    margin: 5px 4px;
+    min-width: 0;
     font-size: 15px;
     color: #${FG_BRIGHT};
     background: #${BG_MID};
     border: 2px solid #${FG_BRIGHT};
-    border-radius: 6px;
+    border-radius: 8px;
     transition: all 0.2s ease;
 }
-/* empty persistent workspaces: dim text, still a full outline */
 #workspaces button.empty {
     color: #${BAR_INACTIVE_WS};
-    background: transparent;
+    background: #${BAR_BG};
     border: 2px solid #${FG_BRIGHT};
 }
 /* active must come after .empty: an empty focused workspace has both classes */
@@ -104,39 +97,22 @@ window#waybar {
 /* Idle text/icons use FG_BRIGHT — same cream as occupied workspaces, so the
    bar stays readable on every theme and wallpaper. Semantic states (muted,
    warning, caffeine ON, dropbox sync/error) keep accent colors. */
-/* thinking-orbs chip: own pill, immediately right of workspace 10. */
-#agent {
+#clock {
     background: #${BAR_BG};
     border: 2px solid #${FG_BRIGHT};
-    border-radius: 10px;
-    margin: 0 0 0 8px;
-    padding: 0 8px 0 4px;
-}
-#thinking-orb {
-    background: transparent;
-    padding: 0 2px 0 4px;
-    margin: 2px 0;
-}
-#custom-agent-orb {
-    background: transparent;
-    color: #${FG_BRIGHT};
-    font-size: 12px;
-    font-weight: 600;
-    padding: 0 6px 0 2px;
-    margin: 0;
-}
-#clock {
-    padding: 0 12px;
+    border-radius: 8px;
+    margin: 6px 0;
+    padding: 0 14px;
     color: #${FG_BRIGHT};
     font-weight: 600;
 }
 #cpu, #memory, #disk, #network, #pulseaudio, #battery, #custom-dropbox, #custom-caffeine, #tray {
-    padding: 0 6px;
-    margin: 2px 5px;
+    padding: 0 8px;
+    margin: 6px 3px;
     background: #${BG_MID};
     color: #${FG_BRIGHT};
     border: 2px solid #${FG_BRIGHT};
-    border-radius: 6px;
+    border-radius: 8px;
     transition: all 0.2s ease;
 }
 #cpu:hover, #memory:hover, #disk:hover, #network:hover, #pulseaudio:hover, #battery:hover, #custom-dropbox:hover, #custom-caffeine:hover {
@@ -145,8 +121,8 @@ window#waybar {
 }
 /* caffeine keep-awake toggle: roomy chip, cup + ON/off so the state is obvious */
 #custom-caffeine {
-    min-width: 4.8em;
-    padding: 0 8px;
+    min-width: 4.6em;
+    padding: 0 10px;
     font-size: 14px;
     font-weight: 700;
     letter-spacing: 0.04em;
@@ -160,7 +136,10 @@ window#waybar {
 #pulseaudio.muted { color: #${RED}; }
 #battery.warning { color: #${YELLOW}; }
 #battery.critical { color: #${RED}; }
-#tray { padding: 0 6px; }
+#tray {
+    padding: 0 8px;
+    margin: 6px 4px 6px 3px;
+}
 #custom-dropbox.syncing { color: #${YELLOW}; }
 #custom-dropbox.starting { color: #${YELLOW}; }
 #custom-dropbox.paused { color: #${FG_DIM}; }
@@ -174,8 +153,6 @@ menu {
 menuitem {
     color: #${FG_BRIGHT};
     padding: 4px 12px;
-    margin: 2px;
-    border: 1px solid #${FG_BRIGHT};
     border-radius: 4px;
 }
 menuitem:hover {
