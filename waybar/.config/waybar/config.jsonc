@@ -9,17 +9,29 @@
     // merges includes for keys not defined here, so modules-right must live ONLY there.
     "include": ["~/.config/waybar/local.jsonc"],
 
-    "modules-left": ["hyprland/workspaces", "image#agent-orb"],
+    "modules-left": ["hyprland/workspaces", "group/agent"],
     "modules-center": ["clock"],
 
-    // 20px thinking-orbs indicator. Only the exec script's png path is shown;
-    // when no terminal agent is mid-turn the script prints nothing and the
-    // module takes no space. Lives in the left group, after workspace 10.
-    "image#agent-orb": {
+    // Own chip to the right of workspace 10 (not inside the numbered block).
+    // Group CSS id is #agent (waybar strips the group/ prefix). Image id must
+    // not also be agent, or the pill style never lands on the group.
+    "group/agent": {
+        "orientation": "horizontal",
+        "modules": ["image#thinking-orb", "custom/agent-orb"]
+    },
+    "image#thinking-orb": {
         "exec": "/home/brandonrobertniehaus/code/agent-orb/waybar.sh",
-        "size": 22,
+        "size": 24,
         "interval": 0.15,
         "tooltip": true,
+        "on-click": "/home/brandonrobertniehaus/code/agent-orb/focus.sh"
+    },
+    "custom/agent-orb": {
+        "exec": "/home/brandonrobertniehaus/code/agent-orb/waybar-label.sh",
+        "return-type": "json",
+        "interval": 0.4,
+        "tooltip": true,
+        "hide-empty-text": true,
         "on-click": "/home/brandonrobertniehaus/code/agent-orb/focus.sh"
     },
 

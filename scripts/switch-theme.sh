@@ -46,14 +46,26 @@ window#waybar {
     background: transparent;
     color: #${FG_BRIGHT};
 }
-.modules-left, .modules-center, .modules-right {
+.modules-center, .modules-right {
     background: #${BAR_BG};
     border: 1px solid #${BAR_BORDER};
     border-radius: 10px;
     margin: 6px 4px;
     padding: 0 6px;
 }
-#workspaces { padding: 0 4px; }
+/* Left side is two pills: workspaces, then the agent orb chip. */
+.modules-left {
+    background: transparent;
+    border: none;
+    margin: 6px 4px;
+    padding: 0;
+}
+#workspaces {
+    background: #${BAR_BG};
+    border: 1px solid #${BAR_BORDER};
+    border-radius: 10px;
+    padding: 0 6px;
+}
 /* base = occupied: bright chip so windows-elsewhere are visible at a glance */
 #workspaces button {
     padding: 0 10px;
@@ -85,12 +97,26 @@ window#waybar {
 /* Idle text/icons use FG_BRIGHT — same cream as occupied workspaces, so the
    bar stays readable on every theme and wallpaper. Semantic states (muted,
    warning, caffeine ON, dropbox sync/error) keep accent colors. */
-/* thinking-orbs: 20px inline orb after workspace 10, inside the left group.
-   No chip — the module hides when idle. */
-#image.agent-orb {
+/* thinking-orbs chip: own pill, immediately right of workspace 10. */
+#agent {
+    background: #${BAR_BG};
+    border: 1px solid #${BAR_BORDER};
+    border-radius: 10px;
+    margin: 0 0 0 4px;
+    padding: 0 8px 0 4px;
+}
+#thinking-orb {
     background: transparent;
-    padding: 0 8px 0 2px;
+    padding: 0 2px 0 4px;
     margin: 4px 0;
+}
+#custom-agent-orb {
+    background: transparent;
+    color: #${FG_BRIGHT};
+    font-size: 12px;
+    font-weight: 600;
+    padding: 0 8px 0 4px;
+    margin: 0;
 }
 #clock {
     padding: 0 14px;
