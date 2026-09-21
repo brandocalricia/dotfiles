@@ -46,53 +46,60 @@ window#waybar {
     background: transparent;
     color: #${FG_BRIGHT};
 }
+/* Group pills. Outlines are the bar cream so every cluster reads against
+   the wallpaper without introducing a new color. */
 .modules-center, .modules-right {
     background: #${BAR_BG};
-    border: 1px solid #${BAR_BORDER};
+    border: 2px solid #${FG_BRIGHT};
     border-radius: 10px;
-    margin: 6px 4px;
-    padding: 0 6px;
+    margin: 4px 2px;
+    padding: 2px 3px;
 }
 /* Left side is two pills: workspaces, then the agent orb chip. */
 .modules-left {
     background: transparent;
     border: none;
-    margin: 6px 4px;
+    margin: 4px 2px;
     padding: 0;
 }
 #workspaces {
     background: #${BAR_BG};
-    border: 1px solid #${BAR_BORDER};
+    border: 2px solid #${FG_BRIGHT};
     border-radius: 10px;
-    padding: 0 6px;
+    padding: 2px 2px;
 }
 /* base = occupied: bright chip so windows-elsewhere are visible at a glance */
 #workspaces button {
-    padding: 0 10px;
-    margin: 4px 3px;
+    padding: 0 5px;
+    margin: 2px 6px;
     font-size: 15px;
     color: #${FG_BRIGHT};
     background: #${BG_MID};
+    border: 2px solid #${FG_BRIGHT};
     border-radius: 6px;
     transition: all 0.2s ease;
 }
-/* empty persistent workspaces: dim, no chip */
+/* empty persistent workspaces: dim text, still a full outline */
 #workspaces button.empty {
     color: #${BAR_INACTIVE_WS};
     background: transparent;
+    border: 2px solid #${FG_BRIGHT};
 }
 /* active must come after .empty: an empty focused workspace has both classes */
 #workspaces button.active {
     color: #${BG_DARK};
     background: #${ACCENT_PRIMARY};
+    border: 2px solid #${FG_BRIGHT};
 }
 #workspaces button.urgent {
     color: #${BG_DARK};
     background: #${RED};
+    border: 2px solid #${FG_BRIGHT};
 }
 #workspaces button:hover {
     background: #${BG_LIGHT};
     color: #${FG_BRIGHT};
+    border: 2px solid #${FG_BRIGHT};
 }
 /* Idle text/icons use FG_BRIGHT — same cream as occupied workspaces, so the
    bar stays readable on every theme and wallpaper. Semantic states (muted,
@@ -100,44 +107,46 @@ window#waybar {
 /* thinking-orbs chip: own pill, immediately right of workspace 10. */
 #agent {
     background: #${BAR_BG};
-    border: 1px solid #${BAR_BORDER};
+    border: 2px solid #${FG_BRIGHT};
     border-radius: 10px;
-    margin: 0 0 0 4px;
+    margin: 0 0 0 8px;
     padding: 0 8px 0 4px;
 }
 #thinking-orb {
     background: transparent;
     padding: 0 2px 0 4px;
-    margin: 4px 0;
+    margin: 2px 0;
 }
 #custom-agent-orb {
     background: transparent;
     color: #${FG_BRIGHT};
     font-size: 12px;
     font-weight: 600;
-    padding: 0 8px 0 4px;
+    padding: 0 6px 0 2px;
     margin: 0;
 }
 #clock {
-    padding: 0 14px;
+    padding: 0 12px;
     color: #${FG_BRIGHT};
     font-weight: 600;
 }
 #cpu, #memory, #disk, #network, #pulseaudio, #battery, #custom-dropbox, #custom-caffeine, #tray {
-    padding: 0 10px;
-    margin: 4px 3px;
+    padding: 0 6px;
+    margin: 2px 5px;
     background: #${BG_MID};
     color: #${FG_BRIGHT};
+    border: 2px solid #${FG_BRIGHT};
     border-radius: 6px;
     transition: all 0.2s ease;
 }
 #cpu:hover, #memory:hover, #disk:hover, #network:hover, #pulseaudio:hover, #battery:hover, #custom-dropbox:hover, #custom-caffeine:hover {
     background: #${BG_LIGHT};
+    border: 2px solid #${FG_BRIGHT};
 }
 /* caffeine keep-awake toggle: roomy chip, cup + ON/off so the state is obvious */
 #custom-caffeine {
     min-width: 4.8em;
-    padding: 0 14px;
+    padding: 0 8px;
     font-size: 14px;
     font-weight: 700;
     letter-spacing: 0.04em;
@@ -146,24 +155,27 @@ window#waybar {
 #custom-caffeine.active {
     color: #${BG_DARK};
     background: #${ACCENT_PRIMARY};
+    border: 2px solid #${FG_BRIGHT};
 }
 #pulseaudio.muted { color: #${RED}; }
 #battery.warning { color: #${YELLOW}; }
 #battery.critical { color: #${RED}; }
-#tray { padding: 0 8px; }
+#tray { padding: 0 6px; }
 #custom-dropbox.syncing { color: #${YELLOW}; }
 #custom-dropbox.starting { color: #${YELLOW}; }
 #custom-dropbox.paused { color: #${FG_DIM}; }
 #custom-dropbox.error { color: #${RED}; }
 menu {
     background: #${BG_DARK};
-    border: 1px solid #${BG_LIGHTER};
+    border: 2px solid #${FG_BRIGHT};
     border-radius: 8px;
     padding: 4px;
 }
 menuitem {
     color: #${FG_BRIGHT};
     padding: 4px 12px;
+    margin: 2px;
+    border: 1px solid #${FG_BRIGHT};
     border-radius: 4px;
 }
 menuitem:hover {
@@ -171,7 +183,7 @@ menuitem:hover {
 }
 tooltip {
     background: #${BG_DARK};
-    border: 1px solid #${BG_LIGHTER};
+    border: 2px solid #${FG_BRIGHT};
     border-radius: 8px;
     color: #${FG_BRIGHT};
     padding: 4px;
