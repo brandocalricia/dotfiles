@@ -140,6 +140,8 @@ window#waybar {
     padding: 0 8px;
     margin: 6px 4px 6px 3px;
 }
+/* Font Awesome dropbox mark sits right of its box. Extra right padding centers it. */
+#custom-dropbox { padding: 0 10px 0 6px; }
 #custom-dropbox.syncing { color: #${YELLOW}; }
 #custom-dropbox.starting { color: #${YELLOW}; }
 #custom-dropbox.paused { color: #${FG_DIM}; }
