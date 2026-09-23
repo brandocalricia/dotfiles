@@ -10,7 +10,7 @@ window#waybar {
     background: transparent;
     color: #e8d9b8;
 }
-/* Sections are only layout. Each module draws its own single outline. */
+/* Sections are only layout. Modules are flat chips: fill and spacing, no stroke. */
 .modules-left,
 .modules-center,
 .modules-right {
@@ -25,7 +25,7 @@ window#waybar {
     margin: 0 0 0 4px;
     padding: 0;
 }
-/* One outline per workspace. Padding keeps the number and icon off the stroke. */
+/* One chip per workspace. Padding keeps the number and icon off the edge. */
 #workspaces button {
     padding: 5px 12px;
     margin: 5px 4px;
@@ -33,35 +33,35 @@ window#waybar {
     font-size: 15px;
     color: #e8d9b8;
     background: #2a1f1a;
-    border: 2px solid #e8d9b8;
+    border: none;
     border-radius: 8px;
     transition: all 0.2s ease;
 }
 #workspaces button.empty {
     color: #8a7a5e;
     background: #1a1612;
-    border: 2px solid #e8d9b8;
+    border: none;
 }
 /* active must come after .empty: an empty focused workspace has both classes */
 #workspaces button.active {
     color: #1a1612;
     background: #c89412;
-    border: 2px solid #e8d9b8;
+    border: none;
 }
 #workspaces button.urgent {
     color: #1a1612;
     background: #8a0e09;
-    border: 2px solid #e8d9b8;
+    border: none;
 }
 #workspaces button:hover {
     background: #3d0d0a;
     color: #e8d9b8;
-    border: 2px solid #e8d9b8;
+    border: none;
 }
 /* Idle text/icons use the occupied-workspace cream. Semantic states keep accents. */
 #clock {
     background: #1a1612;
-    border: 2px solid #e8d9b8;
+    border: none;
     border-radius: 8px;
     margin: 6px 0;
     padding: 0 14px;
@@ -73,13 +73,13 @@ window#waybar {
     margin: 6px 3px;
     background: #2a1f1a;
     color: #e8d9b8;
-    border: 2px solid #e8d9b8;
+    border: none;
     border-radius: 8px;
     transition: all 0.2s ease;
 }
 #cpu:hover, #memory:hover, #disk:hover, #network:hover, #pulseaudio:hover, #battery:hover, #custom-dropbox:hover, #custom-caffeine:hover {
     background: #3d0d0a;
-    border: 2px solid #e8d9b8;
+    border: none;
 }
 /* caffeine keep-awake toggle: roomy chip, cup + ON/off so the state is obvious */
 #custom-caffeine {
@@ -93,7 +93,7 @@ window#waybar {
 #custom-caffeine.active {
     color: #1a1612;
     background: #c89412;
-    border: 2px solid #e8d9b8;
+    border: none;
 }
 #pulseaudio.muted { color: #8a0e09; }
 #battery.warning { color: #d4a13a; }
@@ -110,7 +110,7 @@ window#waybar {
 #custom-dropbox.error { color: #8a0e09; }
 menu {
     background: #1a1612;
-    border: 2px solid #e8d9b8;
+    border: none;
     border-radius: 8px;
     padding: 4px;
 }
@@ -124,7 +124,7 @@ menuitem:hover {
 }
 tooltip {
     background: #1a1612;
-    border: 2px solid #e8d9b8;
+    border: none;
     border-radius: 8px;
     color: #e8d9b8;
     padding: 4px;

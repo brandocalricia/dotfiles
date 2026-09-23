@@ -46,7 +46,7 @@ window#waybar {
     background: transparent;
     color: #${FG_BRIGHT};
 }
-/* Sections are only layout. Each module draws its own single outline. */
+/* Sections are only layout. Modules are flat chips: fill and spacing, no stroke. */
 .modules-left,
 .modules-center,
 .modules-right {
@@ -61,7 +61,7 @@ window#waybar {
     margin: 0 0 0 4px;
     padding: 0;
 }
-/* One outline per workspace. Padding keeps the number and icon off the stroke. */
+/* One chip per workspace. Padding keeps the number and icon off the edge. */
 #workspaces button {
     padding: 5px 12px;
     margin: 5px 4px;
@@ -69,37 +69,37 @@ window#waybar {
     font-size: 15px;
     color: #${FG_BRIGHT};
     background: #${BG_MID};
-    border: 2px solid #${FG_BRIGHT};
+    border: none;
     border-radius: 8px;
     transition: all 0.2s ease;
 }
 #workspaces button.empty {
     color: #${BAR_INACTIVE_WS};
     background: #${BAR_BG};
-    border: 2px solid #${FG_BRIGHT};
+    border: none;
 }
 /* active must come after .empty: an empty focused workspace has both classes */
 #workspaces button.active {
     color: #${BG_DARK};
     background: #${ACCENT_PRIMARY};
-    border: 2px solid #${FG_BRIGHT};
+    border: none;
 }
 #workspaces button.urgent {
     color: #${BG_DARK};
     background: #${RED};
-    border: 2px solid #${FG_BRIGHT};
+    border: none;
 }
 #workspaces button:hover {
     background: #${BG_LIGHT};
     color: #${FG_BRIGHT};
-    border: 2px solid #${FG_BRIGHT};
+    border: none;
 }
 /* Idle text/icons use FG_BRIGHT — same cream as occupied workspaces, so the
    bar stays readable on every theme and wallpaper. Semantic states (muted,
    warning, caffeine ON, dropbox sync/error) keep accent colors. */
 #clock {
     background: #${BAR_BG};
-    border: 2px solid #${FG_BRIGHT};
+    border: none;
     border-radius: 8px;
     margin: 6px 0;
     padding: 0 14px;
@@ -111,13 +111,13 @@ window#waybar {
     margin: 6px 3px;
     background: #${BG_MID};
     color: #${FG_BRIGHT};
-    border: 2px solid #${FG_BRIGHT};
+    border: none;
     border-radius: 8px;
     transition: all 0.2s ease;
 }
 #cpu:hover, #memory:hover, #disk:hover, #network:hover, #pulseaudio:hover, #battery:hover, #custom-dropbox:hover, #custom-caffeine:hover {
     background: #${BG_LIGHT};
-    border: 2px solid #${FG_BRIGHT};
+    border: none;
 }
 /* caffeine keep-awake toggle: roomy chip, cup + ON/off so the state is obvious */
 #custom-caffeine {
@@ -131,7 +131,7 @@ window#waybar {
 #custom-caffeine.active {
     color: #${BG_DARK};
     background: #${ACCENT_PRIMARY};
-    border: 2px solid #${FG_BRIGHT};
+    border: none;
 }
 #pulseaudio.muted { color: #${RED}; }
 #battery.warning { color: #${YELLOW}; }
@@ -148,7 +148,7 @@ window#waybar {
 #custom-dropbox.error { color: #${RED}; }
 menu {
     background: #${BG_DARK};
-    border: 2px solid #${FG_BRIGHT};
+    border: none;
     border-radius: 8px;
     padding: 4px;
 }
@@ -162,7 +162,7 @@ menuitem:hover {
 }
 tooltip {
     background: #${BG_DARK};
-    border: 2px solid #${FG_BRIGHT};
+    border: none;
     border-radius: 8px;
     color: #${FG_BRIGHT};
     padding: 4px;
@@ -172,6 +172,8 @@ fi
 
 # ── foot terminal ─────────────────────────────────────────────────
 if [[ "$(uname)" == "Linux" ]]; then
+# Opaque black with the classic 16 colors. Theme switches rewrite foot.ini
+# but do not recolor it — the bar and windows follow the theme, the terminal does not.
 cat > "$HOME/.config/foot/foot.ini" << EOF
 font=JetBrainsMono Nerd Font:size=11
 pad=12x12
@@ -181,27 +183,27 @@ dpi-aware=yes
 style=beam
 
 [colors-dark]
-alpha=0.95
-background=${BG_DARK}
-foreground=${FG_DIM}
-selection-background=${BG_LIGHT}
-selection-foreground=${FG_BRIGHT}
-regular0=${BG_MID}
-regular1=${RED}
-regular2=${GREEN}
-regular3=${YELLOW}
-regular4=${ACCENT_SECONDARY}
-regular5=${PURPLE}
-regular6=${TEAL}
-regular7=${FG_MID}
-bright0=${BG_LIGHTER}
-bright1=${RED}
-bright2=${GREEN}
-bright3=${YELLOW}
-bright4=${ACCENT_PRIMARY}
-bright5=${PURPLE}
-bright6=${ACCENT_PRIMARY}
-bright7=${FG_BRIGHT}
+alpha=1.0
+background=000000
+foreground=d0d0d0
+selection-background=333333
+selection-foreground=ffffff
+regular0=000000
+regular1=cd0000
+regular2=00cd00
+regular3=cdcd00
+regular4=0000ee
+regular5=cd00cd
+regular6=00cdcd
+regular7=e5e5e5
+bright0=7f7f7f
+bright1=ff0000
+bright2=00ff00
+bright3=ffff00
+bright4=5c5cff
+bright5=ff00ff
+bright6=00ffff
+bright7=ffffff
 EOF
     # Scratchpad terminals bake colors at spawn — kill them so pyprland
     # respawns with the new foot.ini/btop theme on next toggle
