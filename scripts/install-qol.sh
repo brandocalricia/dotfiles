@@ -44,6 +44,12 @@ sudo -u "$RUSER" tldr --update >/dev/null 2>&1 || true
 sudo -u "$RUSER" atuin import auto >/dev/null 2>&1 || true
 ok "installed: atuin delta lazygit direnv tealdeer duf procs dust"
 
+# ── 2b. Never let a plain `dnf upgrade` touch gdm ────────────────────────────
+say "dnf exclude: gdm"
+install -d -m 0755 /etc/dnf/libdnf5.conf.d
+install -m 0644 "$DOTFILES/dnf/20-exclude-gdm.conf" /etc/dnf/libdnf5.conf.d/20-exclude-gdm.conf
+ok "plain dnf upgrade skips gdm (drop-in /etc/dnf/libdnf5.conf.d/20-exclude-gdm.conf)"
+
 # ── 3. Automatic updates (staged + security only, snapper-protected) ─────────
 say "Automatic updates"
 install -m 0755 "$DOTFILES/scripts/auto-update.sh" /usr/local/sbin/auto-update.sh
