@@ -1,57 +1,28 @@
 #!/usr/bin/env bash
-# fedora only: when AC is plugged/unplugged, restart hypridle onto the matching
-# Mac-like profile (2 min battery / 10 min AC). Does nothing while caffeine is on.
+# fedora only: keep hypridle on the Mac-like profile for the current power
+# source (2 min battery / 10 min AC). Does nothing while caffeine is on.
+# caffeine-toggle.sh sync owns the restart, including an 8s settle so a
+# flickering port reading cannot reset the idle clock forever.
 set -u
 export PATH="/usr/bin:/bin:/usr/local/bin:${PATH}"
 
-CAFFEINE="${XDG_RUNTIME_DIR:-/tmp}/caffeine.on"
-RUNNER="${XDG_CONFIG_HOME:-$HOME/.config}/hypr/run-hypridle.sh"
+host="$(hostname -s 2>/dev/null || hostname)"
+[[ "$host" == "fedora" ]] || exit 0
 
-on_ac() {
-    local d online st
-    for d in /sys/class/power_supply/*/type; do
-        [[ -f "$d" ]] || continue
-        if [[ "$(cat "$d" 2>/dev/null)" == "Mains" ]]; then
-            online="${d%/type}/online"
-            [[ -f "$online" && "$(cat "$online" 2>/dev/null)" == "1" ]] && return 0
-        fi
-    done
-    st="$(cat /sys/class/power_supply/BAT1/status 2>/dev/null || true)"
-    case "$st" in
-        Charging|Full) return 0 ;;
-    esac
-    return 1
-}
+SYNC="${XDG_CONFIG_HOME:-$HOME/.config}/hypr/caffeine-toggle.sh"
 
-source_label() {
-    if on_ac; then echo ac; else echo battery; fi
-}
+heal() { "$SYNC" sync >/dev/null 2>&1 || true; }
 
-reload_hypridle() {
-    [[ -f "$CAFFEINE" ]] && return 0
-    pkill -x hypridle 2>/dev/null || true
-    if command -v hyprctl >/dev/null 2>&1; then
-        hyprctl dispatch exec "$RUNNER" >/dev/null 2>&1
+heal
+while true; do
+    if command -v upower >/dev/null 2>&1; then
+        upower --monitor | while read -r _; do
+            heal
+        done
     else
-        setsid -f "$RUNNER" >/dev/null 2>&1
+        while sleep 5; do
+            heal
+        done
     fi
-}
-
-prev="$(source_label)"
-if command -v upower >/dev/null 2>&1; then
-    upower --monitor | while read -r _; do
-        now="$(source_label)"
-        if [[ "$now" != "$prev" ]]; then
-            prev="$now"
-            reload_hypridle
-        fi
-    done
-else
-    while sleep 2; do
-        now="$(source_label)"
-        if [[ "$now" != "$prev" ]]; then
-            prev="$now"
-            reload_hypridle
-        fi
-    done
-fi
+    sleep 2
+done

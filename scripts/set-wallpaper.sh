@@ -28,7 +28,11 @@ img=$(realpath "$img")
 # Persist into local.conf's 'swww img' exec-once line (the path is what we
 # sed; --transition-type none keeps login instant). Append if missing.
 if [ -f "$LOCAL_CONF" ] && grep -q '^exec-once = sleep .* swww img' "$LOCAL_CONF"; then
-    sed -i "s|^exec-once = sleep .* swww img .*|exec-once = sleep 1 \&\& swww img $img --transition-type none|" "$LOCAL_CONF"
+    # --follow-symlinks: local.conf is a symlink to local.<host>.conf. Plain
+    # sed -i replaces that symlink with a regular file, and Hyprland then
+    # stops seeing later edits to the host file (idle-power-watch was lost
+    # this way, so battery/AC idle profiles stopped switching).
+    sed -i --follow-symlinks "s|^exec-once = sleep .* swww img .*|exec-once = sleep 1 \&\& swww img $img --transition-type none|" "$LOCAL_CONF"
 else
     { echo "exec-once = swww-daemon"
       echo "exec-once = sleep 1 && swww img $img --transition-type none"; } >> "$LOCAL_CONF"
