@@ -44,7 +44,13 @@ pick_recent() {
 case "$ACTION" in
     open-folder)
         mkdir -p "$FOLDER"
-        xdg-open "$FOLDER" >/dev/null 2>&1 || true
+        # xdg-open dbus-activates Nautilus without the path on Hyprland,
+        # so the click opens Home. Launch the file manager on ~/Dropbox.
+        if command -v nautilus >/dev/null 2>&1; then
+            setsid nautilus --new-window "$FOLDER" >/dev/null 2>&1 < /dev/null &
+        else
+            xdg-open "$FOLDER" >/dev/null 2>&1 || true
+        fi
         ;;
     open-web)
         open_url "https://www.dropbox.com/home"
