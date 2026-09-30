@@ -1,12 +1,4 @@
 #!/bin/bash
-# Last resort when the compositor is stuck inside the GPU driver and
-# SIGKILL cannot reap it. Sync, remount read-only, reboot.
-set -eu
-logger -t unfreeze-reboot "compositor stuck in the driver; syncing and rebooting"
-echo 1 > /proc/sys/kernel/sysrq
-sync
-echo s > /proc/sysrq-trigger
-sleep 1
-echo u > /proc/sysrq-trigger
-sleep 1
-echo b > /proc/sysrq-trigger
+# Disabled. This used to sync and reboot via SysRq with no confirmation.
+echo "unfreeze-reboot is disabled and will not reboot this machine." >&2
+exit 1
