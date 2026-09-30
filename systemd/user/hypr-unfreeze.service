@@ -1,0 +1,13 @@
+[Unit]
+Description=Recover a wedged Hyprland without a forced power-off
+PartOf=graphical-session.target
+After=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=%h/dotfiles/scripts/hypr-unfreeze.sh
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=hyprland-session.target
