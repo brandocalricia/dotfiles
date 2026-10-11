@@ -26,6 +26,10 @@
             "class<brave-monkeytype.*> title<.*>": "󰌌",
             "class<brave-browser> title<.*[Mm]onkeytype.*>": "󰌌",
             "title<.*[Mm]onkeytype.*>": "󰌌",
+            // Mass GB Zellij session (title "gb | wN") — office-building-cog + cyan pango (t474u/t475u);
+            // distinct from Grok robot 󰚩 and plain foot . Markup colored so it pops vs cream chips.
+            "class<foot> title<[Gg][Bb].*>": "<span foreground='#00e8ff' size='large'>󱥉</span>",
+            "class<com.mitchellh.ghostty|ghostty> title<[Gg][Bb].*>": "<span foreground='#00e8ff' size='large'>󱥉</span>",
             "class<foot> title<.*[Gg]rok.*>": "󰚩",
             "class<com.mitchellh.ghostty|ghostty> title<.*[Gg]rok.*>": "󰚩",
             "class<foot>": "",

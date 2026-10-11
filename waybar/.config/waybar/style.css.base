@@ -58,6 +58,40 @@ window#waybar {
     color: #e8d9b8;
     border: none;
 }
+
+/* t474u/t475u: workspace 1 = Agent Office dock (GB Zellij mass session).
+   Cyan chip (not theme green/cream) + unique office-building-cog window glyph. */
+#workspaces button#1:not(.empty),
+#workspaces button.1:not(.empty) {
+    color: #7af0ff;
+    background: #123038;
+}
+#workspaces button#1.active,
+#workspaces button.1.active {
+    color: #041016;
+    background: #00e8ff;
+}
+#workspaces button#1:hover,
+#workspaces button.1:hover {
+    background: #1a4450;
+    color: #b8f7ff;
+}
+
+/* fallback selectors — waybar 0.15 may not expose button#1 on all builds */
+#workspaces button:nth-child(1):not(.empty) {
+    color: #7af0ff;
+    background: #123038;
+}
+#workspaces button:nth-child(1).active {
+    color: #041016;
+    background: #00e8ff;
+}
+#workspaces button:nth-child(1):hover {
+    background: #1a4450;
+    color: #b8f7ff;
+}
+
+
 /* Idle text/icons use the occupied-workspace cream. Semantic states keep accents. */
 #clock {
     background: #1a1612;
@@ -130,8 +164,3 @@ tooltip {
     padding: 4px;
 }
 
-/* GB workers (t464u) */
-#custom-gb { padding: 0 10px; color: #e6e6e6; }
-#custom-gb.busy { color: #8fd18f; }
-#custom-gb.idle { color: #9aa0aa; }
-#custom-gb.stuck { color: #f0b35a; }

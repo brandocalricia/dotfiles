@@ -94,6 +94,38 @@ window#waybar {
     color: #${FG_BRIGHT};
     border: none;
 }
+/* t474u/t475u: workspace 1 = Agent Office dock (GB Zellij mass session).
+   Fixed cyan (semantic, not theme accent) so it stays distinct across wallpapers. */
+#workspaces button#1:not(.empty),
+#workspaces button.1:not(.empty) {
+    color: #7af0ff;
+    background: #123038;
+}
+#workspaces button#1.active,
+#workspaces button.1.active {
+    color: #041016;
+    background: #00e8ff;
+}
+#workspaces button#1:hover,
+#workspaces button.1:hover {
+    background: #1a4450;
+    color: #b8f7ff;
+}
+
+/* fallback selectors — waybar 0.15 may not expose button#1 on all builds */
+#workspaces button:nth-child(1):not(.empty) {
+    color: #7af0ff;
+    background: #123038;
+}
+#workspaces button:nth-child(1).active {
+    color: #041016;
+    background: #00e8ff;
+}
+#workspaces button:nth-child(1):hover {
+    background: #1a4450;
+    color: #b8f7ff;
+}
+
 /* Idle text/icons use FG_BRIGHT — same cream as occupied workspaces, so the
    bar stays readable on every theme and wallpaper. Semantic states (muted,
    warning, caffeine ON, dropbox sync/error) keep accent colors. */
