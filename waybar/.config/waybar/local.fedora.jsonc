@@ -3,5 +3,13 @@
     // local.jsonc is gitignored — each machine maintains its own copy.
     // config.jsonc `include`s this file; modules-right lives here so this
     // laptop keeps "battery" while a battery-less desktop omits it.
-    "modules-right": ["custom/caffeine", "custom/dropbox", "network", "pulseaudio", "cpu", "memory", "disk", "battery", "tray"]
+    "modules-right": ["custom/gb", "custom/caffeine", "custom/dropbox", "network", "pulseaudio", "cpu", "memory", "disk", "battery", "tray"],
+    // GB worker status from gb-bus (t464u): ● working ○ idle ▲ stuck ⏸ parked. Click = workspace 1.
+    "custom/gb": {
+        "exec": "~/.local/bin/gb-waybar.py",
+        "return-type": "json",
+        "interval": 10,
+        "on-click": "hyprctl dispatch workspace 1",
+        "on-click-right": "foot --title gb-status sh -c 'python3 ~/.grok/agent-city/bus.py status; read -r _'"
+    }
 }

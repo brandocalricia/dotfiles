@@ -129,3 +129,9 @@ tooltip {
     color: #e8d9b8;
     padding: 4px;
 }
+
+/* GB workers (t464u) */
+#custom-gb { padding: 0 10px; color: #e6e6e6; }
+#custom-gb.busy { color: #8fd18f; }
+#custom-gb.idle { color: #9aa0aa; }
+#custom-gb.stuck { color: #f0b35a; }
