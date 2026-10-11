@@ -1,0 +1,164 @@
+{
+    "layer": "top",
+    "position": "top",
+    "height": 48,
+    "spacing": 2,
+
+    // modules-right is per-machine (battery only exists on the laptop) — it lives in
+    // ~/.config/waybar/local.jsonc (gitignored; copy from local.jsonc.example). waybar
+    // merges includes for keys not defined here, so modules-right must live ONLY there.
+    "include": ["~/.config/waybar/local.jsonc"],
+
+    "modules-left": ["hyprland/workspaces"],
+    "modules-center": ["clock"],
+
+    "hyprland/workspaces": {
+        // false -> each monitor's bar shows only that monitor's workspaces
+        // (paired with the per-output persistent-workspaces map below).
+        "all-outputs": false,
+        "format": "{id} {windows}",
+        "format-window-separator": " ",
+        "window-rewrite-default": "󰘔",
+        // Title+class rules beat class-only (waybar priority 3 > 1), so Grok-in-foot
+        // and Monkeytype-in-Brave stay distinct from a plain terminal / browser tab.
+        // Glyphs verified in JetBrainsMono Nerd Font (missing glyphs hide the window).
+        "window-rewrite": {
+            "class<brave-monkeytype.*> title<.*>": "󰌌",
+            "class<brave-browser> title<.*[Mm]onkeytype.*>": "󰌌",
+            "title<.*[Mm]onkeytype.*>": "󰌌",
+            "class<foot> title<.*[Gg]rok.*>": "󰚩",
+            "class<com.mitchellh.ghostty|ghostty> title<.*[Gg]rok.*>": "󰚩",
+            "class<foot>": "",
+            "class<dropdown-term>": "󰞷",
+            "class<dropdown-btop>": "󰊚",
+            // Nerd Font glyphs (not the color logo font): they inherit the bar's
+            // cream so they match workspaces on every theme/wallpaper.
+            "class<brave-browser>": "󰖟",
+            "class<brave-.*>": "󰖟",
+            "class<nordvpn-gui|nordvpn>": "󰦝",
+            "class<steam>": "󰓓",
+            "class<code|Code>": "󰨞",
+            "class<com.spotify.Client|spotify>": "󰓇",
+            "class<md.obsidian.Obsidian|obsidian>": "󰠮",
+            "class<org.gnome.Nautilus>": "󰉋",
+            "class<pavucontrol>": "󰕾",
+            "class<nm-connection-editor>": "󰖩"
+        },
+        // Per-output map. Keys for outputs a host doesn't have are ignored, so
+        // this stays correct on every machine:
+        //   desktop  : main HDMI-A-1 shows 1-5, secondary DP-1 shows 6-10
+        //              (mirrors the hyprland split in ~/.config/hypr/local.conf)
+        //   laptop   : single eDP-1 shows all of 1-10
+        "persistent-workspaces": {
+            "HDMI-A-1": [ 1, 2, 3, 4, 5 ],
+            "DP-1": [ 6, 7, 8, 9, 10 ],
+            "eDP-1": [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 ]
+        },
+        "on-click": "activate",
+        "on-scroll-up": "hyprctl dispatch workspace e-1",
+        "on-scroll-down": "hyprctl dispatch workspace e+1"
+    },
+
+    "clock": {
+        "format": "{:%a %b %d  %I:%M %p}",
+        "tooltip-format": "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>"
+    },
+
+    "cpu": {
+        "format": " {usage}%",
+        "interval": 2,
+        "on-click": "foot -e btop"
+    },
+
+    "memory": {
+        "format": "󰍛 {percentage}%",
+        "interval": 2,
+        "tooltip-format": "{used:0.1f}G / {total:0.1f}G",
+        "on-click": "foot -e btop"
+    },
+
+    "disk": {
+        "interval": 30,
+        "format": "󰋊 {percentage_used}%",
+        "path": "/"
+    },
+
+    "battery": {
+        "bat": "BAT1",
+        "adapter": "ACAD",
+        "interval": 30,
+        "states": {
+            "warning": 30,
+            "critical": 15
+        },
+        "format": "{icon} {capacity}%",
+        "format-charging": " {capacity}%",
+        "format-plugged": " {capacity}%",
+        "format-icons": ["", "", "", "", ""],
+        "tooltip": false
+    },
+
+    "network": {
+        "format-wifi": " wifi",
+        "format-ethernet": "󰈀 wired",
+        "format-disconnected": "󰖪 offline",
+        "tooltip-format": "{ipaddr}",
+        "on-click": "foot -e nmtui",
+        "on-click-right": "~/.config/hypr/wifi-login.sh",
+        "on-click-middle": "~/.config/hypr/wifi-login.sh"
+    },
+
+    "pulseaudio": {
+        "format": "{icon} {volume}%",
+        "format-muted": "󰝟 muted",
+        "format-icons": {
+            "default": ["", "", ""]
+        },
+        "scroll-step": 5,
+        "on-click": "pavucontrol"
+    },
+
+    "custom/caffeine": {
+        // Keep-awake toggle (Option A): SIGSTOP/SIGCONT on hypridle. When ON, all
+        // idle timers (display-off, auto-lock, suspend) are paused. See
+        // ~/.config/hypr/caffeine-toggle.sh. Placed next to network in local.jsonc.
+        "return-type": "json",
+        "exec": "~/.config/hypr/caffeine-toggle.sh status",
+        "on-click": "~/.config/hypr/caffeine-toggle.sh toggle",
+        // The script signals waybar (SIGRTMIN+9) AFTER it flips state, so refresh
+        // from that signal only — exec-on-event would race and re-read stale state.
+        "exec-on-event": false,
+        "interval": 5,
+        "signal": 9,
+        "tooltip": true
+    },
+
+    "custom/dropbox": {
+        // Mac-style Dropbox menubar analog. Icon-only; hover for status, click for menu.
+        "return-type": "json",
+        "exec": "$HOME/.config/waybar/dropbox-status.sh",
+        "interval": 5,
+        "signal": 10,
+        "tooltip": true,
+        "menu": "on-click",
+        "menu-file": "$HOME/.config/waybar/dropbox-menu.xml",
+        "menu-actions": {
+            "open-folder": "$HOME/.config/waybar/dropbox-action.sh open-folder",
+            "recent": "$HOME/.config/waybar/dropbox-action.sh recent",
+            "sharelink": "$HOME/.config/waybar/dropbox-action.sh sharelink",
+            "pause": "$HOME/.config/waybar/dropbox-action.sh pause",
+            "resume": "$HOME/.config/waybar/dropbox-action.sh resume",
+            "restart": "$HOME/.config/waybar/dropbox-action.sh restart",
+            "open-web": "$HOME/.config/waybar/dropbox-action.sh open-web",
+            "account": "$HOME/.config/waybar/dropbox-action.sh account",
+            "link": "$HOME/.config/waybar/dropbox-action.sh link",
+            "help": "$HOME/.config/waybar/dropbox-action.sh help"
+        },
+        "on-click-right": "$HOME/.config/waybar/dropbox-action.sh open-folder"
+    },
+
+    "tray": {
+        "icon-size": 14,
+        "spacing": 8
+    }
+}

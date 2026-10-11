@@ -1,0 +1,12 @@
+{
+    // Per-machine waybar overrides for this host (Framework Laptop 13).
+    // local.jsonc is gitignored — each machine maintains its own copy.
+    // config.jsonc `include`s this file; modules-right lives here so this
+    // laptop keeps "battery" while a battery-less desktop omits it.
+    //
+    // t469u: removed custom/gb chip next to the clock. Mass GB Zellij session
+    // ("gb | …" in foot on workspace 1) shows as a special robot icon on that
+    // workspace via window-rewrite in config.jsonc. Status still: gb-waybar.py
+    // or `python3 ~/.grok/agent-city/bus.py status`.
+    "modules-right": ["custom/caffeine", "custom/dropbox", "network", "pulseaudio", "cpu", "memory", "disk", "battery", "tray"]
+}

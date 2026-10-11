@@ -1,0 +1,139 @@
+* {
+    font-family: "JetBrainsMono Nerd Font", "JetBrainsMono NF", "Font Awesome 6 Free", "WaybarAppIcons", monospace;
+    font-size: 13px;
+    font-weight: 500;
+    min-height: 0;
+    border: none;
+    border-radius: 0;
+}
+window#waybar {
+    background: transparent;
+    color: #dce5d6;
+}
+/* Sections are only layout. Modules are flat chips: fill and spacing, no stroke. */
+.modules-left,
+.modules-center,
+.modules-right {
+    background: transparent;
+    border: none;
+    margin: 0;
+    padding: 0;
+}
+#workspaces {
+    background: transparent;
+    border: none;
+    margin: 0 0 0 4px;
+    padding: 0;
+}
+/* One chip per workspace. Padding keeps the number and icon off the edge. */
+#workspaces button {
+    padding: 5px 12px;
+    margin: 5px 4px;
+    min-width: 0;
+    font-size: 15px;
+    color: #dce5d6;
+    background: #1a2218;
+    border: none;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+#workspaces button.empty {
+    color: #8a9386;
+    background: #0e150c;
+    border: none;
+}
+/* active must come after .empty: an empty focused workspace has both classes */
+#workspaces button.active {
+    color: #0e150c;
+    background: #00e63e;
+    border: none;
+}
+#workspaces button.urgent {
+    color: #0e150c;
+    background: #ffb4ab;
+    border: none;
+}
+#workspaces button:hover {
+    background: #242c22;
+    color: #dce5d6;
+    border: none;
+}
+/* Idle text/icons use FG_BRIGHT — same cream as occupied workspaces, so the
+   bar stays readable on every theme and wallpaper. Semantic states (muted,
+   warning, caffeine ON, dropbox sync/error) keep accent colors. */
+#clock {
+    background: #0e150c;
+    border: none;
+    border-radius: 8px;
+    margin: 6px 0;
+    padding: 0 14px;
+    color: #dce5d6;
+    font-weight: 600;
+}
+#cpu, #memory, #disk, #network, #pulseaudio, #battery, #custom-dropbox, #custom-caffeine, #tray {
+    padding: 0 8px;
+    margin: 6px 3px;
+    background: #1a2218;
+    color: #dce5d6;
+    border: none;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+#cpu:hover, #memory:hover, #disk:hover, #network:hover, #pulseaudio:hover, #battery:hover, #custom-dropbox:hover, #custom-caffeine:hover {
+    background: #242c22;
+    border: none;
+}
+/* caffeine keep-awake toggle: roomy chip, cup + ON/off so the state is obvious */
+#custom-caffeine {
+    min-width: 4.6em;
+    padding: 0 10px;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+}
+#custom-caffeine.inactive { color: #dce5d6; }
+#custom-caffeine.active {
+    color: #0e150c;
+    background: #00e63e;
+    border: none;
+}
+#pulseaudio.muted { color: #ffb4ab; }
+#battery.warning { color: #d5db94; }
+#battery.critical { color: #ffb4ab; }
+#tray {
+    padding: 0 8px;
+    margin: 6px 4px 6px 3px;
+}
+/* Font Awesome dropbox mark sits right of its box. Extra right padding centers it. */
+#custom-dropbox { padding: 0 10px 0 6px; }
+#custom-dropbox.syncing { color: #d5db94; }
+#custom-dropbox.starting { color: #d5db94; }
+#custom-dropbox.paused { color: #c0c9ba; }
+#custom-dropbox.error { color: #ffb4ab; }
+menu {
+    background: #0e150c;
+    border: none;
+    border-radius: 8px;
+    padding: 4px;
+}
+menuitem {
+    color: #dce5d6;
+    padding: 4px 12px;
+    border-radius: 4px;
+}
+menuitem:hover {
+    background: #242c22;
+}
+tooltip {
+    background: #0e150c;
+    border: none;
+    border-radius: 8px;
+    color: #dce5d6;
+    padding: 4px;
+}
+
+/* GB workers (t464u) */
+#custom-gb { padding: 0 10px; color: #e6e6e6; }
+#custom-gb.busy { color: #8fd18f; }
+#custom-gb.idle { color: #9aa0aa; }
+#custom-gb.stuck { color: #f0b35a; }
