@@ -3,7 +3,7 @@
 # Added 2026-07-17.
 [user]
 	name = Brandon Niehaus
-	email = brandocalricia@gmail.com
+	email = 234071962+brandocalricia@users.noreply.github.com
 	signingkey = ~/.ssh/id_ed25519.pub
 [init]
 	defaultBranch = main

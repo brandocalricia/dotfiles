@@ -77,3 +77,7 @@
 
 # Rocket League workshop maps (re-downloadable)
 /home/*/workshopmapsrl
+
+# Dropbox (already synced and versioned by Dropbox)
+/home/*/Dropbox
+/home/*/.dropbox-dist

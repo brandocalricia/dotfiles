@@ -366,6 +366,12 @@ padding=12
 margin=8
 default-timeout=5000
 max-visible=5
+# A cross in the corner of every notification: left click (on the cross or anywhere on it)
+# closes it, right click opens what it points to, middle click closes all of them.
+format=<span alpha="60%%">✕</span>  <b>%s</b>\n%b
+on-button-left=dismiss
+on-button-right=invoke-default-action
+on-button-middle=dismiss-all
 EOF
     makoctl reload 2>/dev/null || true
 fi
