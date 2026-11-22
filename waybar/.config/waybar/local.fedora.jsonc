@@ -6,6 +6,6 @@
     //
     // t474u/t475u: no custom/gb chip by the clock. Mass GB Zellij on workspace 1
     // uses office-building-cog + cyan chip (window-rewrite + #workspaces button#1).
-    // Status: gb-waybar.py or `python3 ~/.grok/agent-city/bus.py status`.
+    // Status: gb-waybar.py.
     "modules-right": ["custom/caffeine", "custom/dropbox", "network", "pulseaudio", "cpu", "memory", "disk", "battery", "tray"]
 }
